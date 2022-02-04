@@ -3,15 +3,15 @@
 # and about resin base images here: http://docs.resin.io/runtime/resin-base-images/
 # Note the node:slim image doesn't have node-gyp
 
-FROM balenalib/%%BALENA_MACHINE_NAME%%-node:10-run
+FROM balenalib/%%BALENA_MACHINE_NAME%%-node:16-run
 
 # node-hid pre-req
 RUN apt-get update && apt-get install -yq \
-    python build-essential \
+    python2 build-essential apt-utils \
     libusb-1.0-0-dev libudev-dev  libsecret-1-dev \ 
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# # bleno pre-req
+# # Noble pre-req
 RUN install_packages bluetooth bluez libbluetooth-dev libudev-dev
 
 # # network manager
@@ -26,9 +26,9 @@ COPY README.md README.md
 COPY CHANGELOG.md CHANGELOG.md
 
 # Install npm dependencies
-RUN JOBS=MAX npm install -g node-gyp
-RUN JOBS=MAX npm install node-hid --build-from-source
-RUN JOBS=MAX npm install bluetooth-hci-socket@npm:@abandonware/bluetooth-hci-socket
+# RUN JOBS=MAX npm install -g node-gyp@7.1.0
+RUN JOBS=MAX npm install node-hid@0.7.9 --build-from-source
+# RUN JOBS=MAX npm install @abandonware/bluetooth-hci-socket
 RUN JOBS=MAX npm install --production --unsafe-perm \
     && npm cache clean --force \
     && rm -rf /tmp/*

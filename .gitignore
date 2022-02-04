@@ -59,3 +59,9 @@ sd
 
 # build ouput folder 2020-06-24
 build
+
+# Microsoft Visual Studio
+.vscode
+.VSCodeCounter
+
+

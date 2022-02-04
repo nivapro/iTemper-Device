@@ -9,6 +9,11 @@
 // 09a52499-dbb2-49be-a308-d1a25d92dc67
 // 64bebe3d-7dcd-43c6-80a8-b2949a3b97ed
 
+// a449e701-371a-48b4-a8a5-e8105127c123
+// ffffffff-ffff-ffff-ffff-fffffffffff0
+// 1ad01b31-dd4b-478c-9aa3-cbca25db3739
+// 1ad01b31-dd4b-478c-9aa3-12bd90900000
+
 export enum UUID_Designator {
     PrimaryService,
     DeviceInfo,

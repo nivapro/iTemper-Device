@@ -1,4 +1,4 @@
-import bleno from 'bleno';
+import dbus from 'dbus-next';
 import * as util from 'util';
 import { stringify } from '../../../core/helpers';
 import { log } from '../../../core/logger';
@@ -14,22 +14,24 @@ export interface ReadResponse {
 export interface WriteResponse {
     result: number;
 }
-export abstract class BaseCharacteristic<T extends object> extends bleno.Characteristic {
+export abstract class BaseCharacteristic<T extends object> extends dbus.interface.Interface {
   private result: Buffer;
 
   constructor(UUID: string, private descriptorValue: string, properties: ReadonlyArray<Property>) {
-    super({
-      uuid: UUID,
-      properties,
-      descriptors: [
-        new bleno.Descriptor({
-          uuid: '2901',
-          value: descriptorValue,
-      })],
-    });
+    super();
+
+    // super({
+    //   uuid: UUID,
+    //   properties,
+    //   descriptors: [
+    //     new bleno.Descriptor({
+    //       uuid: '2901',
+    //       value: descriptorValue,
+    //   })],
+    // });
   }
 
-  async abstract handleReadRequest(): Promise<T>;
+  abstract handleReadRequest(): Promise<T>;
 
   onReadRequest(offset: number, callback: (result: number, data?: Buffer) => void) {
     const m = 'base-characteristic.onReadRequest ('+ this.descriptorValue + '): ';
