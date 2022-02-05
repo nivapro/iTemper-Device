@@ -2,6 +2,8 @@ import dbus from 'dbus-next';
 import { Application } from './gatt-application';
 import { Characteristic } from './gatt-characteristic';
 
+import * as constants from './gatt-constants';
+
 import { GATT_SERVICE_INTERFACE } from './gatt-constants';
 export interface Properties {
     UUID: string;
@@ -33,7 +35,7 @@ export class Service extends dbus.interface.Interface implements GATTService1 {
     constructor(private uuid: string,
                 private application: Application,
                 private primary: boolean = true,
-                private bus: dbus.MessageBus = dbus.systemBus()) {
+                private bus: dbus.MessageBus = constants.systemBus) {
         super(GATT_SERVICE_INTERFACE);
         this.application.addService(this);
     }

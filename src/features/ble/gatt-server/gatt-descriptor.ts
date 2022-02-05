@@ -1,6 +1,8 @@
 import dbus from 'dbus-next';
 import { Characteristic } from './gatt-characteristic';
 
+import * as constants from './gatt-constants';
+
 type Flag = 'Read' | 'Notify';
 type FlagArray = Flag[];
 
@@ -26,7 +28,7 @@ export abstract class Descriptor {
     constructor(private uuid: string,
                 private flags: FlagArray,
                 private characteristic: Characteristic,
-                private bus: dbus.MessageBus = dbus.systemBus() ) {
+                private bus: dbus.MessageBus = constants.systemBus) {
             this.characteristic.addDescriptor(this);
     }
     public getPath(): string {

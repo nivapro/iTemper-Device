@@ -1,3 +1,5 @@
+import dbus from 'dbus-next';
+
 export const ADAPTER_NAME = 'hci0';
 
 export const BLUEZ_SERVICE_NAME = 'org.bluez';
@@ -21,3 +23,9 @@ export const GATT_SERVICE_INTERFACE = BLUEZ_SERVICE_NAME + '.GattService1';
 
 export const ADVERTISEMENT_INTERFACE = BLUEZ_SERVICE_NAME + '.LEAdvertisement1';
 export const ADVERTISING_MANAGER_INTERFACE = BLUEZ_SERVICE_NAME + '.LEAdvertisingManager1';
+
+// System bus
+export const BUS_NAME = 'io.itemper';
+export const systemBus = dbus.systemBus();
+systemBus.requestName(BUS_NAME, 0);
+

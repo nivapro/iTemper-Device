@@ -35,7 +35,7 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
                 private uuid: string,
                 private flags: FlagArray,
                 private service: Service,
-                private bus: dbus.MessageBus = dbus.systemBus()) {
+                private bus: dbus.MessageBus = constants.systemBus) {
         super(constants.GATT_CHARACTERISTIC_INTERFACE);
         this.service.addCharacteristic(this);
     }

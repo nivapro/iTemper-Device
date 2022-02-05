@@ -17,7 +17,7 @@ export class Adertisement extends dbus.interface.Interface {
                 index: number = 0,
                 private _includeTYxPower: boolean = false,
                 private _advertisingType: AdvertisingType = 'peripheral',
-                private _bus: dbus.MessageBus = dbus.systemBus(),
+                private _bus: dbus.MessageBus = constants.systemBus,
         ) {
         super(constants.ADVERTISEMENT_INTERFACE);
         this._path = path + '/adverisment' + index;
