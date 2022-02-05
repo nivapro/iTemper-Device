@@ -1,7 +1,9 @@
-import * as ble from '@/features/ble';
+import * as ble from './../features/ble';
+
 import http from 'http';
 import { exit } from 'process';
 import { log } from './logger';
+
 export function init(server: http.Server) {
     const signals: NodeJS.Signals[] = ['SIGTERM', 'SIGINT'];
 
