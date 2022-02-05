@@ -7,7 +7,7 @@ export const ITEMPER_SERVICE_NAME = 'io.itemper';
 export const ITEMPER_NAMESPACE = '/io/itemper';
 
 
-export const DBUS_PROPERTIES ='org.freedesktop.DBus.Properties';
+export const DBUS_PROP_IFACE ='org.freedesktop.DBus.Properties';
 export const DBUS_OM_IFACE = 'org.freedesktop.DBus.ObjectManager';
 
 

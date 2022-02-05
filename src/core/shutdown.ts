@@ -1,3 +1,4 @@
+import * as ble from '@/features/ble';
 import http from 'http';
 import { log } from './logger';
 export function init(server: http.Server) {
@@ -11,6 +12,7 @@ export function init(server: http.Server) {
     });
 
     function closeApp() {
+        ble.close();
         server.close(() => {
             log.info('HTTP server closed');
         });
