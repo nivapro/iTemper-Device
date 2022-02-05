@@ -31,12 +31,12 @@ export function close() {
   stopAdvertising();
   log.info('Bluetooth GATT services closed');
 }
-export function init() {
+export async function init() {
     log.debug('ble.init');
     Settings.onChange(Settings.SERIAL_NUMBER, (setting: Setting) => {
       log.info('ble.init: new SERIAL_NUMBER=' + setting.value.toString());
       advertisment.setLocalName(AdvertisedName());
     });
-    gatt.init();
+    await gatt.init();
     startAdvertising();
 }

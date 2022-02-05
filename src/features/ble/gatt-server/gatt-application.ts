@@ -1,6 +1,6 @@
 import * as characteristic from './gatt-characteristic';
 
-import { systemBus } from './gatt-constants';
+import * as constants from './gatt-constants';
 import * as descriptor from './gatt-descriptor';
 import * as service from './gatt-service';
 
@@ -17,7 +17,7 @@ export class Application extends dbus.interface.Interface  {
     _services: service.Service[] = [];
     _servicePathIndex = 0;
     constructor(private path: string,
-                private bus: dbus.MessageBus = systemBus) {
+                private bus: dbus.MessageBus = constants.systemBus) {
         super('org.freedesktop.DBus.ObjectManager');
     }
     // Properties & Methods of the interface org.freedesktop.DBus.ObjectManager
@@ -43,7 +43,8 @@ export class Application extends dbus.interface.Interface  {
     public getServices(): service.Service[] {
         return this._services;
     }
-    public publish(): void {
+    public async publish(): Promise<void> {
+        await this.bus.requestName(constants.ITEMPER_NAMESPACE, 0);
         const members: DbusMembers  = {
             methods: {
                 GetManagedObjects: {

@@ -37,7 +37,7 @@ wifi.init();
 if (conf.BLUETOOTH) {
     log.info('Enabling Bluetooth support');
     ruuvi.init();
-    ble.init();
+    await ble.init();
 } else {
     log.info('No Bluetooth support');
 }
