@@ -1,7 +1,8 @@
-
 import { Application } from './gatt-application';
 import { Characteristic } from './gatt-characteristic';
 import { Service } from './gatt-service';
+
+import { log } from './../../../core/logger';
 
 const DOMAIN = '/io/itemper';
 const SERVICE0_UUID = '1ad01b31-dd4b-478c-9aa3-12bd90900000';
@@ -20,10 +21,13 @@ class Characteristic0 extends Characteristic {
     }
 }
 const characteristic0 = new Characteristic0();
-characteristic0.on('message', (msg) => console.log (JSON.stringify(msg)));
 
 // Publish on DBus
-app.publish();
+export function init() {
+    app.publish();
+    log.debug('characteristic0 properties:' + JSON.stringify(characteristic0.getProperties));
+    log.debug('service0 properties:' + JSON.stringify(service0.getProperties));
+}
 
 
 
