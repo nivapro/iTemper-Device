@@ -23,7 +23,7 @@
         "start_dev": "node -r dotenv/config build/app.js",
         "desktop": "electron build/main.js",
         "build": "tsc -p .",
-        "gulp": "gulp build",
+        "gulp": "rm -rf ./build && gulp build",
         "watch": "gulp watch",
         "lint": "tslint -t stylish -c tslint.json \"src/**/*.ts\""
     },
