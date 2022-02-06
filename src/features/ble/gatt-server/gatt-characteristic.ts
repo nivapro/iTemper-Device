@@ -79,7 +79,7 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
                     access: dbus.interface.ACCESS_READ,
                 },
                 Descriptors: {
-                    signature: 'a{ss}',
+                    signature: 'ao',
                     access: dbus.interface.ACCESS_READ,
                 },
             },
@@ -124,7 +124,7 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
     }
     protected get Descriptors(): string[] {
         const result: string[] = [];
-        this._descriptors.map(desc => result.push(desc.getPath()));
+        this._descriptors.forEach(desc => result.push(desc.getPath()));
         return result;
     }
     // Methods of the GATTCharacteristic1 interface
