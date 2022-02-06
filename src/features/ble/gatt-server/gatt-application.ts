@@ -21,7 +21,7 @@ export class Application extends dbus.interface.Interface  {
         super('org.freedesktop.DBus.ObjectManager');
     }
     // Properties & Methods of the interface org.freedesktop.DBus.ObjectManager
-    protected GetManagedObjects() {
+    private GetManagedObjects() {
         const response: ManagedObjects = {};
         this._services.forEach ((serv) => {
             response[serv.getPath()] = serv.getProperties();
@@ -55,7 +55,7 @@ export class Application extends dbus.interface.Interface  {
         };
         dbus.interface.Interface.configureMembers(members);
         this.bus.export(this.path, this);
-        this._services.forEach((serv) => serv.publish());
+        // this._services.forEach((serv) => serv.publish());
         this.bus.requestName('io.itemper', 0);
     }
 }

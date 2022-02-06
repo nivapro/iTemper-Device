@@ -19,8 +19,7 @@ export interface Properties {
 export interface Dict {
     [iface: string]: Properties;
 }
-export abstract class Descriptor {
-    GATT_DESC_IFACE = 'org.bluez.GattDescriptor1';
+export abstract class Descriptor extends dbus.interface.Interface {
     _path: string = '';
     _descriptors: Descriptor[] =[];
     _iface: dbus.interface.Interface;
@@ -29,6 +28,7 @@ export abstract class Descriptor {
                 private flags: FlagArray,
                 private characteristic: Characteristic,
                 private bus: dbus.MessageBus = constants.systemBus) {
+                    super(constants.GATT_DESCRIPTOR_INTERFACE);
             this.characteristic.addDescriptor(this);
     }
     public getPath(): string {
@@ -39,7 +39,7 @@ export abstract class Descriptor {
     }
     public getProperties(): Dict {
         const properties: Dict  = {};
-        properties[this.GATT_DESC_IFACE] =  {
+        properties[constants.GATT_DESCRIPTOR_INTERFACE] = {
             Characteristic: this.Characteristic,
             UUID: this.UUID,
             Flags: this.Flags,
@@ -47,7 +47,6 @@ export abstract class Descriptor {
         return properties;
     }
     public publish(): void {
-        this._iface = new dbus.interface.Interface(this.GATT_DESC_IFACE);
         const members: DbusMembers  = {
             properties: {
                 Characteristic: {
@@ -76,20 +75,20 @@ export abstract class Descriptor {
         this.bus.export(this.getPath(), this._iface);
     }
         // Properties of the GATTCharacteristic1 interface, use org.freedesktop.DBus.Properties to Get and GetAll
-    protected get Characteristic(): string {
+    private get Characteristic(): string {
         return this.characteristic.getPath();
     }
-    protected get UUID(): string {
+    private get UUID(): string {
         return this.uuid;
     }
-    protected get Flags(): FlagArray {
+    private get Flags(): FlagArray {
         return this.flags;
     }
-    protected ReadValue(): void {
+    private ReadValue(): void {
         throw Error();
     }
 
-    protected WriteValue(value: Buffer): void {
+    private WriteValue(value: Buffer): void {
         throw Error(value.toString());
     }
 }

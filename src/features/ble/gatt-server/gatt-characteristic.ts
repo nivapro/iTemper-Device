@@ -31,12 +31,14 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
     _path: string = '';
     _descriptors: Descriptor[] =[];
     _descriptorIndex = 0;
+    self: Characteristic;
     constructor(
                 private uuid: string,
                 private flags: FlagArray,
                 private service: Service,
                 private bus: dbus.MessageBus = constants.systemBus) {
         super(constants.GATT_CHARACTERISTIC_INTERFACE);
+        this.self = this;
         this.service.addCharacteristic(this);
     }
 
@@ -59,7 +61,7 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
             Service: this.Service,
             UUID: this.UUID,
             Flags: this.Flags,
-            Descriptors: [],
+            Descriptors: this.Descriptors,
         };
         return properties;
     }
@@ -100,8 +102,8 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
             },
         };
         dbus.interface.Interface.configureMembers(members);
-        this.bus.export(this.getPath(), this);
-        this._descriptors.forEach((desc) => desc.publish());
+        this.bus.export(this.getPath(), this.self);
+        // this._descriptors.forEach((desc) => desc.publish());
         // const signalMembers: DbusMembers = {
         //     signals: {
         //         PropertiesChanged: {
@@ -113,16 +115,16 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
         // dbus.interface.Interface.configureMembers(signalMembers);
     }
     // Properties of org.freedesktop.DBus.Properties.Get | GetAll
-    protected get Service(): string {
+    private get Service(): string {
         return this.service.getPath();
     }
-    protected get UUID(): string {
+    private get UUID(): string {
         return this.uuid;
     }
-    protected get Flags(): FlagArray {
+    private get Flags(): FlagArray {
         return this.flags;
     }
-    protected get Descriptors(): string[] {
+    private get Descriptors(): string[] {
         const result: string[] = [];
         this._descriptors.forEach(desc => result.push(desc.getPath()));
         return result;

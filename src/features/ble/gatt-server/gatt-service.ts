@@ -32,11 +32,13 @@ export class Service extends dbus.interface.Interface implements GATTService1 {
     _characteristics: Characteristic[] = [];
     _path: string = '';
     _charPathIndex = 0;
+    self: Service;
     constructor(private uuid: string,
                 private application: Application,
                 private primary: boolean = true,
                 private bus: dbus.MessageBus = constants.systemBus) {
         super(GATT_SERVICE_INTERFACE);
+        this.self = this;
         this.application.addService(this);
     }
     // Methods for adding characteristics and publishing the interface on DBus.
@@ -65,18 +67,17 @@ export class Service extends dbus.interface.Interface implements GATTService1 {
             },
         };
         dbus.interface.Interface.configureMembers(members);
-        this.bus.export(this.getPath(), this);
-        this._characteristics.forEach((char) => char.publish());
+        this.bus.export(this.getPath(), this.self);
+        // this._characteristics.forEach((char) => char.publish());
     }
     // Properties of the GATTService1 interface, use org.freedesktop.DBus.Properties to Get and GetAll
-    protected get UUID(): string {
+    private get UUID(): string {
         return this.uuid;
     }
-
-    protected get Primary(): boolean {
+    private get Primary(): boolean {
         return this.primary;
     }
-    protected get Characteristics(): string[] {
+    private get Characteristics(): string[] {
         const result: string[] = [];
         this._characteristics.forEach(char => result.push(char.getPath()));
         return result;
@@ -86,7 +87,7 @@ export class Service extends dbus.interface.Interface implements GATTService1 {
     // Assumes dbus-next handles GetAll on org.freedesktop.DBus.Properties.
     public getProperties(): Dict {
         const properties: Dict  = {};
-        properties[GATT_SERVICE_INTERFACE] =  { UUID: this.UUID, Primary: this.Primary,  Characteristics: [] };
+        properties[GATT_SERVICE_INTERFACE] =  { UUID: this.UUID, Primary: this.Primary,  Characteristics: this.Characteristics};
         return properties;
     }
     public getPath(): string {
