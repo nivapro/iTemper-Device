@@ -44,7 +44,7 @@ export class Application extends dbus.interface.Interface  {
         return this._services;
     }
     public async publish(): Promise<void> {
-        await this.bus.requestName(constants.ITEMPER_NAMESPACE, 0);
+        await this.bus.requestName(constants.BUS_NAME, 0);
         const members: DbusMembers  = {
             methods: {
                 GetManagedObjects: {
