@@ -15,6 +15,7 @@ interface Options {
     _ERROR_LEVEL?: string;
     _CONSOLE_LEVEL?: string;
     _HOSTNAME?: string;
+    _RUUVI_TAGS?: string;
     _SHARED_ACCESS_KEY?: string;
     _ITEMPER_CONFIG_FILE?: string;
     _ITEMPER_PERSIST_DIR?: string;
@@ -28,7 +29,7 @@ class Config {
     }
     private reset() {
         Config.env = {
-            _PRIMARY_SERVICE: process.env.PRIMARY_SERVICE || 'fff1',
+            _PRIMARY_SERVICE: process.env.PRIMARY_SERVICE || '',
             _COLOR: process.env.COLOR|| '#0000cc',
             _SERIAL_NUMBER: process.env.SERIAL_NUMBER || os.hostname(),
             _ITEMPER_URL : process.env.ITEMPER_URL,
@@ -40,6 +41,7 @@ class Config {
             _ERROR_LEVEL : process.env.ERROR_LEVEL,
             _CONSOLE_LEVEL : process.env.CONSOLE_LEVEL,
             _HOSTNAME : os.hostname(),
+            _RUUVI_TAGS: process.env.RUUVI_TAGS,
             _SHARED_ACCESS_KEY: process.env.SHARED_ACCESS_KEY,
             _ITEMPER_CONFIG_FILE: process.env.ITEMPER_CONFIG_FILE,
             _ITEMPER_PERSIST_DIR: process.env.ITEMPER_PERSIST_DIR,
@@ -47,7 +49,7 @@ class Config {
     }
     get PRIMARY_SERVICE() { return Config.env._PRIMARY_SERVICE || ''; }
     set PRIMARY_SERVICE(value: string) { Config.env._PRIMARY_SERVICE = value; }
-    get BLUETOOTH() { return  process.arch === 'arm' || process.arch === 'arm64'; }
+    get BLUETOOTH() :boolean { return (process.arch === 'arm' || process.arch === 'arm64'); }
     get COLOR() { return Config.env._COLOR || ''; }
     set COLOR(value: string) { Config.env._COLOR=value; }
 
@@ -78,6 +80,8 @@ class Config {
     get CONSOLE_LEVEL() { return Config.env._CONSOLE_LEVEL; }
 
     get HOSTNAME() { return Config.env._HOSTNAME; }
+
+    get RUUVI_TAGS(): boolean { return Config.env._RUUVI_TAGS?.toLowerCase() === 'true'; }
 
     public get SHARED_ACCESS_KEY(): string { return Config.env._SHARED_ACCESS_KEY || ''; }
     public set SHARED_ACCESS_KEY(value: string) { Config.env._SHARED_ACCESS_KEY=value; this.saveSharedKey(value); }
