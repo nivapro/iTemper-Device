@@ -19,7 +19,7 @@
         "lib": ["es2017", "dom", "scripthost"],
         "target": "es2017",
         "noUnusedParameters": true,
-        "noUnusedLocals": true,
+//        "noUnusedLocals": true,
         "moduleResolution": "node",
         "esModuleInterop": true
     },
