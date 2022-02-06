@@ -78,7 +78,7 @@ export class Service extends dbus.interface.Interface implements GATTService1 {
     }
     protected get Characteristics(): string[] {
         const result: string[] = [];
-        this._characteristics.map(char => result.push(char.getPath()));
+        this._characteristics.forEach(char => result.push(char.getPath()));
         return result;
     }
 
