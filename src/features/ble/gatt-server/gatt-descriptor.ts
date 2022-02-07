@@ -24,7 +24,7 @@ export abstract class Descriptor extends dbus.interface.Interface {
     _path: string = '';
     _descriptors: Descriptor[] =[];
     _iface: dbus.interface.Interface;
-    _value: Buffer;
+    _value: Buffer = Buffer.from([0]);
 
     constructor(private uuid: string,
                 private flags: FlagArray,
@@ -44,6 +44,7 @@ export abstract class Descriptor extends dbus.interface.Interface {
         properties[constants.GATT_DESCRIPTOR_INTERFACE] = {
             Characteristic: this.Characteristic,
             UUID: this.UUID,
+            Value: this.Value,
             Flags: this.Flags,
         };
         return properties;
@@ -56,6 +57,10 @@ export abstract class Descriptor extends dbus.interface.Interface {
                     access: dbus.interface.ACCESS_READ,
                 },
                 UUID: {
+                    signature: 's',
+                    access: dbus.interface.ACCESS_READ,
+                },
+                Value: {
                     signature: 's',
                     access: dbus.interface.ACCESS_READ,
                 },
@@ -73,7 +78,7 @@ export abstract class Descriptor extends dbus.interface.Interface {
                 },
             },
         };
-        dbus.interface.Interface.configureMembers(members);
+        Descriptor.configureMembers(members);
         this.bus.export(this.getPath(), this._iface);
     }
         // Properties of the GATTCharacteristic1 interface, use org.freedesktop.DBus.Properties to Get and GetAll
@@ -82,6 +87,9 @@ export abstract class Descriptor extends dbus.interface.Interface {
     }
     private get UUID(): string {
         return this.uuid;
+    }
+    private get Value(): Buffer {
+        return this._value;
     }
     private get Flags(): FlagArray {
         return this.flags;
