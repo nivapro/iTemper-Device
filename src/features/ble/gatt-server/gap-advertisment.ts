@@ -28,7 +28,14 @@ export class Adertisement extends dbus.interface.Interface {
     public setLocalName(name: string): void {
         this._localName = name;
     }
-    public publish(): void {
+    public async publish(): Promise<void> {
+        const bus = constants.systemBus;
+        const adapterPath = constants.BLUEZ_NAMESPACE + constants.ADAPTER_NAME;
+        const advertisingManagerObject = 
+         await this._bus.getProxyObject(constants.BLUEZ_SERVICE_NAME, adapterPath);
+         const advertisingmanager =  advertisingManagerObject.getInterface(constants.GATT_MANAGER_INTERFACE);
+         advertisingmanager.RegisterApplication(this._path);
+
         const members: DbusMembers  = {
             properties: {
                 Type: {
@@ -85,7 +92,7 @@ export class Adertisement extends dbus.interface.Interface {
         //         access: dbus.interface.ACCESS_READ,
         //     };
         // }
-        dbus.interface.Interface.configureMembers(members);
+        Adertisement.configureMembers(members);
         this._bus.export(this.getPath(), this);
     }
     public get Type(): AdvertisingType {
@@ -128,5 +135,8 @@ export class Adertisement extends dbus.interface.Interface {
     }
     public setPath(path: string) {
         this._path = path;
+    }
+    public startAdvertising() {
+
     }
 }
