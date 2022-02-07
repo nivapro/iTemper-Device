@@ -27,6 +27,12 @@ type DbusMembers = {
     methods?: { [key: string]: dbus.interface.MethodOptions },
     signals?: { [key: string]: dbus.interface.SignalOptions }
 };
+
+class NotSupportedDBusError extends dbus.DBusError {
+    constructor(public text: string) {
+        super('org.bluez.Error.NotSupported', constants.GATT_CHARACTERISTIC_INTERFACE + ': ' + text);
+    }
+}
 export class Characteristic extends dbus.interface.Interface implements GATTCharacteristic1  {
     _path: string = '';
     _descriptors: Descriptor[] =[];
@@ -84,10 +90,6 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
                     signature: 'as',
                     access: dbus.interface.ACCESS_READ,
                 },
-                MTU: {
-                    signature: 'q',
-                    access: dbus.interface.ACCESS_READ,
-                },
             },
             methods: {
                 ReadValue: {
@@ -137,15 +139,15 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
     }
     // Methods of the GATTCharacteristic1 interface
     protected ReadValue(): Buffer {
-        throw Error();
+        throw new NotSupportedDBusError('ReadValue');
     }
     protected WriteValue(value: Buffer): void {
-        throw Error(value.toString());
+        throw new NotSupportedDBusError('WriteValue, value=: ' + value.toString());
     }
     protected StartNotify(): void {
-        throw Error();
+        throw new NotSupportedDBusError('StartNotify');
     }
     protected StopNotify(): void {
-        throw Error();
+        throw new NotSupportedDBusError('StopNotify');
     }
 }
