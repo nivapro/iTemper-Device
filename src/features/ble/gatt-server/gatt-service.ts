@@ -62,9 +62,9 @@ export class Service extends dbus.interface.Interface implements GATTService1 {
                 },
             },
         };
-        dbus.interface.Interface.configureMembers(members);
+        Service.configureMembers(members);
         this.bus.export(this.getPath(), this.self);
-        // this._characteristics.forEach((char) => char.publish());
+        this._characteristics.forEach((char) => char.publish());
     }
     // Properties of the GATTService1 interface, use org.freedesktop.DBus.Properties to Get and GetAll
     private get UUID(): string {
