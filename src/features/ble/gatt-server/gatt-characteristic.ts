@@ -106,8 +106,9 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
                 },
             },
         };
-        dbus.interface.Interface.configureMembers(members);
+        Characteristic.configureMembers(members);
         this.bus.export(this.getPath(), this.self);
+        this._descriptors.forEach(desc => desc.publish());
         // this._descriptors.forEach((desc) => desc.publish());
         // const signalMembers: DbusMembers = {
         //     signals: {
