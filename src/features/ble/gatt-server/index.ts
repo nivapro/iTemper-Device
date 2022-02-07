@@ -12,18 +12,20 @@ const CHARACTERISTIC1_UUID = '1ad01b31-dd4b-478c-9aa3-12bd90900002';
 class Characteristic0 extends Characteristic {
     constructor() {
         super(CHARACTERISTIC0_UUID, ['Read'], service0);
+        this.overrideReadValue (this.ReadValue);
     }
     protected ReadValue(): Buffer {
-        const value = 'Hej hopp i lingonskogen 1';
+        const value = 'Hej hopp i lingonskogen 0';
         return Buffer.from(value);
     }
 }
 class Characteristic1 extends Characteristic {
     constructor() {
         super(CHARACTERISTIC1_UUID, ['Read'], service0);
+        this.overrideReadValue (this.ReadValue);
     }
     protected ReadValue(): Buffer {
-        const value = 'Hej hopp i lingonskogen 2';
+        const value = 'Hej hopp i lingonskogen 1';
         return Buffer.from(value);
     }
 }

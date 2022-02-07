@@ -28,10 +28,12 @@ class NotSupportedDBusError extends dbus.DBusError {
         super('org.bluez.Error.NotSupported', constants.GATT_CHARACTERISTIC_INTERFACE + ': ' + text);
     }
 }
+type ReadValueFn = () => Buffer;
 export class Characteristic extends dbus.interface.Interface implements GATTCharacteristic1  {
     _path: string = '';
     _descriptors: Descriptor[] =[];
     _descriptorIndex = 0;
+    _readValueFn: ReadValueFn;
     self: Characteristic;
     constructor(
                 private uuid: string,
@@ -88,11 +90,11 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
             },
             methods: {
                 ReadValue: {
-                    inSignature: 'a{sv}',
+                    inSignature: '',
                     outSignature: 'ay',
                 },
                 WriteValue: {
-                    inSignature: 'aya{sv}',
+                    inSignature: 'ay',
                     outSignature: '',
                 },
                 StartNotify: {
@@ -123,8 +125,16 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
         return result;
     }
     // Methods of the GATTCharacteristic1 interface
+    public overrideReadValue(fn: ReadValueFn) {
+        this._readValueFn = fn;
+    }
     protected ReadValue(): Buffer {
-        throw new NotSupportedDBusError('ReadValue');
+        if (this._readValueFn !== undefined) {
+            return this._readValueFn();
+        } else {
+            throw new NotSupportedDBusError('ReadValue');
+        }
+
     }
     protected WriteValue(value: Buffer): void {
         throw new NotSupportedDBusError('WriteValue, value=: ' + value.toString());
