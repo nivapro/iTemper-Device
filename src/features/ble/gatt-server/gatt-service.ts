@@ -64,7 +64,7 @@ export class Service extends dbus.interface.Interface implements GATTService1 {
         };
         Service.configureMembers(members);
         this.bus.export(this.getPath(), this.self);
-        this._characteristics.forEach((char) => char.publish());
+        this._characteristics.forEach(char => char.publish());
     }
     // Properties of the GATTService1 interface, use org.freedesktop.DBus.Properties to Get and GetAll
     private get UUID(): string {
@@ -78,7 +78,9 @@ export class Service extends dbus.interface.Interface implements GATTService1 {
     // Assumes dbus-next handles GetAll on org.freedesktop.DBus.Properties.
     public getProperties(): Dict {
         const properties: Dict  = {};
-        properties[GATT_SERVICE_INTERFACE] =  { UUID: this.UUID, Primary: this.Primary,  Characteristics: this.Characteristics};
+        const charPaths: string[] = [];
+        this._characteristics.forEach(char => charPaths.push(char.getPath()));
+        properties[GATT_SERVICE_INTERFACE] =  { UUID: this.UUID, Primary: this.Primary,  Characteristics: charPaths};
         return properties;
     }
     public getPath(): string {
