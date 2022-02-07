@@ -25,8 +25,6 @@ const characteristic0 = new Characteristic0();
 // Publish on DBus
 export async function init() {
     await app.publish();
-    await service0.publish();
-    await characteristic0.publish();
     log.info('characteristic0 properties:' + JSON.stringify(characteristic0.getProperties()));
     log.info('service0 properties:' + JSON.stringify(service0.getProperties()));
 }
