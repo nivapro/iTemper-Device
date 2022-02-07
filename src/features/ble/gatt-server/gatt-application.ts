@@ -49,7 +49,7 @@ export class Application extends dbus.interface.Interface  {
             methods: {
                 GetManagedObjects: {
                     inSignature: '',
-                    outSignature: 'a{oa{sa{sv}}}',
+                    outSignature: 'a{oa{sa{ss}}}',
                 },
             },
         };

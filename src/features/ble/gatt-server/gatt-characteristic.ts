@@ -2,8 +2,9 @@ import dbus from 'dbus-next';
 import * as constants from './gatt-constants';
 import { Descriptor } from './gatt-descriptor';
 import { Service } from './gatt-service';
+import { DbusMembers } from './gatt-utils';
 
-type Flag = 'Read' | 'Notify';
+type Flag = 'Read' | 'write' | 'Notify';
 type FlagArray = Flag[];
 
 export interface Properties {
@@ -22,12 +23,6 @@ export interface GATTCharacteristic1 {
     getProperties(): Dict;
     publish(): void;
 }
-type DbusMembers = {
-    properties?: { [key: string]: dbus.interface.PropertyOptions},
-    methods?: { [key: string]: dbus.interface.MethodOptions },
-    signals?: { [key: string]: dbus.interface.SignalOptions }
-};
-
 class NotSupportedDBusError extends dbus.DBusError {
     constructor(public text: string) {
         super('org.bluez.Error.NotSupported', constants.GATT_CHARACTERISTIC_INTERFACE + ': ' + text);
@@ -111,16 +106,6 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
         Characteristic.configureMembers(members);
         this.bus.export(this.getPath(), this.self);
         this._descriptors.forEach(desc => desc.publish());
-        // this._descriptors.forEach((desc) => desc.publish());
-        // const signalMembers: DbusMembers = {
-        //     signals: {
-        //         PropertiesChanged: {
-        //             signature: 'sa{sv}as',
-        //         },
-        //     },
-        // };
-        // this._dbusIface = new dbus.interface.Interface(constants.DBUS_PROP_IFACE);
-        // dbus.interface.Interface.configureMembers(signalMembers);
     }
     // Properties of org.freedesktop.DBus.Properties.Get | GetAll
     private get Service(): string {
