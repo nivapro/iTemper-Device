@@ -60,10 +60,6 @@ export class Service extends dbus.interface.Interface implements GATTService1 {
                     signature: 'b',
                     access: dbus.interface.ACCESS_READ,
                 },
-                Characteristics: {
-                    signature: 'as',  // or an 'o' signature?
-                    access: dbus.interface.ACCESS_READ,
-                },
             },
         };
         dbus.interface.Interface.configureMembers(members);
@@ -76,11 +72,6 @@ export class Service extends dbus.interface.Interface implements GATTService1 {
     }
     private get Primary(): boolean {
         return this.primary;
-    }
-    private get Characteristics(): string[] {
-        const result: string[] = [];
-        this._characteristics.forEach(char => result.push(char.getPath()));
-        return result;
     }
 
     // getAllProperties is used when implementing org.freedesktop.DBus.GetManagedObjects.

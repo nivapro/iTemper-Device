@@ -68,30 +68,35 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
     public publish(): void {
         const members: DbusMembers  = {
             properties: {
+                UUID: {
+                    signature: 's',
+                    access: dbus.interface.ACCESS_READ,
+                },
                 Service: {
                     signature: 'o',
                     access: dbus.interface.ACCESS_READ,
                 },
-                UUID: {
-                    signature: 's',
+                Value: {
+                    signature: 'ay',
                     access: dbus.interface.ACCESS_READ,
                 },
                 Flags: {
                     signature: 'as',
                     access: dbus.interface.ACCESS_READ,
                 },
-                Descriptors: {
-                    signature: 'ao',
+                MTU: {
+                    signature: 'q',
                     access: dbus.interface.ACCESS_READ,
                 },
             },
             methods: {
                 ReadValue: {
-                    inSignature: '',
+                    inSignature: 'a{sv}',
                     outSignature: 'ay',
                 },
                 WriteValue: {
-                    inSignature: 'ay',
+                    inSignature: 'aya{sv}',
+                    outSignature: '',
                 },
                 StartNotify: {
                     inSignature: '',

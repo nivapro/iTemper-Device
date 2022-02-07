@@ -12,8 +12,9 @@ type DbusMembers = {
     signals?: { [key: string]: dbus.interface.SignalOptions }
 };
 export interface Properties {
-    Characteristic: dbus.ObjectPath;
     UUID: string;
+    Characteristic: dbus.ObjectPath;
+    Value: Buffer;
     Flags: FlagArray;
 }
 export interface Dict {
@@ -23,6 +24,7 @@ export abstract class Descriptor extends dbus.interface.Interface {
     _path: string = '';
     _descriptors: Descriptor[] =[];
     _iface: dbus.interface.Interface;
+    _value: Buffer;
 
     constructor(private uuid: string,
                 private flags: FlagArray,
