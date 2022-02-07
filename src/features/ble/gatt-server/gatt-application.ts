@@ -53,9 +53,9 @@ export class Application extends dbus.interface.Interface  {
                 },
             },
         };
-        dbus.interface.Interface.configureMembers(members);
+        Application.configureMembers(members);
         this.bus.export(this.path, this);
-        // this._services.forEach((serv) => serv.publish());
+        this._services.forEach((serv) => serv.publish());
         this.bus.requestName('io.itemper', 0);
     }
 }
