@@ -9,6 +9,10 @@ import * as gatt from './gatt-server';
 import { log } from '../../core/logger';
 import { Setting, Settings } from '../../core/settings';
 
+const m = "ble"
+function label(f: string = ""){
+    return m + "." + f + ": ";
+} 
 const advertisment = new Adertisement('/io/itemper', 0);
 
 const namePrefix = 'itemper ';
@@ -17,10 +21,15 @@ function AdvertisedName() {
   return namePrefix + Settings.get(Settings.SERIAL_NUMBER).value.toString();
 }
 async function startAdvertising() {
-  log.info('ble.startAdvertising...');
-  advertisment.addServiceUUID(uuids.getUuid(uuids.UUID_Designator.PrimaryService));
-  advertisment.setLocalName(AdvertisedName());
-  await advertisment.publish();
+  try{
+    advertisment.addServiceUUID(uuids.getUuid(uuids.UUID_Designator.PrimaryService));
+    advertisment.setLocalName(AdvertisedName());
+    await advertisment.publish();
+    log.info(label("startAdvertising") + "Completed");
+  } catch (e){
+    log.error(label("startAdvertising") + "error="+ JSON.stringify(e));
+  } 
+
 
   // bleno.startAdvertising(name, [DeviceInfoService.UUID]);
 }
@@ -43,6 +52,12 @@ export async function init() {
       } 
 
     });
-    await gatt.init();
-    startAdvertising();
+    try{
+      await gatt.init();
+      startAdvertising();
+      log.info(label("init") + "Completed");
+    } catch (e){
+      log.error(label("init") + "error="+ JSON.stringify(e));
+    } 
+
 }

@@ -41,6 +41,9 @@ export class Adertisement extends dbus.interface.Interface {
         try {
             const advertisingManagerObject = await this._bus.getProxyObject(constants.BLUEZ_SERVICE_NAME, adapterPath);
             const advertisingmanager =  advertisingManagerObject.getInterface(constants.GATT_MANAGER_INTERFACE);
+            advertisingmanager.on('message', (msg) =>{
+                log.info(label("publish.on.") + "Received message=" + JSON.stringify(msg));
+            } );
             advertisingmanager.RegisterApplication(this._path,{});
             log.info(label("publish") + "Registered application, path=" + this._path);
         } catch(e){

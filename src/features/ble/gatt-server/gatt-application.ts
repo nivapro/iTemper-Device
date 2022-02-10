@@ -1,6 +1,7 @@
 import * as characteristic from './gatt-characteristic';
 
 import * as constants from './gatt-constants';
+import { log } from '../../../core/logger';
 import * as descriptor from './gatt-descriptor';
 import * as service from './gatt-service';
 
@@ -12,6 +13,10 @@ export interface ManagedObjects {
     [key: string]: service.Dict | characteristic.Dict | descriptor.Dict;
 }
 
+const m = "gatt-application"
+function label(f: string = ""){
+    return m + "." + f + ": ";
+} 
 // org.bluez.GattApplication1 interface implementation
 export class Application extends dbus.interface.Interface  {
     _services: service.Service[] = [];
@@ -44,18 +49,24 @@ export class Application extends dbus.interface.Interface  {
         return this._services;
     }
     public async publish(): Promise<void> {
-        await this.bus.requestName(constants.BUS_NAME, 0);
-        const members: DbusMembers  = {
-            methods: {
-                GetManagedObjects: {
-                    inSignature: '',
-                    outSignature: 'a{oa{sa{ss}}}',
+        try{
+            await this.bus.requestName(constants.BUS_NAME, 0);
+            const members: DbusMembers  = {
+                methods: {
+                    GetManagedObjects: {
+                        inSignature: '',
+                        outSignature: 'a{oa{sa{ss}}}',
+                    },
                 },
-            },
-        };
-        Application.configureMembers(members);
-        this.bus.export(this.path, this);
-        this._services.forEach((serv) => serv.publish());
-        this.bus.requestName('io.itemper', 0);
+            };
+            Application.configureMembers(members);
+            this.bus.export(this.path, this);
+            this._services.forEach((serv) => serv.publish());
+            this.bus.requestName('io.itemper', 0);
+        }
+        catch (e){
+            log.error(label("publish") + "error=" + JSON.stringify(e));
+        }  
+
     }
 }
