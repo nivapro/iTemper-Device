@@ -44,17 +44,17 @@ export function close() {
 }
 export async function init() {
     log.debug('ble.init');
-    Settings.onChange(Settings.SERIAL_NUMBER, (setting: Setting) => {
+    Settings.onChange(Settings.SERIAL_NUMBER, async (setting: Setting) => {
       log.info('ble.init: new SERIAL_NUMBER=' + setting.value.toString());
       if(advertisment.isAdvertising()){
         stopAdvertising();
-        startAdvertising();
+        await startAdvertising();
       } 
 
     });
     try{
       await gatt.init();
-      startAdvertising();
+      await startAdvertising();
       log.info(label("init") + "Completed");
     } catch (e){
       log.error(label("init") + "error="+ JSON.stringify(e));
