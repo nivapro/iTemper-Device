@@ -16,6 +16,7 @@ export class Adertisement extends dbus.interface.Interface {
     _localName: string= '';
     _data: Buffer;
     _path: string = '';
+    _discoverable: boolean = false;
     _isAdvertising: boolean = false;
     constructor(path: string,
                 index: number = 0,
@@ -37,14 +38,14 @@ export class Adertisement extends dbus.interface.Interface {
     public async publish(): Promise<void> {
         const bus = constants.systemBus;
         const adapterPath = constants.BLUEZ_NAMESPACE + constants.ADAPTER_NAME;
-        
+        this._discoverable = true;
         try {
             const advertisingManagerObject = await this._bus.getProxyObject(constants.BLUEZ_SERVICE_NAME, adapterPath);
             const advertisingmanager =  advertisingManagerObject.getInterface(constants.GATT_MANAGER_INTERFACE);
             advertisingmanager.on('message', (msg) =>{
                 log.info(label("publish.on.") + "Received message=" + JSON.stringify(msg));
             } );
-            advertisingmanager.RegisterApplication(this._path,{});
+            await advertisingmanager.RegisterApplication(this._path,{});
             log.info(label("publish") + "Registered application, path=" + this._path);
         } catch(e){
             log.error(label("publish") + "Registered application, error=" + JSON.stringify(e));
@@ -60,6 +61,10 @@ export class Adertisement extends dbus.interface.Interface {
                     signature: 's',
                     access: dbus.interface.ACCESS_READ,
                 },
+                Discoverable: {
+                    signature: 'b',
+                    access: dbus.interface.ACCESS_READ,
+                },
             },
             methods: {
                 Release: {
@@ -68,44 +73,49 @@ export class Adertisement extends dbus.interface.Interface {
                 },
             },
         };
-        // TODO: Add and test this:
-        //
-        // if (this._serviceUUIDs !== [] && members.properties) {
-        //     members.properties['ServiceUUIDs'] = {
-        //         signature: 'as',
-        //         access: dbus.interface.ACCESS_READ,
-        //     };
-        // }
-        // if (this._solicitUUIDs !== [] && members.properties) {
-        //     members.properties['SolicitUUIDs'] = {
-        //         signature: 'as',
-        //         access: dbus.interface.ACCESS_READ,
-        //     };
-        // }
-        // if (this._manufacturerData && members.properties) {
-        //     members.properties['ManufacturerData'] = {
-        //         signature: 'a{qv}',
-        //         access: dbus.interface.ACCESS_READ,
-        //     };
-        // }
-        // if (this._serviceData && members.properties) {
-        //     members.properties['ServiceData'] = {
-        //         signature: 'a{sv}',
-        //         access: dbus.interface.ACCESS_READ,
-        //     };
-        // }
-        // if (this._includeTYxPower && members.properties) {
-        //     members.properties['Includes'] = {
-        //         signature: 'as',
-        //         access: dbus.interface.ACCESS_READ,
-        //     };
-        // }
-        // if (this._data && members.properties) {
-        //     members.properties['ServiceData'] = {
-        //         signature: 'a{yv}',
-        //         access: dbus.interface.ACCESS_READ,
-        //     };
-        // }
+        
+        if (this._serviceUUIDs !== [] && members.properties) {
+            members.properties['ServiceUUIDs'] = {
+                signature: 'as',
+                access: dbus.interface.ACCESS_READ,
+            };
+        }
+        if (this._solicitUUIDs !== [] && members.properties) {
+            members.properties['SolicitUUIDs'] = {
+                signature: 'as',
+                access: dbus.interface.ACCESS_READ,
+            };
+        }
+        if (this._manufacturerData && members.properties) {
+            members.properties['ManufacturerData'] = {
+                signature: 'a{qv}',
+                access: dbus.interface.ACCESS_READ,
+            };
+        }
+        if (this._serviceData && members.properties) {
+            members.properties['ServiceData'] = {
+                signature: 'a{sv}',
+                access: dbus.interface.ACCESS_READ,
+            };
+        }
+        if (this._discoverable && members.properties) {
+            members.properties['ServiceData'] = {
+                signature: 'a{sv}',
+                access: dbus.interface.ACCESS_READ,
+            };
+        }
+        if (this._includeTYxPower && members.properties) {
+            members.properties['Includes'] = {
+                signature: 'as',
+                access: dbus.interface.ACCESS_READ,
+            };
+        }
+        if (this._data && members.properties) {
+            members.properties['ServiceData'] = {
+                signature: 'a{yv}',
+                access: dbus.interface.ACCESS_READ,
+            };
+        }
         try{
             Adertisement.configureMembers(members);
             this._bus.export(this.getPath(), this);
@@ -133,6 +143,9 @@ export class Adertisement extends dbus.interface.Interface {
     }
     public get LocalName(): string {
         return this._localName;
+    }
+    public get Discoverable(): boolean {
+        return this._discoverable;
     }
     public get Includes(): string[] {
         const includes: string[] = [];

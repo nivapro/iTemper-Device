@@ -8,6 +8,26 @@ import * as DBus from 'dbus-next';
 /**
  * Service: org.bluez
  * ObjectPath: /org/bluez/hci0
+ * Interface: org.freedesktop.DBus.Introspectable
+ */
+export interface OrgfreedesktopDBusIntrospectable extends DBus.ClientInterface {
+
+    /***** Properties *****/
+
+
+    /***** Methods *****/
+
+    //@method({ name: 'Introspect', inSignature: '', outSignature: 's' })
+    Introspect(): Promise<string>;
+
+
+    /***** Signals *****/
+
+}
+
+/**
+ * Service: org.bluez
+ * ObjectPath: /org/bluez/hci0
  * Interface: org.bluez.Adapter1
  */
 export interface Adapter1 extends DBus.ClientInterface {
@@ -59,9 +79,6 @@ export interface Adapter1 extends DBus.ClientInterface {
     //@property({ name: 'Modalias', signature: 's', access: ACCESS_READ })
     Modalias(): Promise<string>;
 
-    //@property({ name: 'Roles', signature: 'as', access: ACCESS_READ })
-    Roles(): Promise<Array<string>>;
-
 
     /***** Methods *****/
 
@@ -83,6 +100,34 @@ export interface Adapter1 extends DBus.ClientInterface {
 
     /***** Signals *****/
 
+}
+
+/**
+ * Service: org.bluez
+ * ObjectPath: /org/bluez/hci0
+ * Interface: org.freedesktop.DBus.Properties
+ */
+export interface OrgfreedesktopDBusProperties extends DBus.ClientInterface {
+
+    /***** Properties *****/
+
+
+    /***** Methods *****/
+
+    //@method({ name: 'Get', inSignature: 'ss', outSignature: 'v' })
+    Get(iface: string, name: string, ): Promise<DBus.Variant>;
+
+    //@method({ name: 'Set', inSignature: 'ssv', outSignature: '' })
+    Set(iface: string, name: string, value: DBus.Variant): Promise<void>;
+
+    //@method({ name: 'GetAll', inSignature: 's', outSignature: 'a{sv}' })
+    GetAll(iface: string, ): Promise<{[key: string]: DBus.Variant}>;
+
+
+    /***** Signals *****/
+
+    //@signal({ name: 'PropertiesChanged', signature: 'sa{sv}as' })
+    on(evt: "PropertiesChanged", cb: (iface: string, changed_properties: {[key: string]: DBus.Variant}, invalidated_properties: Array<string>) => void): this;
 }
 
 /**
@@ -200,5 +245,4 @@ export interface NetworkServer1 extends DBus.ClientInterface {
     /***** Signals *****/
 
 }
-
 

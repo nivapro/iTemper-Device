@@ -13,7 +13,7 @@ const XMLObjectData = `<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object I
 </method></interface><interface name="org.bluez.Adapter1"><method name="StartDiscovery"></method><method name="SetDiscoveryFilter"><arg name="properties" type="a{sv}" direction="in"/>
 </method><method name="StopDiscovery"></method><method name="RemoveDevice"><arg name="device" type="o" direction="in"/>
 </method><method name="GetDiscoveryFilters"><arg name="filters" type="as" direction="out"/>
-</method><property name="Address" type="s" access="read"></property><property name="AddressType" type="s" access="read"></property><property name="Name" type="s" access="read"></property><property name="Alias" type="s" access="readwrite"></property><property name="Class" type="u" access="read"></property><property name="Powered" type="b" access="readwrite"></property><property name="Discoverable" type="b" access="readwrite"></property><property name="DiscoverableTimeout" type="u" access="readwrite"></property><property name="Pairable" type="b" access="readwrite"></property><property name="PairableTimeout" type="u" access="readwrite"></property><property name="Discovering" type="b" access="read"></property><property name="UUIDs" type="as" access="read"></property><property name="Modalias" type="s" access="read"></property><property name="Roles" type="as" access="read"></property></interface><interface name="org.freedesktop.DBus.Properties"><method name="Get"><arg name="interface" type="s" direction="in"/>
+</method><property name="Address" type="s" access="read"></property><property name="AddressType" type="s" access="read"></property><property name="Name" type="s" access="read"></property><property name="Alias" type="s" access="readwrite"></property><property name="Class" type="u" access="read"></property><property name="Powered" type="b" access="readwrite"></property><property name="Discoverable" type="b" access="readwrite"></property><property name="DiscoverableTimeout" type="u" access="readwrite"></property><property name="Pairable" type="b" access="readwrite"></property><property name="PairableTimeout" type="u" access="readwrite"></property><property name="Discovering" type="b" access="read"></property><property name="UUIDs" type="as" access="read"></property><property name="Modalias" type="s" access="read"></property></interface><interface name="org.freedesktop.DBus.Properties"><method name="Get"><arg name="interface" type="s" direction="in"/>
 <arg name="name" type="s" direction="in"/>
 <arg name="value" type="v" direction="out"/>
 </method><method name="Set"><arg name="interface" type="s" direction="in"/>
@@ -44,6 +44,77 @@ const XMLObjectData = `<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object I
 <arg name="bridge" type="s" direction="in"/>
 </method><method name="Unregister"><arg name="uuid" type="s" direction="in"/>
 </method></interface></node>`;
+
+/**
+ * Service: org.bluez
+ * ObjectPath: /org/bluez/hci0
+ * Interface: org.freedesktop.DBus.Introspectable
+ */
+export class OrgfreedesktopDBusIntrospectable extends EventEmitter {
+
+    public readonly dbusInterfaceName = 'org.freedesktop.DBus.Introspectable';
+    public dbusObject: DBus.ProxyObject;
+    public propertiesDBusInterface: DBus.ClientInterface;
+    public thisDBusInterface: DBus.ClientInterface;
+
+    public static Connect(bus: DBus.MessageBus, objectPath: string = "/org/bluez/hci0", xml: string = XMLObjectData): Promise<OrgfreedesktopDBusIntrospectable> {
+        return bus.getProxyObject('org.bluez', objectPath, xml).then((obj) => new OrgfreedesktopDBusIntrospectable(obj));
+    }
+
+    constructor(dbusObject: DBus.ProxyObject) {
+        super();
+        this.dbusObject = dbusObject;
+        this.thisDBusInterface = this.dbusObject.getInterface('org.freedesktop.DBus.Introspectable');
+        this.propertiesDBusInterface = this.dbusObject.getInterface('org.freedesktop.DBus.Properties');
+
+        // forward property change events
+        const forwardPropertyChange = (iface: string, changed: any, invalidated: any) => {
+            if(iface === this.dbusInterfaceName) {
+                this.emit('PropertiesChanged', iface, changed, invalidated);
+            }
+        }
+
+        // forward all signals
+        this.on("newListener", (event: string, listener: (...args: any[]) => void) => {
+            if(event === "PropertiesChanged" && this.listenerCount('PropertiesChanged') === 0) {
+                this.propertiesDBusInterface.on('PropertiesChanged', forwardPropertyChange);
+            } else {
+                this.thisDBusInterface.on(event, listener);
+            }
+        });
+        this.on("removeListener", (event: string, listener: (...args: any[]) => void) => {
+            if(event === "PropertiesChanged" && this.listenerCount('PropertiesChanged') === 0) {
+                this.propertiesDBusInterface.removeListener('PropertiesChanged', forwardPropertyChange);
+            } else {
+                this.thisDBusInterface.removeListener(event, listener);
+            }
+        });
+    }
+
+    /***** Properties *****/
+
+    public getProperties(): Promise<{[name: string]: DBus.Variant}> {
+        return this.propertiesDBusInterface.GetAll(this.dbusInterfaceName);
+    }
+
+    public getProperty(name: string): Promise<DBus.Variant> {
+        return this.propertiesDBusInterface.Get(this.dbusInterfaceName, name);
+    }
+
+    public setProperty(name: string, value: DBus.Variant): Promise<void> {
+        return this.propertiesDBusInterface.Set(this.dbusInterfaceName, name, value);
+    }
+
+
+    /***** Methods *****/
+
+    //@method({ name: 'Introspect', inSignature: '', outSignature: 's' })
+    public Introspect(): Promise<string> {
+        return this.thisDBusInterface.Introspect();
+    }
+
+}
+
 
 /**
  * Service: org.bluez
@@ -206,11 +277,6 @@ export class Adapter1 extends EventEmitter {
         return this.propertiesDBusInterface.Get(this.dbusInterfaceName, 'Modalias').then((variant: DBus.Variant) => variant.value);
     }
 
-    //@property({ name: 'Roles', signature: 'as', access: ACCESS_READ })
-    public Roles(): Promise<Array<string>> {
-        return this.propertiesDBusInterface.Get(this.dbusInterfaceName, 'Roles').then((variant: DBus.Variant) => variant.value);
-    }
-
 
     /***** Methods *****/
 
@@ -241,6 +307,93 @@ export class Adapter1 extends EventEmitter {
 
 }
 
+
+/**
+ * Service: org.bluez
+ * ObjectPath: /org/bluez/hci0
+ * Interface: org.freedesktop.DBus.Properties
+ */
+export class OrgfreedesktopDBusProperties extends EventEmitter {
+
+    public readonly dbusInterfaceName = 'org.freedesktop.DBus.Properties';
+    public dbusObject: DBus.ProxyObject;
+    public propertiesDBusInterface: DBus.ClientInterface;
+    public thisDBusInterface: DBus.ClientInterface;
+
+    public static Connect(bus: DBus.MessageBus, objectPath: string = "/org/bluez/hci0", xml: string = XMLObjectData): Promise<OrgfreedesktopDBusProperties> {
+        return bus.getProxyObject('org.bluez', objectPath, xml).then((obj) => new OrgfreedesktopDBusProperties(obj));
+    }
+
+    constructor(dbusObject: DBus.ProxyObject) {
+        super();
+        this.dbusObject = dbusObject;
+        this.thisDBusInterface = this.dbusObject.getInterface('org.freedesktop.DBus.Properties');
+        this.propertiesDBusInterface = this.dbusObject.getInterface('org.freedesktop.DBus.Properties');
+
+        // forward property change events
+        const forwardPropertyChange = (iface: string, changed: any, invalidated: any) => {
+            if(iface === this.dbusInterfaceName) {
+                this.emit('PropertiesChanged', iface, changed, invalidated);
+            }
+        }
+
+        // forward all signals
+        this.on("newListener", (event: string, listener: (...args: any[]) => void) => {
+            if(event === "PropertiesChanged" && this.listenerCount('PropertiesChanged') === 0) {
+                this.propertiesDBusInterface.on('PropertiesChanged', forwardPropertyChange);
+            } else {
+                this.thisDBusInterface.on(event, listener);
+            }
+        });
+        this.on("removeListener", (event: string, listener: (...args: any[]) => void) => {
+            if(event === "PropertiesChanged" && this.listenerCount('PropertiesChanged') === 0) {
+                this.propertiesDBusInterface.removeListener('PropertiesChanged', forwardPropertyChange);
+            } else {
+                this.thisDBusInterface.removeListener(event, listener);
+            }
+        });
+    }
+
+    /***** Properties *****/
+
+    public getProperties(): Promise<{[name: string]: DBus.Variant}> {
+        return this.propertiesDBusInterface.GetAll(this.dbusInterfaceName);
+    }
+
+    public getProperty(name: string): Promise<DBus.Variant> {
+        return this.propertiesDBusInterface.Get(this.dbusInterfaceName, name);
+    }
+
+    public setProperty(name: string, value: DBus.Variant): Promise<void> {
+        return this.propertiesDBusInterface.Set(this.dbusInterfaceName, name, value);
+    }
+
+
+    /***** Methods *****/
+
+    //@method({ name: 'Get', inSignature: 'ss', outSignature: 'v' })
+    public Get(iface: string, name: string, ): Promise<DBus.Variant> {
+        return this.thisDBusInterface.Get(iface, name, );
+    }
+
+    //@method({ name: 'Set', inSignature: 'ssv', outSignature: '' })
+    public Set(iface: string, name: string, value: DBus.Variant): Promise<void> {
+        return this.thisDBusInterface.Set(iface, name, value);
+    }
+
+    //@method({ name: 'GetAll', inSignature: 's', outSignature: 'a{sv}' })
+    public GetAll(iface: string, ): Promise<{[key: string]: DBus.Variant}> {
+        return this.thisDBusInterface.GetAll(iface, );
+    }
+
+}
+/***** Signals for org.freedesktop.DBus.Properties *****/
+export declare interface OrgfreedesktopDBusProperties {
+    //@signal({ name: 'PropertiesChanged', signature: 'sa{sv}as' })
+    on(evt: "PropertiesChanged", cb: (interface: string, changed_properties: {[key: string]: DBus.Variant}, invalidated_properties: Array<string>) => void): this;
+    
+    on(event: string, listener: Function): this;
+}
 
 /**
  * Service: org.bluez
@@ -584,6 +737,5 @@ export class NetworkServer1 extends EventEmitter {
     }
 
 }
-
 
 
