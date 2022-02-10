@@ -1,10 +1,13 @@
 import dbus from 'dbus-next';
 import * as constants from './gatt-constants';
-
+import { log } from '../../../core/logger';
 import { DbusMembers } from './gatt-utils';
 
 type AdvertisingType = 'broadcast' | 'peripheral';
-
+const m = "gap-advertisment"
+function label(f: string = ""){
+    return m + "." + f + ": ";
+} 
 export class Adertisement extends dbus.interface.Interface {
     _serviceUUIDs: string [] = [];
     _manufacturerData: Buffer;
@@ -13,6 +16,7 @@ export class Adertisement extends dbus.interface.Interface {
     _localName: string= '';
     _data: Buffer;
     _path: string = '';
+    _isAdvertising: boolean = false;
     constructor(path: string,
                 index: number = 0,
                 private _includeTYxPower: boolean = false,
@@ -24,17 +28,24 @@ export class Adertisement extends dbus.interface.Interface {
     }
     public addServiceUUID(uuid: string): void {
         this._serviceUUIDs.push(uuid);
+        log.info(label("addServiceUUID") + "UUID=" + uuid);
     }
     public setLocalName(name: string): void {
         this._localName = name;
+        log.info(label("setLocalName") + "LocalName=" + name);
     }
     public async publish(): Promise<void> {
         const bus = constants.systemBus;
         const adapterPath = constants.BLUEZ_NAMESPACE + constants.ADAPTER_NAME;
-        const advertisingManagerObject = 
-         await this._bus.getProxyObject(constants.BLUEZ_SERVICE_NAME, adapterPath);
-         const advertisingmanager =  advertisingManagerObject.getInterface(constants.GATT_MANAGER_INTERFACE);
-         advertisingmanager.RegisterApplication(this._path);
+        
+        try {
+            const advertisingManagerObject = await this._bus.getProxyObject(constants.BLUEZ_SERVICE_NAME, adapterPath);
+            const advertisingmanager =  advertisingManagerObject.getInterface(constants.GATT_MANAGER_INTERFACE);
+            advertisingmanager.RegisterApplication(this._path,{});
+            log.info(label("publish") + "Registered application, path=" + this._path);
+        } catch(e){
+            log.error(label("publish") + "Registered application, error=" + JSON.stringify(e));
+        } 
 
         const members: DbusMembers  = {
             properties: {
@@ -92,8 +103,15 @@ export class Adertisement extends dbus.interface.Interface {
         //         access: dbus.interface.ACCESS_READ,
         //     };
         // }
-        Adertisement.configureMembers(members);
-        this._bus.export(this.getPath(), this);
+        try{
+            Adertisement.configureMembers(members);
+            this._bus.export(this.getPath(), this);
+            this._isAdvertising = true;
+            log.info(label("publish") + "Export Adertisement, members=" + JSON.stringify(members));
+        } catch (e){
+            log.error(label("publish") + "Export Adertisement, error=" + JSON.stringify(e));
+        } 
+
     }
     public get Type(): AdvertisingType {
         return this._advertisingType;
@@ -136,7 +154,7 @@ export class Adertisement extends dbus.interface.Interface {
     public setPath(path: string) {
         this._path = path;
     }
-    public startAdvertising() {
-
-    }
+    public isAdvertising(): boolean {
+        return this._isAdvertising;
+    } 
 }
