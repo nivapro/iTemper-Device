@@ -1,4 +1,5 @@
 import * as characteristic from './gatt-characteristic';
+import { GattManager1 } from '../bluez/org.bluez-gatt-class';
 
 import * as constants from './gatt-constants';
 import { log } from '../../../core/logger';
@@ -21,8 +22,8 @@ function label(f: string = ""){
 export class Application extends dbus.interface.Interface  {
     _services: service.Service[] = [];
     _servicePathIndex = 0;
-    constructor(private path: string,
-                private bus: dbus.MessageBus = constants.systemBus) {
+    constructor(private _path: string,
+                private _bus: dbus.MessageBus = constants.systemBus) {
         super('org.freedesktop.DBus.ObjectManager');
     }
     // Properties & Methods of the interface org.freedesktop.DBus.ObjectManager
@@ -42,7 +43,7 @@ export class Application extends dbus.interface.Interface  {
     }
     // Methods for adding characteristics and publishing the interface on DBus.
     public addService(service: service.Service): void {
-        service.setPath(this.path + '/service' + this._servicePathIndex++);
+        service.setPath(this._path + '/service' + this._servicePathIndex++);
         this._services.push(service);
     }
     public getServices(): service.Service[] {
@@ -50,7 +51,7 @@ export class Application extends dbus.interface.Interface  {
     }
     public async publish(): Promise<void> {
         try{
-            await this.bus.requestName(constants.BUS_NAME, 0);
+            await this._bus.requestName(constants.BUS_NAME, 0);
             const members: DbusMembers  = {
                 methods: {
                     GetManagedObjects: {
@@ -60,13 +61,19 @@ export class Application extends dbus.interface.Interface  {
                 },
             };
             Application.configureMembers(members);
-            this.bus.export(this.path, this);
+            this._bus.export(this._path, this);
             this._services.forEach((serv) => serv.publish());
-            this.bus.requestName('io.itemper', 0);
+            log.info(label("publish") + "Application configured");
         }
         catch (e){
-            log.error(label("publish") + "error=" + JSON.stringify(e));
-        }  
-
+            log.error(label("publish") + "Could not request name and configure members, error=" + JSON.stringify(e));
+        }
+        try{
+            const gattManager = await GattManager1.Connect(this._bus);
+            gattManager.RegisterApplication(this._path, {});
+            log.info(label("publish") + "Application registered");
+        } catch(e){
+            log.error(label("publish") + "Could not register application, error=" + JSON.stringify(e));
+        } 
     }
 }

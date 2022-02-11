@@ -1,4 +1,5 @@
 import dbus from 'dbus-next';
+import { LEAdvertisingManager1 } from '../bluez/org.bluez-gatt-class';
 import * as constants from './gatt-constants';
 import { log } from '../../../core/logger';
 import { DbusMembers } from './gatt-utils';
@@ -25,7 +26,7 @@ export class Adertisement extends dbus.interface.Interface {
                 private _bus: dbus.MessageBus = constants.systemBus,
         ) {
         super(constants.ADVERTISEMENT_INTERFACE);
-        this._path = path + '/adverisment' + index;
+        this._path = path + '/advertisment' + index;
     }
     public addServiceUUID(uuid: string): void {
         this._serviceUUIDs.push(uuid);
@@ -36,21 +37,6 @@ export class Adertisement extends dbus.interface.Interface {
         log.info(label("setLocalName") + "LocalName=" + name);
     }
     public async publish(): Promise<void> {
-        const bus = constants.systemBus;
-        const adapterPath = constants.BLUEZ_NAMESPACE + constants.ADAPTER_NAME;
-        this._discoverable = true;
-        try {
-            const advertisingManagerObject = await this._bus.getProxyObject(constants.BLUEZ_SERVICE_NAME, adapterPath);
-            const advertisingmanager =  advertisingManagerObject.getInterface(constants.GATT_MANAGER_INTERFACE);
-            advertisingmanager.on('message', (msg) =>{
-                log.info(label("publish.on.") + "Received message=" + JSON.stringify(msg));
-            } );
-            await advertisingmanager.RegisterApplication(this._path,{});
-            log.info(label("publish") + "Registered application, path=" + this._path);
-        } catch(e){
-            log.error(label("publish") + "Registered application, error=" + JSON.stringify(e));
-        } 
-
         const members: DbusMembers  = {
             properties: {
                 Type: {
@@ -123,6 +109,19 @@ export class Adertisement extends dbus.interface.Interface {
             log.info(label("publish") + "Export Adertisement, members=" + JSON.stringify(members));
         } catch (e){
             log.error(label("publish") + "Export Adertisement, error=" + JSON.stringify(e));
+        } 
+
+        try {
+            const adapterPath = constants.BLUEZ_NAMESPACE + constants.ADAPTER_NAME;
+            this._discoverable = true;
+            // const objectManager = await OrgfreedesktopDBusObjectManager.Connect(this._bus);
+            // const managedObjects = await objectManager.GetManagedObjects();
+            // log.info(label("publish") + "managedObjects=" + JSON.stringify(managedObjects));
+            const advertisingManager = await LEAdvertisingManager1.Connect(constants.systemBus)
+            await advertisingManager.RegisterAdvertisement(this._path, {});
+            log.info(label("publish") + "Registered application, path=" + this._path);
+        } catch(e){
+            log.error(label("publish") + "Registered application, error=" + JSON.stringify(e));
         } 
 
     }

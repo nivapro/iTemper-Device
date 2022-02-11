@@ -14,6 +14,7 @@
 // 1ad01b31-dd4b-478c-9aa3-cbca25db3739
 // 1ad01b31-dd4b-478c-9aa3-12bd90900000
 
+import { conf } from '../../core/config' 
 export enum UUID_Designator {
     PrimaryService,
     DeviceInfo,
@@ -23,7 +24,7 @@ export enum UUID_Designator {
 export function getUuid(designator: UUID_Designator) {
     switch (designator) {
         case UUID_Designator.PrimaryService:
-            return ' 1ad01b31-dd4b-478c-9aa3-12bd90900000';
+            return conf.PRIMARY_SERVICE.length >  0 ?  conf.PRIMARY_SERVICE : '1ad01b31-dd4b-478c-9aa3-12bd90900000';
         case UUID_Designator.DeviceInfo:
             return 'deeb26b8b4b04884a1e1b13c0c957805';
         case UUID_Designator.CurrentWiFi:

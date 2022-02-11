@@ -12,10 +12,10 @@ type DbusMembers = {
     signals?: { [key: string]: dbus.interface.SignalOptions }
 };
 export interface Properties {
-    UUID: string;
-    Characteristic: dbus.ObjectPath;
-    Value: Buffer;
-    Flags: FlagArray;
+    UUID: dbus.Variant<string>;
+    Characteristic: dbus.Variant<dbus.ObjectPath>;
+    Value: dbus.Variant<Buffer>;
+    Flags: dbus.Variant<FlagArray>;
 }
 export interface Dict {
     [iface: string]: Properties;
@@ -26,12 +26,12 @@ export abstract class Descriptor extends dbus.interface.Interface {
     _iface: dbus.interface.Interface;
     _value: Buffer = Buffer.from([0]);
 
-    constructor(private uuid: string,
-                private flags: FlagArray,
-                private characteristic: Characteristic,
-                private bus: dbus.MessageBus = constants.systemBus) {
+    constructor(private _uuid: string,
+                private _flags: FlagArray,
+                private _characteristic: Characteristic,
+                private _bus: dbus.MessageBus = constants.systemBus) {
                     super(constants.GATT_DESCRIPTOR_INTERFACE);
-            this.characteristic.addDescriptor(this);
+            this._characteristic.addDescriptor(this);
     }
     public getPath(): string {
         return this._path;
@@ -41,12 +41,11 @@ export abstract class Descriptor extends dbus.interface.Interface {
     }
     public getProperties(): Dict {
         const properties: Dict  = {};
-        properties[constants.GATT_DESCRIPTOR_INTERFACE] = {
-            Characteristic: this.Characteristic,
-            UUID: this.UUID,
-            Value: this.Value,
-            Flags: this.Flags,
-        };
+        const Characteristic = new dbus.Variant<dbus.ObjectPath>('o', this.Characteristic);
+        const UUID = new dbus.Variant<string>('s',  this.UUID);
+        const Value = new dbus.Variant<Buffer>('ay', this.Value);
+        const Flags = new dbus.Variant<FlagArray>('as',  this.Flags);
+        properties[constants.GATT_DESCRIPTOR_INTERFACE] = { Characteristic, UUID, Value, Flags };
         return properties;
     }
     public publish(): void {
@@ -60,10 +59,10 @@ export abstract class Descriptor extends dbus.interface.Interface {
                     signature: 's',
                     access: dbus.interface.ACCESS_READ,
                 },
-                Value: {
-                    signature: 's',
-                    access: dbus.interface.ACCESS_READ,
-                },
+                // Value: {
+                //     signature: 's',
+                //     access: dbus.interface.ACCESS_READ,
+                // },
                 Flags: {
                     signature: 'as',
                     access: dbus.interface.ACCESS_READ,
@@ -79,20 +78,20 @@ export abstract class Descriptor extends dbus.interface.Interface {
             },
         };
         Descriptor.configureMembers(members);
-        this.bus.export(this.getPath(), this._iface);
+        this._bus.export(this.getPath(), this._iface);
     }
         // Properties of the GATTCharacteristic1 interface, use org.freedesktop.DBus.Properties to Get and GetAll
     private get Characteristic(): string {
-        return this.characteristic.getPath();
+        return this._characteristic.getPath();
     }
     private get UUID(): string {
-        return this.uuid;
+        return this._uuid;
     }
     private get Value(): Buffer {
         return this._value;
     }
     private get Flags(): FlagArray {
-        return this.flags;
+        return this._flags;
     }
     private ReadValue(): void {
         throw Error();

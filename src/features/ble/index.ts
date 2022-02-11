@@ -13,7 +13,8 @@ const m = "ble"
 function label(f: string = ""){
     return m + "." + f + ": ";
 } 
-const advertisment = new Adertisement('/io/itemper', 0);
+const includeTYxPower = true;
+const advertisment = new Adertisement('/io/itemper', 0, includeTYxPower);
 
 const namePrefix = 'itemper ';
 
