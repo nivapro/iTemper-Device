@@ -14,7 +14,7 @@ type DbusMembers = {
 export interface Properties {
     UUID: dbus.Variant<string>;
     Characteristic: dbus.Variant<dbus.ObjectPath>;
-    Value: dbus.Variant<Buffer>;
+    // Value: dbus.Variant<Buffer>;
     Flags: dbus.Variant<FlagArray>;
 }
 export interface Dict {
@@ -41,11 +41,12 @@ export abstract class Descriptor extends dbus.interface.Interface {
     }
     public getProperties(): Dict {
         const properties: Dict  = {};
-        const Characteristic = new dbus.Variant<dbus.ObjectPath>('o', this.Characteristic);
-        const UUID = new dbus.Variant<string>('s',  this.UUID);
-        const Value = new dbus.Variant<Buffer>('ay', this.Value);
-        const Flags = new dbus.Variant<FlagArray>('as',  this.Flags);
-        properties[constants.GATT_DESCRIPTOR_INTERFACE] = { Characteristic, UUID, Value, Flags };
+        properties[constants.GATT_DESCRIPTOR_INTERFACE] = {
+            Characteristic: new dbus.Variant<string> ('o', this.Characteristic),
+            UUID: new dbus.Variant<string> ('s',this.UUID),
+            // Value: new dbus.Variant<Buffer> ('ay',this.Value),
+            Flags: new dbus.Variant<FlagArray> ('as', this.Flags),
+        };
         return properties;
     }
     public publish(): void {

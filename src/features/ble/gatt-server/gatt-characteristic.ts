@@ -60,11 +60,12 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
     }
     public getProperties(): Dict {
         const properties: Dict  = {};
-        const Service = new dbus.Variant<string>('o', this.Service);
-        const UUID = new dbus.Variant<string>('s', this.UUID);
-        const Flags = new dbus.Variant<FlagArray>('as',this.Flags);
-        const Descriptors = new dbus.Variant<string[]>('o', this.Descriptors);
-        properties[constants.GATT_CHARACTERISTIC_INTERFACE] =  { Service, UUID, Flags, Descriptors };
+        properties[constants.GATT_CHARACTERISTIC_INTERFACE] =  {
+            Service: new dbus.Variant<dbus.ObjectPath>('o', this.Service),
+            UUID: new dbus.Variant<string>('s', this.UUID),
+            Flags: new dbus.Variant<FlagArray>('as', this.Flags),
+            Descriptors: new dbus.Variant<dbus.ObjectPath[]>('ao', this.Descriptors),
+        };
         return properties;
     }
     public publish(): void {

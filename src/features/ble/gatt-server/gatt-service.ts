@@ -117,10 +117,10 @@ export class Service extends dbus.interface.Interface implements GATTService1 {
         const properties: Dict  = {};
         const charPaths: string[] = [];
         this._characteristics.forEach(char => charPaths.push(char.getPath()));
-        const UUID = new dbus.Variant<string>('s', this.UUID);
-        const Primary = new dbus.Variant<boolean>('b', this.Primary);
-        const Characteristics = new dbus.Variant<string[]>('as', charPaths);
-        properties[GATT_SERVICE_INTERFACE] =  { UUID, Primary,  Characteristics};
+        properties[GATT_SERVICE_INTERFACE] =  { 
+            UUID: new dbus.Variant<string>('s', this.UUID), 
+            Primary: new dbus.Variant<boolean>('b', this.Primary),  
+            Characteristics: new dbus.Variant<string[]>('as', charPaths};
         return properties;
     }
     public getPath(): string {
