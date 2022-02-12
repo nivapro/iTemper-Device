@@ -4,6 +4,10 @@ import { Service } from './gatt-service';
 import { decode } from './gatt-utils';
 
 import { log } from './../../../core/logger';
+const m = "gattserver"
+function label(f: string = ""){
+    return m + "." + f + ": ";
+} 
 
 class Characteristic0 extends Characteristic {
     static UUID = '1ad01b31-dd4b-478c-9aa3-12bd90900001';
@@ -22,6 +26,7 @@ class Characteristic1 extends Characteristic {
     constructor(protected _service: Service) {
         super(Characteristic1.UUID, ['read'], _service);
         this.overrideReadValue (this.ReadValue);
+        this.overrideWriteValue(this.WriteValue)
     }
     protected ReadValue(): Buffer {
         return Buffer.from(this._value);
@@ -29,6 +34,7 @@ class Characteristic1 extends Characteristic {
     protected WriteValue(value: Buffer): void {
         const newValue = decode(value);
         this._value = newValue;
+        log.info(label("WriteValue, value=" + this._value));
     }
 }
 const DOMAIN_PATH = '/io/itemper';

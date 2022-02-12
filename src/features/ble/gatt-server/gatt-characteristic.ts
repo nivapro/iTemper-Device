@@ -29,11 +29,13 @@ class NotSupportedDBusError extends dbus.DBusError {
     }
 }
 type ReadValueFn = () => Buffer;
+type WriteValueFn = (value: Buffer) => void;
 export class Characteristic extends dbus.interface.Interface implements GATTCharacteristic1  {
     _path: string = '';
     _descriptors: Descriptor[] =[];
     _descriptorIndex = 0;
     _readValueFn: ReadValueFn;
+    _writeValueFn: WriteValueFn;
     self: Characteristic;
     constructor(
                 protected _uuid: string,
@@ -135,8 +137,15 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
             throw new NotSupportedDBusError('ReadValue');
         }
     }
+    public overrideWriteValue(fn: WriteValueFn) {
+        this._writeValueFn = fn;
+    }
     protected WriteValue(value: Buffer): void {
-        throw new NotSupportedDBusError('WriteValue, value=: ' + value.toString());
+        if (this._writeValueFn !== undefined) {
+            this._writeValueFn(value);
+        } else {
+            throw new NotSupportedDBusError('WriteValue, value=: ' + value.toString());
+        }
     }
     protected StartNotify(): void {
         throw new NotSupportedDBusError('StartNotify');
