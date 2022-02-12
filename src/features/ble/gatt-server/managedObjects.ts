@@ -76,27 +76,32 @@ const applicationGetManagedObjects = {
         }
     }
 }
-// ('g-io-error-quark: GDBus.Error:com.github.dbus_next.Error: The DBus library '
-//  'encountered an error.\n'
-//  'Error: expected a Variant for value (got string)\n'
-//  '    at jsToMarshalFmt '
-//  '(/home/tova/repos/iTemper-Device/node_modules/dbus-next/lib/marshall-compat.js:93:15)\n'
-//  '    at jsToMarshalFmt '
-//  '(/home/tova/repos/iTemper-Device/node_modules/dbus-next/lib/marshall-compat.js:118:27)\n'
-//  '    at jsToMarshalFmt '
-//  '(/home/tova/repos/iTemper-Device/node_modules/dbus-next/lib/marshall-compat.js:118:27)\n'
-//  '    at jsToMarshalFmt '
-//  '(/home/tova/repos/iTemper-Device/node_modules/dbus-next/lib/marshall-compat.js:118:27)\n'
-//  '    at marshallMessage '
-//  '(/home/tova/repos/iTemper-Device/node_modules/dbus-next/lib/marshall-compat.js:179:27)\n'
-//  '    at EventEmitter.self.message '
-//  '(/home/tova/repos/iTemper-Device/node_modules/dbus-next/lib/connection.js:164:27)\n'
-//  '    at MessageBus.send '
-//  '(/home/tova/repos/iTemper-Device/node_modules/dbus-next/lib/bus.js:372:22)\n'
-//  '    at sendReply '
-//  '(/home/tova/repos/iTemper-Device/node_modules/dbus-next/lib/service/handlers.js:332:13)\n'
-//  '    at handleMessage '
-//  '(/home/tova/repos/iTemper-Device/node_modules/dbus-next/lib/service/handlers.js:338:9)\n'
-//  '    at handleMessage '
-//  '(/home/tova/repos/iTemper-Device/node_modules/dbus-next/lib/bus.js:136:21) '
-//  '(36)')
+// From D-feet
+const Dfeet = {
+    '/io/itemper/service0': {
+        'org.bluez.GattService1': {
+            'Characteristics': [
+                '/io/itemper/service0/char0',
+                '/io/itemper/service0/char1'
+            ],
+            'Primary': true, // True,
+            'UUID': '1ad01b31-dd4b-478c-9aa3-12bd90900000'
+        }
+    },
+    '/io/itemper/service0/char0': {
+        'org.bluez.GattCharacteristic1': {
+            'Descriptors': [],
+            'Flags': ['Read'],
+            'Service': '/io/itemper/service0',
+            'UUID': '1ad01b31-dd4b-478c-9aa3-12bd90900001'
+        }
+    },
+    '/io/itemper/service0/char1': {
+        'org.bluez.GattCharacteristic1': {
+            'Descriptors': [],
+            'Flags': ['Read'],
+            'Service': '/io/itemper/service0',
+            'UUID': '1ad01b31-dd4b-478c-9aa3-12bd90900002'
+        }
+    }
+}
