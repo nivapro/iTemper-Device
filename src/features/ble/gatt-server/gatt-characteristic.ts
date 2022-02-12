@@ -36,13 +36,13 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
     _readValueFn: ReadValueFn;
     self: Characteristic;
     constructor(
-                private uuid: string,
-                private flags: FlagArray,
-                private service: Service,
-                private bus: dbus.MessageBus = constants.systemBus) {
+                protected _uuid: string,
+                protected _flags: FlagArray,
+                protected _service: Service,
+                protected _bus: dbus.MessageBus = constants.systemBus) {
         super(constants.GATT_CHARACTERISTIC_INTERFACE);
         this.self = this;
-        this.service.addCharacteristic(this);
+        this._service.addCharacteristic(this);
     }
 
     public addDescriptor(descriptor: Descriptor): void {
@@ -79,10 +79,10 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
                     signature: 'o',
                     access: dbus.interface.ACCESS_READ,
                 },
-                Value: {
-                    signature: 'ay',
-                    access: dbus.interface.ACCESS_READ,
-                },
+                // Value: {
+                //     signature: 'ay',
+                //     access: dbus.interface.ACCESS_READ,
+                // },
                 Flags: {
                     signature: 'as',
                     access: dbus.interface.ACCESS_READ,
@@ -106,18 +106,18 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
             },
         };
         Characteristic.configureMembers(members);
-        this.bus.export(this.getPath(), this.self);
+        this._bus.export(this.getPath(), this.self);
         this._descriptors.forEach(desc => desc.publish());
     }
     // Properties of org.freedesktop.DBus.Properties.Get | GetAll
     private get Service(): string {
-        return this.service.getPath();
+        return this._service.getPath();
     }
     private get UUID(): string {
-        return this.uuid;
+        return this._uuid;
     }
     private get Flags(): FlagArray {
-        return this.flags;
+        return this._flags;
     }
     private get Descriptors(): string[] {
         const result: string[] = [];
@@ -134,7 +134,6 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
         } else {
             throw new NotSupportedDBusError('ReadValue');
         }
-
     }
     protected WriteValue(value: Buffer): void {
         throw new NotSupportedDBusError('WriteValue, value=: ' + value.toString());
