@@ -73,9 +73,9 @@ export class Application extends dbus.interface.Interface  {
         try{
             const gattManager = await GattManager1.Connect(this._bus);
             gattManager.RegisterApplication(this._path, {});
-            log.info(label("publish") + "Application registered");
+            log.info(label("publish") + "Application registered on path " + this._path);
         } catch(e){
-            log.error(label("publish") + "Could not register application, error=" + JSON.stringify(e));
+            log.error(label("publish") + "Could not register application on path " + this._path + ", error\n=" + JSON.stringify(e));
         } 
     }
 }

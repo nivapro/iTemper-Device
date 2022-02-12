@@ -9,7 +9,7 @@ class Characteristic0 extends Characteristic {
     static UUID = '1ad01b31-dd4b-478c-9aa3-12bd90900001';
     private _value = 'Hej hopp i lingonskogen 0';
     constructor(protected _service: Service) {
-        super(Characteristic0.UUID, ['Read'], _service);
+        super(Characteristic0.UUID, ['read'], _service);
         this.overrideReadValue (this.ReadValue);
     }
     protected ReadValue(): Buffer {
@@ -20,7 +20,7 @@ class Characteristic1 extends Characteristic {
     static UUID = '1ad01b31-dd4b-478c-9aa3-12bd90900002';
     private _value = 'Hej hopp i lingonskogen 1';
     constructor(protected _service: Service) {
-        super(Characteristic1.UUID, ['Read'], _service);
+        super(Characteristic1.UUID, ['read'], _service);
         this.overrideReadValue (this.ReadValue);
     }
     protected ReadValue(): Buffer {

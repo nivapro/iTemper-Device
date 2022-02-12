@@ -4,7 +4,7 @@ import { Descriptor } from './gatt-descriptor';
 import { Service } from './gatt-service';
 import { DbusMembers } from './gatt-utils';
 
-type Flag = 'Read' | 'write' | 'Notify';
+type Flag = 'read' | 'write' | 'notify';
 type FlagArray = Flag[];
 
 export interface Properties {
