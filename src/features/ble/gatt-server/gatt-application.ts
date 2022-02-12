@@ -17,7 +17,8 @@ export interface ManagedObjects {
 const m = "gatt-application"
 function label(f: string = ""){
     return m + "." + f + ": ";
-} 
+}
+
 // org.bluez.GattApplication1 interface implementation
 export class Application extends dbus.interface.Interface  {
     _services: service.Service[] = [];
@@ -39,6 +40,7 @@ export class Application extends dbus.interface.Interface  {
 
             });
         });
+        log.info(label("GetManagedObjects:") + JSON.stringify(response));
         return response;
     }
     // Methods for adding characteristics and publishing the interface on DBus.
@@ -56,7 +58,7 @@ export class Application extends dbus.interface.Interface  {
                 methods: {
                     GetManagedObjects: {
                         inSignature: '',
-                        outSignature: 'a{oa{sa{ss}}}',
+                        outSignature: 'a{oa{sa{sv}}}',
                     },
                 },
             };
