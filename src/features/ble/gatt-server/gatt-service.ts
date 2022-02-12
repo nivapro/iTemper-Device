@@ -120,7 +120,7 @@ export class Service extends dbus.interface.Interface implements GATTService1 {
         properties[GATT_SERVICE_INTERFACE] =  { 
             UUID: new dbus.Variant<string>('s', this.UUID), 
             Primary: new dbus.Variant<boolean>('b', this.Primary),  
-            Characteristics: new dbus.Variant<string[]>('as', charPaths};
+            Characteristics: new dbus.Variant<string[]>('as', charPaths )};
         return properties;
     }
     public getPath(): string {
