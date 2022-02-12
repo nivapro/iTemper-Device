@@ -6,9 +6,9 @@ import * as constants from './gatt-constants';
 
 import { GATT_SERVICE_INTERFACE } from './gatt-constants';
 export interface Properties {
-    UUID: string;
-    Primary: boolean;
-    Characteristics: string [];
+    UUID: dbus.Variant<string>;
+    Primary: dbus.Variant<boolean>;
+    Characteristics: dbus.Variant<string []>;
 }
 export interface Dict {
     [iface: string]: Properties;
@@ -80,7 +80,10 @@ export class Service extends dbus.interface.Interface implements GATTService1 {
         const properties: Dict  = {};
         const charPaths: string[] = [];
         this._characteristics.forEach(char => charPaths.push(char.getPath()));
-        properties[GATT_SERVICE_INTERFACE] =  { UUID: this.UUID, Primary: this.Primary,  Characteristics: charPaths};
+        properties[GATT_SERVICE_INTERFACE] =  { 
+            UUID: new dbus.Variant<string>('s', this.UUID), 
+            Primary: new dbus.Variant<boolean>('b', this.Primary),  
+            Characteristics: new dbus.Variant<string[]>('as', charPaths};
         return properties;
     }
     public getPath(): string {

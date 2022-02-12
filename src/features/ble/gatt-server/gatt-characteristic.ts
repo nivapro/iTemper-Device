@@ -8,10 +8,10 @@ type Flag = 'Read' | 'write' | 'Notify';
 type FlagArray = Flag[];
 
 export interface Properties {
-    Service: dbus.ObjectPath;
-    UUID: string;
-    Flags: FlagArray;
-    Descriptors: dbus.ObjectPath[];
+    Service: dbus.Variant<dbus.ObjectPath>;
+    UUID: dbus.Variant<string>;
+    Flags: dbus.Variant<FlagArray>;
+    Descriptors: dbus.Variant<dbus.ObjectPath[]>;
 }
 export interface Dict {
     [iface: string]: Properties;
@@ -61,10 +61,10 @@ export class Characteristic extends dbus.interface.Interface implements GATTChar
     public getProperties(): Dict {
         const properties: Dict  = {};
         properties[constants.GATT_CHARACTERISTIC_INTERFACE] =  {
-            Service: this.Service,
-            UUID: this.UUID,
-            Flags: this.Flags,
-            Descriptors: this.Descriptors,
+            Service: new dbus.Variant<dbus.ObjectPath>('o', this.Service),
+            UUID: new dbus.Variant<string>('s', this.UUID),
+            Flags: new dbus.Variant<FlagArray>('as', this.Flags),
+            Descriptors: new dbus.Variant<dbus.ObjectPath[]>('ao', this.Descriptors),
         };
         return properties;
     }

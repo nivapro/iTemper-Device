@@ -12,10 +12,10 @@ type DbusMembers = {
     signals?: { [key: string]: dbus.interface.SignalOptions }
 };
 export interface Properties {
-    UUID: string;
-    Characteristic: dbus.ObjectPath;
-    Value: Buffer;
-    Flags: FlagArray;
+    UUID: dbus.Variant<string>;
+    Characteristic: dbus.Variant<dbus.ObjectPath>;
+    // Value: dbus.Variant<Buffer>;
+    Flags: dbus.Variant<FlagArray>;
 }
 export interface Dict {
     [iface: string]: Properties;
@@ -42,10 +42,10 @@ export abstract class Descriptor extends dbus.interface.Interface {
     public getProperties(): Dict {
         const properties: Dict  = {};
         properties[constants.GATT_DESCRIPTOR_INTERFACE] = {
-            Characteristic: this.Characteristic,
-            UUID: this.UUID,
-            Value: this.Value,
-            Flags: this.Flags,
+            Characteristic: new dbus.Variant<string> ('o', this.Characteristic),
+            UUID: new dbus.Variant<string> ('s',this.UUID),
+            // Value: new dbus.Variant<Buffer> ('ay',this.Value),
+            Flags: new dbus.Variant<FlagArray> ('as', this.Flags),
         };
         return properties;
     }
