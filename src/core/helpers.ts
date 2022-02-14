@@ -1,5 +1,5 @@
 import { log } from './logger';
-export function stringify(o: object) {
+export function stringify(o: unknown) {
     const cache: object[] = [];
 
     return JSON.stringify(o, function(key, value) {
