@@ -1,10 +1,10 @@
 
 
-import { Adertisement } from './gatt-server/gap-advertisment';
+import { Adertisement } from './gatt/gap-advertisment';
 
 import * as uuids from './ble-uuid';
 
-import * as gatt from './gatt-server';
+import { gattServer} from './services/device-info-service';
 
 import { log } from '../../core/logger';
 import { Setting, Settings } from '../../core/settings';
@@ -54,7 +54,7 @@ export async function init() {
 
     });
     try{
-      await gatt.init();
+      await gattServer.init();
       await startAdvertising();
       log.info(label("init") + "Completed");
     } catch (e){

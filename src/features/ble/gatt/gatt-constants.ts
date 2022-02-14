@@ -1,0 +1,204 @@
+import dbus from 'dbus-next';
+
+export const ADAPTER_NAME = 'hci0';
+
+export const BLUEZ_SERVICE_NAME = 'org.bluez';
+export const BLUEZ_NAMESPACE = '/org/bluez/';
+
+export const ITEMPER_SERVICE_NAME = 'io.itemper';
+export const ITEMPER_NAMESPACE = '/io/itemper';
+
+
+export const DBUS_PROP_IFACE ='org.freedesktop.DBus.Properties';
+export const DBUS_OM_IFACE = 'org.freedesktop.DBus.ObjectManager';
+
+
+export const ADAPTER_INTERFACE = BLUEZ_SERVICE_NAME + '.Adapter1';
+export const DEVICE_INTERFACE = BLUEZ_SERVICE_NAME + '.Device1';
+
+export const GATT_CHARACTERISTIC_INTERFACE = BLUEZ_SERVICE_NAME + '.GattCharacteristic1';
+export const GATT_DESCRIPTOR_INTERFACE = BLUEZ_SERVICE_NAME + '.GattDescriptor1';
+export const GATT_MANAGER_INTERFACE = BLUEZ_SERVICE_NAME + '.GattManager1';
+export const GATT_SERVICE_INTERFACE = BLUEZ_SERVICE_NAME + '.GattService1';
+
+export const ADVERTISEMENT_INTERFACE = BLUEZ_SERVICE_NAME + '.LEAdvertisement1';
+export const ADVERTISING_MANAGER_INTERFACE = BLUEZ_SERVICE_NAME + '.LEAdvertisingManager1';
+
+// System bus
+export const BUS_NAME = 'io.itemper';
+export const systemBus = dbus.systemBus();
+systemBus.requestName(BUS_NAME, 0);
+
+namespace Apperance {
+    const GenericUnknown = 0x0000;
+    const GenericPhone = 0x0040;
+    const GenericComputer = 0x0080;
+    const DesktopWorkstation = 0x0081;
+    const ServerclassComputer = 0x0082;
+    const Laptop = 0x0083;
+    const HandheldPC_PDAclamshell = 0x0084;
+    const PalmsizePC_PDA = 0x0085;
+    const Wearablecomputerwatchsize = 0x0086;
+    const Tablet = 0x0087;
+    const DockingStation = 0x0088;
+    const AllinOne = 0x0089;
+    const BladeServer = 0x008A;
+    const Convertible = 0x008B;
+    const Detachable = 0x008C;
+    const IoTGateway = 0x008D;
+    const MiniPC = 0x008E;
+    const StickPC = 0x008F;
+    const GenericWatch = 0x00C0;
+    const SportsWatch = 0x00C1;
+    const Smartwatch = 0x00C2;
+    const GenericClock = 0x0100;
+    const GenericDisplay = 0x0140;
+    const GenericRemoteControl = 0x0180;
+    const GenericEyeglasses = 0x01C0;
+    const GenericTag = 0x0200;
+    const GenericKeyring = 0x0240;
+    const GenericMediaPlayer = 0x0280;
+    const GenericBarcodeScanner = 0x02C0;
+    const GenericThermometer = 0x0300;
+
+    const GenericHeartRateSensor = 0x0340;
+    const HeartRateBelt = 0x0341;
+    const GenericBloodPressure = 0x0380;
+    const ArmBloodPressure = 0x0381;
+    const WristBloodPressure = 0x0382;
+    const GenericHumanInterfaceDevice = 0x03C0;
+    const Keyboard = 0x03C1;
+    const Mouse = 0x03C2;
+    const Joystick = 0x03C3;
+    const Gamepad = 0x03C4;
+    const DigitizerTablet = 0x03C5;
+    const CardReader = 0x03C6;
+    const DigitalPen = 0x03C7;
+    const BarcodeScanner = 0x03C8;
+    const Touchpad = 0x03C9;
+    const PresentationRemote = 0x03CA;
+    const GenericGlucoseMeter = 0x0400;
+    const GenericRunningWalkingSensor = 0x0440;
+    const InShoeRunningWalkingSensor = 0x0441;
+    const OnShoeRunningWalkingSensor = 0x0442;
+    const OnHipRunningWalkingSensor = 0x0443;
+    const GenericCycling = 0x0480;
+    const CyclingComputer = 0x0481;
+    const SpeedSensor = 0x0482;
+    const CadenceSensor = 0x0483;
+    const PowerSensor = 0x0484;
+    const SpeedandCadenceSensor = 0x0485;
+    const GenericControlDevice = 0x04C0;
+    const Switch = 0x04C1;
+    const MultiSwitch = 0x04C2;
+    const Button = 0x04C3;
+    const Slider = 0x04C4;
+    const RotarySwitch = 0x04C5;
+    const TouchPanel = 0x04C6;
+
+    const SingleSwitch = 0x04C7;
+    const DoubleSwitch = 0x04C8;
+    const TripleSwitch = 0x04C9;
+    const BatterySwitch = 0x04CA;
+    const EnergyHarvestingSwitch = 0x04CB;
+    const PushButton = 0x04CC;
+    const GenericNetworkDevice = 0x0500;
+    const AccessPoint = 0x0501;
+    const MeshDevice = 0x0502;
+    const MeshNetworkProxy = 0x0503;
+    const GenericSensor = 0x0540;
+    const MotionSensor = 0x0541;
+    const AirqualitySensor = 0x0542;
+    const TemperatureSensor = 0x0543;
+    const HumiditySensor = 0x0544;
+    const LeakSensor = 0x0545;
+    const SmokeSensor = 0x0546;
+    const OccupancySensor = 0x0547;
+    const ContactSensor = 0x0548;
+    const CarbonMonoxideSensor = 0x0549;
+    const CarbonDioxideSensor = 0x054A;
+    const AmbientLightSensor = 0x054B;
+    const EnergySensor = 0x054C;
+    const ColorLightSensor = 0x054D;
+    const RainSensor = 0x054E;
+    const FireSensor = 0x054F;
+    const WindSensor = 0x0550;
+    const ProximitySensor = 0x0551;
+    const MultiSensor = 0x0552;
+    const Flushmountedsensor = 0x0553;
+    const Ceilingmountedsensor = 0x0554;
+    const Wallmountedsensor = 0x0555;
+    const Multisensor = 0x0556;
+    const EnergyMeter = 0x0557;
+
+    const FlameDetector = 0x0558;
+    const VehicleTirePressureSensor = 0x0559;
+    const GenericLightFixtures = 0x0580;
+    const WallLight = 0x0581;
+    const CeilingLight = 0x0582;
+    const FloorLight = 0x0583;
+    const CabinetLight = 0x0584;
+    const DeskLight = 0x0585;
+    const TrofferLight = 0x0586;
+    const PendantLight = 0x0587;
+    const IngroundLight = 0x0588;
+    const FloodLight = 0x0589;
+    const UnderwaterLight = 0x058A;
+    const BollardwithLight = 0x058B;
+    const PathwayLight = 0x058C;
+    const GardenLight = 0x058D;
+    const PoletopLight = 0x058E;
+    const Spotlight = 0x058F;
+    const LinearLight = 0x0590;
+    const StreetLight = 0x0591;
+    const ShelvesLight = 0x0592;
+    const BayLight = 0x0593;
+    const EmergencyExitLight = 0x0594;
+    const Lightcontroller = 0x0595;
+    const Lightdriver = 0x0596;
+    const Bulb = 0x0597;
+    const LowbayLight = 0x0598;
+    const HighbayLight = 0x0599;
+    const GenericFan = 0x05C0;
+    const CeilingFan = 0x05C1;
+    const AxialFan = 0x05C2;
+    const ExhaustFan = 0x05C3;
+    const PedestalFan = 0x05C4;
+    const DeskFan = 0x05C5;
+ 
+    const WallFan = 0x05C6;
+    const GenericHVAC = 0x0600;
+    const Thermostat = 0x0601;
+    const Humidifier = 0x0602;
+    const Dehumidifier = 0x0603;
+    const Heater = 0x0604;
+    const Radiator = 0x0605;
+    const Boiler = 0x0606;
+    const Heatpump = 0x0607;
+    const Infraredheater = 0x0608;
+    const Radiantpanelheater = 0x0609;
+    const Fanheater = 0x060A;
+    const Aircurtain = 0x060B;
+    const GenericAirConditioning = 0x0640;
+    const GenericHumidifier = 0x0680;
+    const GenericHeating = 0x06C0;
+    const Radiator2 = 0x06C1;
+    const Boiler2 = 0x06C2;
+    const HeatPump = 0x06C3;
+    const InfraredHeater = 0x06C4;
+    const RadiantPanelHeater = 0x06C5;
+    const FanHeater = 0x06C6;
+    const AirCurtain = 0x06C7;
+    const GenericAccessControl = 0x0700;
+    const AccessDoor = 0x0701;
+    const GarageDoor = 0x0702;
+    const EmergencyExitDoor = 0x0703;
+    const AccessLock = 0x0704;
+    const Elevator = 0x0705;
+    const Window = 0x0706;
+    const EntranceGate = 0x0707;
+    const DoorLock = 0x0708;
+    const Locker = 0x0709;
+    const GenericMotorizedDevice = 0x0740;
+} 
+

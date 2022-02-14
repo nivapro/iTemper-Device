@@ -1,41 +1,69 @@
+/**  GAP Avdertisment mdoule */
 import dbus from 'dbus-next';
-import { LEAdvertisingManager1 } from '../bluez/org.bluez-gatt-class';
+import { LEAdvertisingManager1 } from './bluez/org.bluez-gatt-class';
 import * as constants from './gatt-constants';
 import { log } from '../../../core/logger';
 import { DbusMembers } from './gatt-utils';
 
 type AdvertisingType = 'broadcast' | 'peripheral';
 const m = "gap-advertisment"
+
 function label(f: string = ""){
     return m + "." + f + ": ";
 } 
-export class Adertisement extends dbus.interface.Interface {
+export interface ServiceDataDict{
+   [uuid: string]: Buffer; 
+}
+export interface ManufacturerDataDict{
+    [ManufacturerID: number]: Buffer; 
+ }
+/**  Use class Adertisement for ardvertising your GATT service 
+ *   hierachi through DBus.
+ */
+ export class Adertisement extends dbus.interface.Interface {
     _serviceUUIDs: string [] = [];
-    _manufacturerData: Buffer;
+    _manufacturerData: ManufacturerDataDict = {} ;
     _solicitUUIDs: string [] = [];
-    _serviceData: Buffer;
+    _serviceData: ServiceDataDict = {};
     _localName: string= '';
-    _data: Buffer;
     _path: string = '';
     _discoverable: boolean = false;
+    _includes: string[] = []; 
     _isAdvertising: boolean = false;
+    /** Create an advertisment
+     * @param path - Domain name, e.g. 'com.example'
+     * @param index - index added to the end of the path
+     * @param includeTxPower - set to true (default) to include TxPower feature
+     * @param AdvertisingType -  'peripheral' (default) or 'Broadcast' 
+     */
     constructor(path: string,
                 index: number = 0,
-                private _includeTYxPower: boolean = false,
+                private _includeTxPower: boolean = true,
                 private _advertisingType: AdvertisingType = 'peripheral',
                 private _bus: dbus.MessageBus = constants.systemBus,
         ) {
         super(constants.ADVERTISEMENT_INTERFACE);
         this._path = path + '/advertisment' + index;
+        if (this._includeTxPower) {
+            this.include('tx-power');
+        }
     }
+    /** Add a service to tthe ServiceUUID properpty
+     * 
+     * @param uuid - Service UUID
+     */
     public addServiceUUID(uuid: string): void {
         this._serviceUUIDs.push(uuid);
         log.info(label("addServiceUUID") + "UUID=" + uuid);
     }
+    /** Set the local name to be advertised.
+     * @param name - The name of the service in the advertisement 
+     */
     public setLocalName(name: string): void {
         this._localName = name;
         log.info(label("setLocalName") + "LocalName=" + name);
     }
+    /** Call publish to advertise the services to the clients */
     public async publish(): Promise<void> {
         const members: DbusMembers  = {
             properties: {
@@ -60,45 +88,33 @@ export class Adertisement extends dbus.interface.Interface {
             },
         };
         
-        if (this._serviceUUIDs !== [] && members.properties) {
+        if (this.ServiceUUIDs.length > 0 && members.properties) {
             members.properties['ServiceUUIDs'] = {
                 signature: 'as',
                 access: dbus.interface.ACCESS_READ,
             };
         }
-        if (this._solicitUUIDs !== [] && members.properties) {
+        if (this.SolicitUUIDs.length > 0 && members.properties) {
             members.properties['SolicitUUIDs'] = {
                 signature: 'as',
                 access: dbus.interface.ACCESS_READ,
             };
         }
-        if (this._manufacturerData && members.properties) {
+        if (this.ManufacturerData !== {}  && members.properties) {
             members.properties['ManufacturerData'] = {
                 signature: 'a{qv}',
                 access: dbus.interface.ACCESS_READ,
             };
         }
-        if (this._serviceData && members.properties) {
+        if (this.ServiceData !== {}  && members.properties) {
             members.properties['ServiceData'] = {
-                signature: 'a{sv}',
+                signature: 'a{say}',
                 access: dbus.interface.ACCESS_READ,
             };
         }
-        if (this._discoverable && members.properties) {
-            members.properties['ServiceData'] = {
-                signature: 'a{sv}',
-                access: dbus.interface.ACCESS_READ,
-            };
-        }
-        if (this._includeTYxPower && members.properties) {
+        if (this.Includes.length > 0 && members.properties) {
             members.properties['Includes'] = {
                 signature: 'as',
-                access: dbus.interface.ACCESS_READ,
-            };
-        }
-        if (this._data && members.properties) {
-            members.properties['ServiceData'] = {
-                signature: 'a{yv}',
                 access: dbus.interface.ACCESS_READ,
             };
         }
@@ -131,13 +147,13 @@ export class Adertisement extends dbus.interface.Interface {
     public get ServiceUUIDs(): string[] {
         return this._serviceUUIDs;
     }
+    public get ManufacturerData(): ManufacturerDataDict {
+        return this._manufacturerData;
+    }
     public get SolicitUUIDs(): string[] {
         return this._solicitUUIDs;
     }
-    public get ManufacturerData(): Buffer {
-        return this._manufacturerData;
-    }
-    public get ServiceData(): Buffer {
+    public get ServiceData(): ServiceDataDict {
         return this._serviceData;
     }
     public get LocalName(): string {
@@ -147,18 +163,10 @@ export class Adertisement extends dbus.interface.Interface {
         return this._discoverable;
     }
     public get Includes(): string[] {
-        const includes: string[] = [];
-        if (this._includeTYxPower) {
-            includes.push('tx-power');
-        }
-        return includes;
+        return this._includes;
     }
-    public get Data(): string[] {
-        const includes: string[] = [];
-        if (this._includeTYxPower) {
-            includes.push('tx-power');
-        }
-        return includes;
+    private include(feature: string): void {
+        this._includes.push(feature);
     }
     public Release() {
         // Nothing to do

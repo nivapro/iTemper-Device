@@ -1,5 +1,5 @@
 import * as characteristic from './gatt-characteristic';
-import { GattManager1 } from '../bluez/org.bluez-gatt-class';
+import { GattManager1 } from './bluez/org.bluez-gatt-class';
 
 import * as constants from './gatt-constants';
 import { log } from '../../../core/logger';
@@ -11,7 +11,9 @@ import dbus from 'dbus-next';
 import { DbusMembers } from './gatt-utils';
 
 export interface ManagedObjects {
-    [key: string]: service.Dict | characteristic.Dict | descriptor.Dict;
+    [key: string]: service.ServicePropertyDict |
+                   characteristic.CharacteristicPropertyDict |
+                   descriptor.DescriptorPropertyDict;
 }
 
 const m = "gatt-application"
@@ -21,7 +23,7 @@ function label(f: string = ""){
 
 // org.bluez.GattApplication1 interface implementation
 export class Application extends dbus.interface.Interface  {
-    _services: service.Service[] = [];
+    _services: service.GATTService1[] = [];
     _servicePathIndex = 0;
     constructor(private _path: string,
                 private _bus: dbus.MessageBus = constants.systemBus) {
@@ -48,10 +50,10 @@ export class Application extends dbus.interface.Interface  {
         service.setPath(this._path + '/service' + this._servicePathIndex++);
         this._services.push(service);
     }
-    public getServices(): service.Service[] {
+    public getServices(): service.GATTService1[] {
         return this._services;
     }
-    public async publish(): Promise<void> {
+    public async init(): Promise<void> {
         try{
             await this._bus.requestName(constants.BUS_NAME, 0);
             const members: DbusMembers  = {
@@ -64,7 +66,7 @@ export class Application extends dbus.interface.Interface  {
             };
             Application.configureMembers(members);
             this._bus.export(this._path, this);
-            this._services.forEach((serv) => serv.publish());
+            this._services.forEach((serv) => serv.export());
             log.info(label("publish") + "Application configured");
         }
         catch (e){

@@ -1,16 +1,18 @@
-// import bleno from 'bleno';
-// import * as util from 'util';
+import * as gatt from './../gatt';
+
 import { stringify } from '../../../core/helpers';
 import { log } from '../../../core/logger';
 import { Settings } from '../../../core/settings';
 import { getUuid, UUID_Designator} from '../ble-uuid';
-import { BaseCharacteristic } from './base-characteristic';
 import { DeviceData, isDeviceDataValid } from './characteristic-data';
 
-export class DeviceCharacteristic extends  BaseCharacteristic<DeviceData> {
+export class DeviceCharacteristic extends  gatt.Characteristic<DeviceData> {
   public static UUID = getUuid(UUID_Designator.DeviceInfo);
-  constructor() {
-    super(DeviceCharacteristic.UUID, 'Device settings',  ['read', 'write']);
+  constructor(protected _service: gatt.Service) {
+    super(_service, DeviceCharacteristic.UUID,  ['read', 'write']);
+    this.setReadFn(this.handleReadRequest);
+    this.setWriteFn(this.handleWriteRequest, isDeviceDataValid);
+    this.addDescriptor(new gatt.UserDescriptor('Device settings', this))
   }
   handleReadRequest(): Promise<DeviceData> {
     return new Promise((resolve) => {
@@ -26,19 +28,14 @@ export class DeviceCharacteristic extends  BaseCharacteristic<DeviceData> {
     });
   }
 
-  handleWriteRequest(raw: unknown): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      if (isDeviceDataValid(raw)) {
-        const deviceData = raw as DeviceData;
+  handleWriteRequest(deviceData: DeviceData): Promise<void> {
+    return new Promise((resolve) => {
         this.update(Settings.SERIAL_NUMBER, deviceData.name);
         this.update(Settings.SHARED_ACCESS_KEY, deviceData.key);
         if (deviceData.color ) {
           this.update(Settings.COLOR, deviceData.color);
         }
-        resolve(true);
-      } else {
-        reject();
-      }
+        resolve();
     });
   }
 
