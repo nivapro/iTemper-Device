@@ -9,10 +9,10 @@ import { DeviceData, isDeviceDataValid } from './characteristic-data';
 export class DeviceCharacteristic extends  gatt.Characteristic<DeviceData> {
   public static UUID = getUuid(UUID_Designator.DeviceInfo);
   constructor(protected _service: gatt.Service) {
-    super(_service, DeviceCharacteristic.UUID,  ['read', 'write']);
-    this.setReadFn(this.handleReadRequest);
-    this.setWriteFn(this.handleWriteRequest, isDeviceDataValid);
-    this.addDescriptor(new gatt.UserDescriptor('Device settings', this))
+    super(_service, DeviceCharacteristic.UUID);
+    this.enableReadValue(this.handleReadRequest);
+    this.enableWriteValue(this.handleWriteRequest, isDeviceDataValid);
+    // const descriptor = new gatt.UserDescriptor('Device settings', this);
   }
   handleReadRequest(): Promise<DeviceData> {
     return new Promise((resolve) => {

@@ -36,7 +36,6 @@ interface WriteValueOptions {
 export class Descriptor extends dbus.interface.Interface implements GattDescriptor1 {
     _path: string = '';
     _descriptors: Descriptor[] =[];
-    _iface: dbus.interface.Interface;
     protected _value: Buffer = Buffer.from([0]);
     _readValueFn: () => Buffer;
     _writeValueFn: (value: Buffer) => boolean;
@@ -94,7 +93,7 @@ export class Descriptor extends dbus.interface.Interface implements GattDescript
             },
         };
         Descriptor.configureMembers(members);
-        this._bus.export(this.getPath(), this._iface);
+        this._bus.export(this.getPath(), this);
     }
         // Properties of the GATTCharacteristic1 interface, use org.freedesktop.DBus.Properties to Get and GetAll
     public get Characteristic(): string {
@@ -120,7 +119,7 @@ export class Descriptor extends dbus.interface.Interface implements GattDescript
     }
     protected ReadValue(options: ReadValueOptions): Buffer {
         if (this._readValueFn === undefined) {
-            throw new NotSupportedDBusError('ReadValue');
+            throw new NotSupportedDBusError('ReadValue', constants.GATT_DESCRIPTOR_INTERFACE);
         } 
         const value = Buffer.from(stringify(this._readValueFn()));
         const offset = options && options.offset && options.offset < value.length ? options.offset : 0;
@@ -129,16 +128,17 @@ export class Descriptor extends dbus.interface.Interface implements GattDescript
     protected WriteValue(value: Buffer, options: WriteValueOptions): Promise<void> {
         const offset = options && options.offset && options.offset < value.length ? options.offset : 0;
         if (this._writeValueFn === undefined || offset > 0 ) {
-            throw new NotSupportedDBusError('WriteValue offset=: ' + offset);
+            throw new NotSupportedDBusError('WriteValue offset=: ' + offset, constants.GATT_DESCRIPTOR_INTERFACE);
         } else {
             const valid = this._writeValueFn(value);
         } 
-        throw new NotSupportedDBusError('WriteValue, value=: ' + value.toString());
+        throw new NotSupportedDBusError('WriteValue, value=: ' + value.toString(), constants.GATT_DESCRIPTOR_INTERFACE);
     }
 }
 export class UserDescriptor extends Descriptor {
     constructor(value: string, protected _characteristic: GATTCharacteristic1){
-        super('2901', _characteristic, ['Read']);
+        super('0x2901', _characteristic, ['Read']);
         this._value = Buffer.from(value);
+        this.setReadFn(() => this._value)
     } 
 } 

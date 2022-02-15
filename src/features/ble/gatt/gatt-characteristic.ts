@@ -1,11 +1,12 @@
-import dbus from 'dbus-next';
+import dbus, { DBusError } from 'dbus-next';
 import * as constants from './gatt-constants';
 import { GattDescriptor1 } from './gatt-descriptor';
 import { Service } from './gatt-service';
-import { DbusMembers, NotSupportedDBusError } from './gatt-utils';
+import { DbusMembers, NotSupportedDBusError, MethodOptions } from './gatt-utils';
 import { stringify } from '../../../core/helpers'; 
 import { log } from '../../../core/logger';
 import { decode } from './gatt-utils';
+import { FailedException, PropertyOptions } from '.';
 // From Bluez 5.53 GATT API specification
 interface ReadValueOptions {
     offset?:number;
@@ -22,13 +23,18 @@ interface WriteValueOptions {
 	link?: string,
 	'prepare-authorize'?: boolean
 }
-export type Flag = 'broadcast' | 'read' | 'write-without-response' | 'write' | 'notify' | 'indicate' | 
-            'authenticated-signed-writes' | 'extended-properties' | 'reliable-write' | 'writable-auxiliaries' |
-            'encrypt-read' | 'encrypt-write' | 'encrypt-notify' | 'encrypt-indicate' | 'encrypt-authenticated-read' |
-            'encrypt-authenticated-write' | 'encrypt-authenticated-notify' | 'encrypt-authenticated-indicate' |
-            'secure-read' | 'secure-write' | 'secure-notify' | 'secure-indicate' | 'authorize';
+
+export type Flag = 'broadcast' | 'extended-properties' | 'writable-auxiliaries' | 'authorize';
 
 export type FlagArray = Flag[];
+
+export type ReadFlag = 'read' | 'encrypt-read' | 'encrypt-authenticated-read' | 'secure-read';
+
+export  type WriteFlag  = 'write' | 'write-without-response' |  'authenticated-signed-writes' | 'reliable-write'|
+             'encrypt-authenticated-write' | 'secure-write';
+export type NotifyFlag = 'notify' | 'encrypt-notify' | 'encrypt-authenticated-notify' | 'secure-notify';
+
+export type indicateFlag = 'indicate' | 'encrypt-indicate' | 'encrypt-authenticated-indicate' | 'secure-indicate';
 
 const m = "gatt-characteristic"
 function label(f: string = ""){
@@ -37,8 +43,8 @@ function label(f: string = ""){
 export interface CharacteristicProperties {
     Service: dbus.Variant<dbus.ObjectPath>;
     UUID: dbus.Variant<string>;
-    Flags: dbus.Variant<FlagArray>;
-    Descriptors: dbus.Variant<dbus.ObjectPath[]>;
+    Flags: dbus.Variant<string[]>;
+    Descriptors?: dbus.Variant<dbus.ObjectPath[]>;
 }
 export interface CharacteristicPropertyDict {
     [iface: string]: CharacteristicProperties;
@@ -55,16 +61,29 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     _path: string = '';
     _descriptors: GattDescriptor1[] =[];
     _descriptorIndex = 0;
+    _flags: string[] = []; 
     _readValueFn: () => Promise<T>;
     _writeValueFn: (value: T) => Promise<void>;
     _isValidFn: (raw: unknown) => boolean;
+    _startNotifyFn: () => void;
+    _stopNotifyFn: () => void;
+    _indicateFn: () => void;
+
+    _members: DbusMembers = { };
+
     constructor(
                 protected _service: Service,
                 protected _uuid: string,
-                protected _flags: FlagArray,
+                flags: FlagArray = [],
                 protected _bus: dbus.MessageBus = constants.systemBus) {
         super(constants.GATT_CHARACTERISTIC_INTERFACE);
+        
         this._service.addCharacteristic(this);
+        
+        this.addFlags(flags);
+        this.addProperty('UUID', { signature: 's', access: dbus.interface.ACCESS_READ});
+        this.addProperty('Service', { signature: 'o', access: dbus.interface.ACCESS_READ});
+        this.addProperty('Flags', {signature: 'as', access: dbus.interface.ACCESS_READ });
     }
     public addDescriptor(descriptor: GattDescriptor1): void {
         descriptor.setPath(this.getPath() + '/desc' + this._descriptorIndex++);
@@ -84,51 +103,16 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         properties[constants.GATT_CHARACTERISTIC_INTERFACE] =  {
             Service: new dbus.Variant<dbus.ObjectPath>('o', this.Service),
             UUID: new dbus.Variant<string>('s', this.UUID),
-            Flags: new dbus.Variant<FlagArray>('as', this.Flags),
+            Flags: new dbus.Variant<string[]>('as', this.Flags),
             Descriptors: new dbus.Variant<dbus.ObjectPath[]>('ao', this.Descriptors),
         };
         return properties;
     }
-    public export(): void {
-        const members: DbusMembers  = {
-            properties: {
-                UUID: {
-                    signature: 's',
-                    access: dbus.interface.ACCESS_READ,
-                },
-                Service: {
-                    signature: 'o',
-                    access: dbus.interface.ACCESS_READ,
-                },
-                // Value: {
-                //     signature: 'ay',
-                //     access: dbus.interface.ACCESS_READ,
-                // },
-                Flags: {
-                    signature: 'as',
-                    access: dbus.interface.ACCESS_READ,
-                },
-            },
-            methods: {
-                ReadValue: {
-                    inSignature: 'a{sv}',
-                    outSignature: 'ay',
-                },
-                WriteValue: {
-                    inSignature: 'aya{sv}',
-                    outSignature: '',
-                },
-                StartNotify: {
-                    inSignature: '',
-                },
-                StopNotify: {
-                    inSignature: '',
-                },
-            },
-        };
-        Characteristic.configureMembers(members);
+    public export(): void {  
+        Characteristic.configureMembers(this._members);
         this._bus.export(this.getPath(), this);
         this._descriptors.forEach(desc => desc.export());
+        log.info(label('export') + 'members=' + JSON.stringify(this._members));
     }
     // Properties of org.freedesktop.DBus.Properties.Get | GetAll
     private get Service(): string {
@@ -137,7 +121,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     private get UUID(): string {
         return this._uuid;
     }
-    private get Flags(): FlagArray {
+    private get Flags(): string[] {
         return this._flags;
     }
     private get Descriptors(): string[] {
@@ -145,18 +129,51 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         this._descriptors.forEach(desc => result.push(desc.getPath()));
         return result;
     }
-    public setReadFn(fn: () => Promise<T>) {
-        this._readValueFn = fn;
+    private addFlags(flags: string[]): void {
+        flags.forEach(flag => {
+            if (this._flags.indexOf(flag) === -1) {
+                this._flags.push(flag);
+            }
+        });
     }
-    public setWriteFn(writeValueFn: (value: T) => Promise<void>, isValidFn: (raw: unknown) => boolean) {
+    public addMethod(methodName: string, options: MethodOptions) {
+        if (!this._members.methods){
+            this._members['methods'] = { }
+        } 
+        this._members.methods[methodName] = options;
+        log.info(label('addMethod') + JSON.stringify( this._members.methods));
+    } 
+    public addProperty(propertyName: string, options: PropertyOptions) {
+        if (!this._members.properties){
+            this._members['properties'] = { }
+        } 
+        this._members.properties[propertyName] = options;
+        log.info(label('addProperty') + JSON.stringify( this._members.properties));      
+    }    
+    public enableReadValue(readValueFn: () => Promise<T>, flags: ReadFlag[] = ['read']) {
+        this.addFlags(flags);
+        this._readValueFn = readValueFn;
+        this.addMethod('ReadValue', { inSignature: 'a{sv}', outSignature: 'ay' });
+    }
+    public enableWriteValue( writeValueFn: (value: T) => Promise<void>, isValidFn: (raw: unknown) => boolean, flags: WriteFlag[] = ['write']) {
+        this.addFlags(flags);
         this._writeValueFn = writeValueFn;
         this._isValidFn = isValidFn;
+        this.addMethod('WriteValue', { inSignature: 'aya{sv}', outSignature: '' });
+    }
+    public enableNotify(flags: NotifyFlag[], startNotifyFn: () => void, stopNotifyFn: () => void) {
+        this.addFlags(flags);
+        this._startNotifyFn = startNotifyFn;
+        this._stopNotifyFn = stopNotifyFn;
+        this.addMethod('StartNotify', { inSignature: '', outSignature: '' });
+        this.addMethod('StopNotify',{ inSignature: '', outSignature: '' });
     }
     // Methods members
     protected  ReadValue(options: ReadValueOptions): Promise<Buffer> {
+
         return new Promise ((resolve, reject) => {
             if (this._readValueFn === undefined) {
-                reject ('ReadValue function undefined');
+                reject (new NotSupportedDBusError('ReadValue', constants.GATT_CHARACTERISTIC_INTERFACE));
             } 
             this._readValueFn().then((value) => {
                 const buffer = Buffer.from(stringify(value));
@@ -173,7 +190,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         return new Promise ((resolve, reject) => {
             const offset = options && options.offset ? options.offset : 0;
             if (this._writeValueFn === undefined || offset > 0) {
-                reject(new NotSupportedDBusError('WriteValue, value=: ' + data.toString()));
+                reject(new FailedException('WriteValue, value=: ' + data.toString(), constants.GATT_CHARACTERISTIC_INTERFACE));
             }
             const raw = JSON.parse(decode(data));
             if (this._isValidFn(raw)){
@@ -184,13 +201,17 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         });
     }
     protected StartNotify(): void {
-        if (!this._flags.find(flag => flag === 'notify')) {
-            throw new NotSupportedDBusError('StartNotify');
+        if (!this._startNotifyFn) {
+            throw new NotSupportedDBusError('StartNotify', constants.GATT_CHARACTERISTIC_INTERFACE);
+        } else{
+            this._startNotifyFn();
         } 
     }
     protected StopNotify(): void {
-        if (!this._flags.find(flag => flag === 'notify')) {
-            throw new NotSupportedDBusError('StopNotify');
-        }
+        if (!this._stopNotifyFn) {
+            throw new NotSupportedDBusError('StopNotify', constants.GATT_CHARACTERISTIC_INTERFACE);
+        } else{
+            this._stopNotifyFn();
+        } 
     }
 }
