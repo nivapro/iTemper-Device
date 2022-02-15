@@ -10,7 +10,7 @@ import { getUuid, UUID_Designator} from './ble-uuid';
 
 class Characteristic0 extends gatt.Characteristic<string> {
     static UUID = '1ad01b31-dd4b-478c-9aa3-12bd90900001';
-    private _value = 'Hej hopp i lingonskogen 0';
+    _value = 'Hej hopp i lingonskogen 0';
     constructor(protected _service: gatt.Service) {
         super(_service, Characteristic0.UUID);
         this.enableReadValue (this.read);
@@ -21,7 +21,7 @@ class Characteristic0 extends gatt.Characteristic<string> {
 }
 class Characteristic1 extends gatt.Characteristic<string> {
     static UUID = '1ad01b31-dd4b-478c-9aa3-12bd90900002';
-    private _value = 'Hej hopp i lingonskogen 1';
+    _value = 'Hej hopp i lingonskogen 1';
     constructor(protected _service: gatt.Service) {
         super(_service, Characteristic1.UUID);
         this.enableReadValue (this.read);
@@ -37,7 +37,7 @@ class Characteristic1 extends gatt.Characteristic<string> {
     } 
     public write(value: string): void {
         this._value = value;
-        log.info(label('write') + 'value=' + this._value);
+        log.info(label('write') + 'Value changed, new value=' + this._value);
     }
 }
 const DOMAIN_PATH = '/io/itemper'; 
