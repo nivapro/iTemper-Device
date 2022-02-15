@@ -1,6 +1,4 @@
-import { Application } from './gatt/gatt-application';
-import { Characteristic } from './gatt/gatt-characteristic';
-import { Service } from './gatt/gatt-service';
+import * as gatt from './gatt'
 
 import { log } from '../../core/logger';
 const m = "gattserver"
@@ -9,33 +7,25 @@ function label(f: string = ""){
 } 
 import { getUuid, UUID_Designator} from './ble-uuid';
 
-const DOMAIN_PATH = '/io/itemper'; 
-//
-// All services, characteristics, and descriptors are located under this path.
 
-const SERVICE0_UUID = getUuid(UUID_Designator.PrimaryService);;
-
-const app = new Application(DOMAIN_PATH);
-const service0 = new Service(SERVICE0_UUID, app);
-
-class Characteristic0 extends Characteristic<string> {
+class Characteristic0 extends gatt.Characteristic<string> {
     static UUID = '1ad01b31-dd4b-478c-9aa3-12bd90900001';
     private _value = 'Hej hopp i lingonskogen 0';
-    constructor(protected _service: Service) {
-        super(_service, Characteristic0.UUID, ['read']);
-        this.setReadFn (this.read);
+    constructor(protected _service: gatt.Service) {
+        super(_service, Characteristic0.UUID);
+        this.enableReadValue (this.read);
     }
     private read(): Promise<string> {
         return new Promise (resolve => resolve(this._value))
     } 
 }
-class Characteristic1 extends Characteristic<string> {
+class Characteristic1 extends gatt.Characteristic<string> {
     static UUID = '1ad01b31-dd4b-478c-9aa3-12bd90900002';
     private _value = 'Hej hopp i lingonskogen 1';
-    constructor(protected _service: Service) {
-        super(_service, Characteristic1.UUID, ['read', 'write']);
-        this.setReadFn (this.read);
-        this.setWriteFn(this.write, this.isValid);
+    constructor(protected _service: gatt.Service) {
+        super(_service, Characteristic1.UUID);
+        this.enableReadValue (this.read);
+        this.enableWriteValue(this.write, this.isValid);
     }
     private read(): Promise<string> {
         return new Promise (resolve => resolve(this._value))
@@ -51,16 +41,18 @@ class Characteristic1 extends Characteristic<string> {
         });
     }
 }
+const DOMAIN_PATH = '/io/itemper'; 
+export const SERVICE0_UUID = '1ad01b31-dd4b-478c-9aa3-12bd90901000';
 
-const characteristic0 = new Characteristic0(service0);
-const characteristic1 = new Characteristic1(service0);
-
-export async function init() {
-    await app.init();
-    // log.info('characteristic0 properties:' + JSON.stringify(characteristic0.getProperties()));
-    // log.info('characteristic0 properties:' + JSON.stringify(characteristic1.getProperties()));
-    // log.info('service0 properties:' + JSON.stringify(service0.getProperties()));
-}
+export class GattServer {
+    _app = new gatt.Application(DOMAIN_PATH);
+    _service0 = new gatt.Service(SERVICE0_UUID, this._app);
+    _char0 = new Characteristic0(this._service0);
+    _char1 = new Characteristic1(this._service0);
+    public init(){
+        this._app.init();
+    } 
+} 
 
 
 

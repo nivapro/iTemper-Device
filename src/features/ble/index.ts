@@ -4,7 +4,8 @@ import { Adertisement } from './gatt/gap-advertisment';
 
 import * as uuids from './ble-uuid';
 
-import { gattServer} from './services/device-info-service';
+// import { GattServer, SERVICE0_UUID }  from './services/device-info-service';
+import { GattServer, SERVICE0_UUID }  from './gatt-server';
 
 import { log } from '../../core/logger';
 import { Setting, Settings } from '../../core/settings';
@@ -13,17 +14,25 @@ const m = "ble"
 function label(f: string = ""){
     return m + "." + f + ": ";
 } 
+// Gatt Server
+const gattServer = new GattServer();
+
+// GAP Advertisement
 const includeTYxPower = true;
 const advertisment = new Adertisement('/io/itemper', 0, includeTYxPower);
 
 const namePrefix = 'itemper ';
 
+// function AdvertisedName() {
+//   return namePrefix + Settings.get(Settings.SERIAL_NUMBER).value.toString();
+// }
+
 function AdvertisedName() {
-  return namePrefix + Settings.get(Settings.SERIAL_NUMBER).value.toString();
+  return namePrefix + Date.now().toString().slice(9);
 }
 async function startAdvertising() {
   try{
-    advertisment.addServiceUUID(uuids.getUuid(uuids.UUID_Designator.PrimaryService));
+    advertisment.addServiceUUID(SERVICE0_UUID);
     advertisment.setLocalName(AdvertisedName());
     await advertisment.publish();
     log.info(label("startAdvertising") + "Completed");

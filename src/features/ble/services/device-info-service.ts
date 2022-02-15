@@ -10,23 +10,15 @@ const DOMAIN_PATH = '/io/itemper';
 //
 // All services, characteristics, and descriptors are located under this path.
 
-const SERVICE0_UUID = getUuid(UUID_Designator.PrimaryService);;
+export const SERVICE0_UUID = '1ad01b31-dd4b-478c-9aa3-12bd90900100' // getUuid(UUID_Designator.PrimaryService);;
+export class GattServer {
+    _app = new gatt.Application(DOMAIN_PATH);
+    _service = new gatt.Service(SERVICE0_UUID, this._app);
+    _char = new DeviceCharacteristic(this._service);
 
-export const gattServer = new gatt.Application(DOMAIN_PATH);
-const deviceInfoService = new gatt.Service(SERVICE0_UUID, gattServer);
-const deviceCharacteristic = new DeviceCharacteristic(deviceInfoService);
+    public init(){
+        this._app.init();
+    } 
+} 
 
-// export class DeviceInfoService extends gatt.Service {
-//   public static UUID = getUuid(UUID_Designator.PrimaryService);
-//   constructor() {
-//     super({
-//       uuid: DeviceInfoService.UUID,
-//       characteristics: [
-//         new AvailableWiFiCharacteristic(),
-//         new DeviceCharacteristic(),
-//         new CurrentWiFiCharacteristic(),
-//       ],
-//     });
-//   }
-// }
 
