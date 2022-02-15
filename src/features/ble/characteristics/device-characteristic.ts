@@ -26,15 +26,12 @@ export class DeviceCharacteristic extends  gatt.Characteristic<DeviceData> {
 
   }
 
-  handleWriteRequest(deviceData: DeviceData): Promise<void> {
-    return new Promise((resolve) => {
+  handleWriteRequest(deviceData: DeviceData): void {
         this.update(Settings.SERIAL_NUMBER, deviceData.name);
         this.update(Settings.SHARED_ACCESS_KEY, deviceData.key);
         if (deviceData.color ) {
           this.update(Settings.COLOR, deviceData.color);
         }
-        resolve();
-    });
   }
 
   update(setting: string, value: string) {
