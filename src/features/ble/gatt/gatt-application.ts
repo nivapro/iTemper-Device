@@ -25,9 +25,10 @@ function label(f: string = ""){
 export class Application extends dbus.interface.Interface  {
     _services: service.GATTService1[] = [];
     _servicePathIndex = 0;
+    static IFACE = 'org.freedesktop.DBus.ObjectManager';
     constructor(private _path: string,
                 private _bus: dbus.MessageBus = constants.systemBus) {
-        super('org.freedesktop.DBus.ObjectManager');
+        super(Application.IFACE);
     }
     // Properties & Methods of the interface org.freedesktop.DBus.ObjectManager
     private GetManagedObjects() {
@@ -48,30 +49,35 @@ export class Application extends dbus.interface.Interface  {
     // Methods for adding characteristics and publishing the interface on DBus.
     public addService(service: service.Service): void {
         service.setPath(this._path + '/service' + this._servicePathIndex++);
+        log.info(label('addService') + ', path=' + this._path);
         this._services.push(service);
+        log.info(label('addService') + 'Completed');
     }
     public getServices(): service.GATTService1[] {
         return this._services;
     }
     public async init(): Promise<void> {
+        const members: DbusMembers  = {
+            methods: {
+                GetManagedObjects: {
+                    inSignature: '',
+                    outSignature: 'a{oa{sa{sv}}}',
+                },
+            },
+        };
         try{
             await this._bus.requestName(constants.BUS_NAME, 0);
-            const members: DbusMembers  = {
-                methods: {
-                    GetManagedObjects: {
-                        inSignature: '',
-                        outSignature: 'a{oa{sa{sv}}}',
-                    },
-                },
-            };
-            Application.configureMembers(members);
-            this._bus.export(this._path, this);
-            this._services.forEach((serv) => serv.export());
-            log.info(label("publish") + "Application configured");
+            log.info(label("publish") + 'DBus name set to ' + constants.BUS_NAME);
         }
         catch (e){
-            log.error(label("publish") + "Could not request name and configure members, error=" + JSON.stringify(e));
+            log.error(label("publish") + "Could not request name, error=" + JSON.stringify(e));
         }
+        Application.configureMembers(members);
+        log.info(label("publish") + Application.IFACE + ' members configured');
+        this._bus.export(this._path, this);
+        log.info(label("publish") + 'Interface ' + Application.IFACE + ' exported on path ' +  this._path);
+        this._services.forEach((serv) => serv.export());
+        log.info(label("publish") + "Application configured");
         try{
             const gattManager = await GattManager1.Connect(this._bus);
             gattManager.RegisterApplication(this._path, {});
