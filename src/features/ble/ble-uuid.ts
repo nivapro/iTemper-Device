@@ -24,13 +24,13 @@ export enum UUID_Designator {
 export function getUuid(designator: UUID_Designator) {
     switch (designator) {
         case UUID_Designator.PrimaryService:
-            return conf.PRIMARY_SERVICE.length >  0 ?  conf.PRIMARY_SERVICE : '1ad01b31-dd4b-478c-9aa3-12bd90900000';
+            return conf.PRIMARY_SERVICE.length >  0 ?  conf.PRIMARY_SERVICE : '1ad01b31-dd4b-478c-9aa3-12bd90900100';
         case UUID_Designator.DeviceInfo:
-            return 'deeb26b8b4b04884a1e1b13c0c957805';
+            return '1ad01b31-dd4b-478c-9aa3-12bd90900010';
         case UUID_Designator.CurrentWiFi:
-            return '00e5394a2d994c2c9c44d752b618fc9b';
+            return '1ad01b31-dd4b-478c-9aa3-12bd90900011';
         case UUID_Designator.AvailableWiFi:
-            return 'cdd1fc106d5e425488864d4130897b55';
+            return '1ad01b31-dd4b-478c-9aa3-12bd90900012';
     }
 }
 
