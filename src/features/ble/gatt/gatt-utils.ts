@@ -1,6 +1,13 @@
 import dbus from 'dbus-next';
+import { log } from '../../../core/logger';
 import * as util from 'util';
 import * as constants from './gatt-constants'
+
+const m = "gatt-utils"
+function label(f: string = ""){
+    return m + "." + f + ": ";
+} 
+
 export type DbusMembers = {
     properties?: { [key: string]: dbus.interface.PropertyOptions},
     methods?: { [key: string]: dbus.interface.MethodOptions },
@@ -13,8 +20,9 @@ export type SignalOptions = dbus.interface.SignalOptions;
 
 // helper functions to encode/decode messages
 export function decode(buf: Buffer): string {
-    const dec = new util.TextDecoder('utf-8');
-    return dec.decode(buf);
+    const decoder = new util.TextDecoder('utf-8');
+    const decoded = decoder.decode(buf);
+    return decoded;
   }
 export function encode(value: string ): BufferSource {
     const enc = new util.TextEncoder();
