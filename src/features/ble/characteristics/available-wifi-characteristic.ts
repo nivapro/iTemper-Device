@@ -1,4 +1,4 @@
-
+import * as gatt from './../gatt';
 import wifi from 'node-wifi';
 import { log } from '../../../core/logger';
 import { WiFi } from '../../device/device-status';
@@ -7,19 +7,19 @@ import { BaseCharacteristic } from './base-characteristic';
 import { WiFiData } from './characteristic-data';
 
 type NetworkList = WiFiData[];
-export class AvailableWiFiCharacteristic extends  BaseCharacteristic<NetworkList> {
+export class AvailableWiFiCharacteristic extends  gatt.Characteristic<NetworkList> {
   public static UUID = getUuid(UUID_Designator.AvailableWiFi);
-  private isSubscription = false;
-  private updateValueCallback: any;
-  private maxValueSize = 0;
-  private Interval = 20_000;
+  private Interval = 5_000;
   private timeout: NodeJS.Timeout;
 
-  constructor() {
-    super(AvailableWiFiCharacteristic.UUID, 'Available wireless networks',  ['read', 'notify']);
+  constructor(protected _service: gatt.Service) {
+    super(_service, AvailableWiFiCharacteristic.UUID);
+    this.enableReadValue(this.handleReadRequest);
+    this.enableNotify(this.startNotify, this.stopNotify);
   }
+
   handleWriteRequest(raw: unknown): Promise<boolean> {
-      throw Error('handleWriteRequest not implemented: received' + JSON.stringify(raw));
+      throw Error('AvailableWiFiCharacteristic: handleWriteRequest not implemented: received' + JSON.stringify(raw));
   }
   handleReadRequest(MaxNetworks: number = 5): Promise<NetworkList> {
     return new Promise((resolve, reject) => {
@@ -39,18 +39,22 @@ export class AvailableWiFiCharacteristic extends  BaseCharacteristic<NetworkList
       });
     });
   }
-
-  onSubscribe(maxValueSize: number, updateValueCallback: (data: any) => void): void {
-    log.info('available-wifi-characteristic.onSubscribe: maxValueSize=' + maxValueSize);
-    this.isSubscription = true;
-    this.updateValueCallback = updateValueCallback;
-    this.maxValueSize = maxValueSize;
+  startNotify() {
+    this.Notifying = true;
     this.publish();
     this.timeout = setInterval(() => {
-      if (this.isSubscription) {
+      if (this.Notifying) {
         this.publish();
       }
     }, this.Interval);
+  }
+  stopNotify() {
+    log.info('AvailableWiFiCharacteristic.stopNotify');
+    if (this.Notifying) {
+      this.Notifying = false;
+      clearInterval(this.timeout);
+    }
+
   }
   publish() {
     log.info('available-wifi-characteristic.publish');
@@ -58,22 +62,16 @@ export class AvailableWiFiCharacteristic extends  BaseCharacteristic<NetworkList
     .then((networks) => {
       for (const network of networks) {
         const value = Buffer.from(JSON.stringify(network));
-        if (value.length > this.maxValueSize) {
+        if (value.length > this.MTU) {
           log.error('available-wifi-characteristic.publish: value exceeds maxValueSize ' + value.length);
         } else {
+          this.Value = value;
           log.info('available-wifi-characteristic.publish');
-          if (this.isSubscription) {
-            this.updateValueCallback(value);
+          if (this.Notifying) {
+            AvailableWiFiCharacteristic.ValueChanged<NetworkList>(this);
           }
         }
       }
     });
-  }
-   onUnsubscribe(): void {
-    log.info('base-characteristic.onUnsubscribe');
-    if (this.isSubscription) {
-      this.isSubscription = false;
-      clearInterval(this.timeout);
-    }
   }
 }
