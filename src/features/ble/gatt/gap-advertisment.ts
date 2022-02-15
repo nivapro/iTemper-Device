@@ -169,7 +169,7 @@ export interface ManufacturerDataDict{
         this._includes.push(feature);
     }
     public Release() {
-        // Nothing to do
+        log.info(label('Release') + 'Nothing to do');
     }
     public getPath(): string {
         return this._path;
