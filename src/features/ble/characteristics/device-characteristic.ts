@@ -14,18 +14,16 @@ export class DeviceCharacteristic extends  gatt.Characteristic<DeviceData> {
     this.enableWriteValue(this.handleWriteRequest, isDeviceDataValid);
     // const descriptor = new gatt.UserDescriptor('Device settings', this);
   }
-  handleReadRequest(): Promise<DeviceData> {
-    return new Promise((resolve) => {
+  handleReadRequest(): DeviceData {
       const data = {
           name: Settings.get(Settings.SERIAL_NUMBER).value as string,
           color:  Settings.get(Settings.COLOR).value as string,
           deviceID: '123',
           key: Settings.get(Settings.SHARED_ACCESS_KEY).value as string,
       };
-      log.info('device-characteristic.handleReadRequest: successfully retrieving device data='
-      + stringify(data));
-      resolve(data);
-    });
+      log.info('device-characteristic.handleReadRequest: success device data=' + stringify(data));
+      return data;
+
   }
 
   handleWriteRequest(deviceData: DeviceData): Promise<void> {

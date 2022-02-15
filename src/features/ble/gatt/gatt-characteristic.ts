@@ -62,8 +62,8 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     _descriptors: GattDescriptor1[] =[];
     _descriptorIndex = 0;
     _flags: string[] = []; 
-    _readValueFn: () => Promise<T>;
-    _writeValueFn: (value: T) => Promise<void>;
+    _readValueFn: () => T;
+    _writeValueFn: (value: T) => void;
     _isValidFn: (raw: unknown) => boolean;
     _startNotifyFn: () => void;
     _stopNotifyFn: () => void;
@@ -150,12 +150,12 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         this._members.properties[propertyName] = options;
         log.info(label('addProperty') + JSON.stringify( this._members.properties));      
     }    
-    public enableReadValue(readValueFn: () => Promise<T>, flags: ReadFlag[] = ['read']) {
+    public enableReadValue(readValueFn: () => T, flags: ReadFlag[] = ['read']) {
         this.addFlags(flags);
         this._readValueFn = readValueFn;
         this.addMethod('ReadValue', { inSignature: 'a{sv}', outSignature: 'ay' });
     }
-    public enableWriteValue( writeValueFn: (value: T) => Promise<void>, isValidFn: (raw: unknown) => boolean, flags: WriteFlag[] = ['write']) {
+    public enableWriteValue( writeValueFn: (value: T) => void, isValidFn: (raw: unknown) => boolean, flags: WriteFlag[] = ['write']) {
         this.addFlags(flags);
         this._writeValueFn = writeValueFn;
         this._isValidFn = isValidFn;
@@ -169,36 +169,62 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         this.addMethod('StopNotify',{ inSignature: '', outSignature: '' });
     }
     // Methods members
-    protected  ReadValue(options: ReadValueOptions): Promise<Buffer> {
+    // protected  ReadValue(options: ReadValueOptions): Promise<Buffer> {
 
-        return new Promise ((resolve, reject) => {
-            if (this._readValueFn === undefined) {
-                reject (new NotSupportedDBusError('ReadValue', constants.GATT_CHARACTERISTIC_INTERFACE));
-            } 
-            this._readValueFn().then((value) => {
-                const buffer = Buffer.from(stringify(value));
-                const offset = options && options.offset ? options.offset : 0;
-                if (offset < buffer.length){
-                    resolve (buffer.slice(offset));
-                } else {
-                    reject('offset larger than buffer size')
-                } 
-            });
-        }); 
+    //     return new Promise ((resolve, reject) => {
+    //         if (this._readValueFn === undefined) {
+    //             reject (new NotSupportedDBusError('ReadValue', constants.GATT_CHARACTERISTIC_INTERFACE));
+    //         } 
+    //         this._readValueFn().then((value) => {
+    //             const buffer = Buffer.from(stringify(value));
+    //             const offset = options && options.offset ? options.offset : 0;
+    //             if (offset < buffer.length){
+    //                 resolve (buffer.slice(offset));
+    //             } else {
+    //                 reject('offset larger than buffer size')
+    //             } 
+    //         });
+    //     }); 
+    // }
+    protected  ReadValue(options: ReadValueOptions): Buffer {
+        log.info(label('ReadValue') + 'options=' + JSON.stringify(options));
+        if (this._readValueFn === undefined) {
+            throw new NotSupportedDBusError('ReadValue', constants.GATT_CHARACTERISTIC_INTERFACE);
+        } 
+        const value = this._readValueFn();
+        const buffer = Buffer.from(stringify(value));
+        const offset = options && options.offset ? options.offset : 0;
+        if (offset < buffer.length){
+            return  buffer.slice(offset);
+        } else {
+            throw new FailedException('offset larger than buffer size', constants.GATT_CHARACTERISTIC_INTERFACE)
+        } 
     }
-    protected WriteValue(data: Buffer, options: WriteValueOptions): Promise<void> {
-        return new Promise ((resolve, reject) => {
-            const offset = options && options.offset ? options.offset : 0;
-            if (this._writeValueFn === undefined || offset > 0) {
-                reject(new FailedException('WriteValue, value=: ' + data.toString(), constants.GATT_CHARACTERISTIC_INTERFACE));
-            }
-            const raw = JSON.parse(decode(data));
+    protected WriteValue(data: Buffer, options: WriteValueOptions): void {
+        log.info(label('WriteValue') + 'options=' + JSON.stringify(options));
+        log.info(label('WriteValue') + 'data=' + JSON.stringify(data));
+        const offset = options && options.offset ? options.offset : 0;
+        if (this._writeValueFn === undefined || offset > 0) {
+            log.error(label('WriteValue') + 'No WriteValue function or offset > 0');
+            throw new FailedException('WriteValue, value=: ' + data.toString(), constants.GATT_CHARACTERISTIC_INTERFACE);
+        }
+        // assumes that the client has JSON.stringified the value
+        try{
+            const decoded = decode(data);
+            log.info(label('WriteValue') + 'decoded=' + decoded);
+            const raw = JSON.parse(decoded); 
+            log.info(label('WriteValue') + 'raw=' + JSON.stringify(raw));
             if (this._isValidFn(raw)){
-                return this._writeValueFn(<T>raw).then(() => resolve());
+                log.info(label('WriteValue') + 'writes value to _writeValueFn'); 
+                this._writeValueFn(<T>raw);
             } else{
-                reject('WriteValue, received invalid data');
+                throw new FailedException('WriteValue, received invalid data', constants.GATT_CHARACTERISTIC_INTERFACE);
             };
-        });
+        } catch (e) {
+            log.error(label('WriteValue') + 'e=' + e);
+        } 
+
+
     }
     protected StartNotify(): void {
         if (!this._startNotifyFn) {

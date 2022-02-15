@@ -15,8 +15,8 @@ class Characteristic0 extends gatt.Characteristic<string> {
         super(_service, Characteristic0.UUID);
         this.enableReadValue (this.read);
     }
-    private read(): Promise<string> {
-        return new Promise (resolve => resolve(this._value))
+    private read(): string {
+        return this._value;
     } 
 }
 class Characteristic1 extends gatt.Characteristic<string> {
@@ -27,18 +27,17 @@ class Characteristic1 extends gatt.Characteristic<string> {
         this.enableReadValue (this.read);
         this.enableWriteValue(this.write, this.isValid);
     }
-    private read(): Promise<string> {
-        return new Promise (resolve => resolve(this._value))
+    private read(): string {
+        return this._value;
     } 
     public isValid(data: unknown): boolean {
-        return typeof data === 'string'
+        const check = typeof data === 'string';
+        log.info(label('isValid') + 'check=' + check? 'valid': 'invalid');
+        return check;
     } 
-    public write(value: string): Promise<void> {
-        return new Promise (resolve =>{ 
-            this._value = value;
-            log.info(label('write') + 'value=' + this._value);
-            resolve();
-        });
+    public write(value: string): void {
+        this._value = value;
+        log.info(label('write') + 'value=' + this._value);
     }
 }
 const DOMAIN_PATH = '/io/itemper'; 
