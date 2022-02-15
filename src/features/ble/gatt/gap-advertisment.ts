@@ -135,9 +135,9 @@ export interface ManufacturerDataDict{
             // log.info(label("publish") + "managedObjects=" + JSON.stringify(managedObjects));
             const advertisingManager = await LEAdvertisingManager1.Connect(constants.systemBus)
             await advertisingManager.RegisterAdvertisement(this._path, {});
-            log.info(label("publish") + "Registered application, path=" + this._path);
+            log.info(label("publish") + "Registered Adertisement, path=" + this._path);
         } catch(e){
-            log.error(label("publish") + "Registered application, error=" + JSON.stringify(e));
+            log.error(label("publish") + "Registered Adertisement, error=" + JSON.stringify(e));
         } 
 
     }
