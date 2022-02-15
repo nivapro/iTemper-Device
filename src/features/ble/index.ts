@@ -4,8 +4,8 @@ import { Adertisement } from './gatt/gap-advertisment';
 
 import * as uuids from './ble-uuid';
 
-// import { GattServer, SERVICE0_UUID }  from './services/device-info-service';
-import { GattServer, SERVICE0_UUID }  from './gatt-server';
+import { GattServer, SERVICE0_UUID }  from './services/device-info-service';
+// import { GattServer, SERVICE0_UUID }  from './gatt-server';
 
 import { log } from '../../core/logger';
 import { Setting, Settings } from '../../core/settings';
