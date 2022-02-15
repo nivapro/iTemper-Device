@@ -105,3 +105,15 @@ const Dfeet = {
         }
     }
 }
+
+const members = {
+    "properties":{
+        "UUID":{"signature":"s","access":"read","name":"UUID","signatureTree":[{"type":"s","child":[]}]},
+        "Service":{"signature":"o","access":"read","name":"Service","signatureTree":[{"type":"o","child":[]}]},
+        "Flags":{"signature":"as","access":"read","name":"Flags","signatureTree":[{"type":"a","child":[{"type":"s","child":[]}]}]}
+    },
+    "methods":{
+        "ReadValue":{"inSignature":"a{sv}","outSignature":"ay","name":"ReadValue","disabled":false,"inSignatureTree":[{"type":"a","child":[{"type":"{","child":[{"type":"s","child":[]},{"type":"v","child":[]}]}]}],"outSignatureTree":[{"type":"a","child":[{"type":"y","child":[]}]}]},
+        "WriteValue":{"inSignature":"aya{sv}","outSignature":"","name":"WriteValue","disabled":false,"inSignatureTree":[{"type":"a","child":[{"type":"y","child":[]}]},{"type":"a","child":[{"type":"{","child":[{"type":"s","child":[]},{"type":"v","child":[]}]}]}],"outSignatureTree":[]}
+    }
+}
