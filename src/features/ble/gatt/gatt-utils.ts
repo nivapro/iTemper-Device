@@ -7,6 +7,10 @@ export type DbusMembers = {
     signals?: { [key: string]: dbus.interface.SignalOptions }
 };
 
+export type PropertyOptions = dbus.interface.PropertyOptions;
+export type MethodOptions = dbus.interface.MethodOptions;
+export type SignalOptions = dbus.interface.SignalOptions;
+
 // helper functions to encode/decode messages
 export function decode(buf: Buffer): string {
     const dec = new util.TextDecoder('utf-8');
@@ -18,7 +22,13 @@ export function encode(value: string ): BufferSource {
 }
 
 export class NotSupportedDBusError extends dbus.DBusError {
-  constructor(public text: string) {
-      super('org.bluez.Error.NotSupported', constants.GATT_CHARACTERISTIC_INTERFACE + ': ' + text);
+  constructor(public text: string, iface: string) {
+      super('org.bluez.Error.NotSupported', iface + ': ' + text);
+  }
+}
+
+export class FailedException extends dbus.DBusError {
+  constructor(public text: string, iface: string) {
+      super('org.bluez.Error.Failed', iface + ': ' + text);
   }
 }
