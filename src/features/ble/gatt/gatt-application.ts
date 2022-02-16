@@ -51,7 +51,7 @@ export class Application extends dbus.interface.Interface  {
     // Methods for adding characteristics and publishing the interface on DBus.
     public addService(service: service.Service): void {
         service.setPath(this._path + '/service' + this._servicePathIndex++);
-        log.info(label('addService') + ', path=' + this._path);
+        log.debug(label('addService') + ', path=' + this._path);
         this._services.push(service);
         log.info(label('addService') + 'Completed');
     }
@@ -69,11 +69,11 @@ export class Application extends dbus.interface.Interface  {
         };
         await utils.setBusName(this._name);
         Application.configureMembers(members);
-        log.info(label("publish") + Application.IFACE + ' members configured');
+        log.debug(label("publish") + Application.IFACE + ' DBus members configured');
         this._bus.export(this._path, this);
-        log.info(label("publish") + 'Interface ' + Application.IFACE + ' exported on path ' +  this._path);
+        log.debug(label("publish") + 'Interface ' + Application.IFACE + ' exported on path ' +  this._path);
         this._services.forEach((serv) => serv.export());
-        log.info(label("publish") + "Application configured");
+        log.debug(label("publish") + "Application configured");
         try{
             const gattManager = await GattManager1.Connect(this._bus);
             gattManager.RegisterApplication(this._path, {});

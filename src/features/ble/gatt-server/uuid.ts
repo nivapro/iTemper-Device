@@ -1,7 +1,7 @@
 // All UUIDs are based on this random UUID:
 // 1ad01b31-dd4b-478c-9aa3-cbca25db3739
 
-import { conf } from '../../core/config' 
+import { conf } from '../../../core/config' 
 export enum UUID_Designator {
     PrimaryService,
     DeviceInfo,

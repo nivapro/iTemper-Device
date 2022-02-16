@@ -2,7 +2,7 @@ import * as gatt from '../gatt';
 import wifi from 'node-wifi';
 import { log } from '../../../core/logger';
 import { WiFi } from '../../device/device-status';
-import { getUuid, UUID_Designator} from '../ble-uuid';
+import { getUuid, UUID_Designator} from './uuid';
 import { WiFiData } from './data';
 
 type NetworkList = WiFiData[];

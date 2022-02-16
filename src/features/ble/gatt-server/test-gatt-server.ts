@@ -5,7 +5,7 @@ const m = "gattserver"
 function label(f: string = ""){
     return m + "." + f + ": ";
 } 
-import { getUuid, UUID_Designator} from '../ble-uuid';
+import { getUuid, UUID_Designator} from './uuid';
 
 
 class Characteristic0 extends gatt.Characteristic<string> {

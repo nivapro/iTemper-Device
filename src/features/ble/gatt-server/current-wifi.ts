@@ -3,7 +3,7 @@ import wifi from 'node-wifi';
 import { stringify } from '../../../core/helpers';
 import { log } from '../../../core/logger';
 import { WiFi } from '../../device/device-status';
-import { getUuid, UUID_Designator} from '../ble-uuid';
+import { getUuid, UUID_Designator} from './uuid';
 import { isWiFiRequestValid, WiFiData, WiFiRequest } from './data';
 
 export class CurrentWiFiCharacteristic extends  gatt.Characteristic<WiFiData>{

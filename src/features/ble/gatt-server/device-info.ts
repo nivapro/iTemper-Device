@@ -3,7 +3,7 @@ import * as gatt from '../gatt';
 import { stringify } from '../../../core/helpers';
 import { log } from '../../../core/logger';
 import { Settings } from '../../../core/settings';
-import { getUuid, UUID_Designator} from '../ble-uuid';
+import { getUuid, UUID_Designator} from './uuid';
 import { DeviceData, isDeviceDataValid } from './data';
 
 export class DeviceInfoCharacteristic extends  gatt.Characteristic<DeviceData> {
