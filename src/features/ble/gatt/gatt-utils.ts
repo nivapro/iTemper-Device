@@ -11,7 +11,6 @@ function label(f: string = ""){
 const systemBus: dbus.MessageBus = dbus.systemBus();
 export async function setBusName(name: string ){
   const BUS_NAME = name;
-  systemBus.requestName(BUS_NAME, 0);
   try{
     await systemBus.requestName(BUS_NAME, 0);
     log.info(label("setDBusName") + 'DBus name set to ' + BUS_NAME);
