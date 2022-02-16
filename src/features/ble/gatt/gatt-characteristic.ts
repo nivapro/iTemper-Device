@@ -58,23 +58,22 @@ export interface GATTCharacteristic1 {
     export(): void;
 }
 export abstract class Characteristic<T>extends dbus.interface.Interface implements GATTCharacteristic1  {
-    _path: string = '';
-    _descriptors: GattDescriptor1[] =[];
-    _descriptorIndex = 0;
-    _flags: string[] = []; 
-    _readValueFn: () => T ;
-    _readValueAsync: () => Promise<T> ;
-    _writeValueFn: (value: T) => void ;
-    _writeValueAsync: (value: T) => Promise<void> ;
-    _isValidFn: (raw: unknown) => boolean;
-    _startNotifyFn: () => void;
-    _stopNotifyFn: () => void;
-    _indicateFn: () => void;
-    _notifying: boolean = false;
+    private _path: string = '';
+    private _descriptors: GattDescriptor1[] =[];
+    private _descriptorIndex = 0;
+    private _flags: string[] = []; 
+    private _readValueFn: () => T ;
+    private _readValueAsync: () => Promise<T> ;
+    private _writeValueFn: (value: T) => void ;
+    private _writeValueAsync: (value: T) => Promise<void> ;
+    private _isValidFn: (raw: unknown) => boolean;
+    private _startNotifyFn: () => void;
+    private _stopNotifyFn: () => void;
+    private _indicateFn: () => void;
+    private _notifying: boolean = false;
     private _cachedValue: Buffer;
     private _mtu: number = 185;
-
-    _members: DbusMembers = { };
+    private _members: DbusMembers = { };
 
     static ValueChanged<T>(iface: Characteristic<T>) {
         dbus.interface.Interface.emitPropertiesChanged(iface, {Value: iface.Value }, []);
