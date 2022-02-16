@@ -5,6 +5,7 @@ import * as constants from './gatt-constants';
 import { log } from '../../../core/logger';
 import * as descriptor from './gatt-descriptor';
 import * as service from './gatt-service';
+import * as utils from './gatt-utils'
 
 import dbus from 'dbus-next';
 
@@ -27,6 +28,7 @@ export class Application extends dbus.interface.Interface  {
     _servicePathIndex = 0;
     static IFACE = 'org.freedesktop.DBus.ObjectManager';
     constructor(private _path: string,
+                private _name: string,
                 private _bus: dbus.MessageBus = constants.systemBus) {
         super(Application.IFACE);
     }
@@ -65,13 +67,7 @@ export class Application extends dbus.interface.Interface  {
                 },
             },
         };
-        try{
-            await this._bus.requestName(constants.BUS_NAME, 0);
-            log.info(label("publish") + 'DBus name set to ' + constants.BUS_NAME);
-        }
-        catch (e){
-            log.error(label("publish") + "Could not request name, error=" + JSON.stringify(e));
-        }
+        await utils.setBusName(this._name);
         Application.configureMembers(members);
         log.info(label("publish") + Application.IFACE + ' members configured');
         this._bus.export(this._path, this);
