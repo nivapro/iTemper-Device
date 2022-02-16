@@ -3,7 +3,7 @@
 import { Adertisement } from './gatt/gap-advertisment';
 import * as constants from './gatt/gatt-constants';
 
-import { GattServer, SERVICE0_UUID }  from './services/device-info-service';
+import { GattServer, DOMAIN_PATH, SERVICE0_UUID }  from './gatt-server';
 // import { GattServer, SERVICE0_UUID }  from './gatt-server';
 
 import { log } from '../../core/logger';
@@ -14,8 +14,6 @@ function label(f: string = ""){
     return m + "." + f + ": ";
 } 
 // Gatt Server
-const ITEMPER_SERVICE_NAME = 'io.itemper';
-const ITEMPER_PATH = '/io/itemper';
 const gattServer = new GattServer();
 
 // GAP Advertisement
@@ -24,7 +22,7 @@ const advertisingType = 'peripheral';
 const apperance = constants.apperance.MultiSensor;
 const includeTYxPower = true;
 
-const advertisment = new Adertisement(ITEMPER_PATH,
+const advertisment = new Adertisement(DOMAIN_PATH,
                               AdvertisingPathIndex,
                               advertisingType,
                               apperance,
