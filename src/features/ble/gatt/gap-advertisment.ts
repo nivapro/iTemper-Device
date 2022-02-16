@@ -38,8 +38,9 @@ export interface ManufacturerDataDict{
      */
     constructor(path: string,
                 index: number = 0,
-                private _includeTxPower: boolean = true,
                 private _advertisingType: AdvertisingType = 'peripheral',
+                private _appearance: number = constants.apperance.GenericUnknown,
+                private _includeTxPower: boolean = true,
                 private _bus: dbus.MessageBus = constants.systemBus,
         ) {
         super(constants.ADVERTISEMENT_INTERFACE);
@@ -77,6 +78,10 @@ export interface ManufacturerDataDict{
                 },
                 Discoverable: {
                     signature: 'b',
+                    access: dbus.interface.ACCESS_READ,
+                },
+                Appearance: {
+                    signature: 'q',
                     access: dbus.interface.ACCESS_READ,
                 },
             },
@@ -141,6 +146,32 @@ export interface ManufacturerDataDict{
         } 
 
     }
+    async register(){
+        try {
+            const adapterPath = constants.BLUEZ_NAMESPACE + constants.ADAPTER_NAME;
+            this._discoverable = true;
+            // const objectManager = await OrgfreedesktopDBusObjectManager.Connect(this._bus);
+            // const managedObjects = await objectManager.GetManagedObjects();
+            // log.info(label("publish") + "managedObjects=" + JSON.stringify(managedObjects));
+            const advertisingManager = await LEAdvertisingManager1.Connect(constants.systemBus)
+            await advertisingManager.RegisterAdvertisement(this._path, {});
+            log.info(label("publish") + "Registered Adertisement, path=" + this._path);
+        } catch(e){
+            log.error(label("publish") + "Register Adertisement, error=" + JSON.stringify(e));
+        }
+    } 
+
+    async unregister(){
+        try {
+            const adapterPath = constants.BLUEZ_NAMESPACE + constants.ADAPTER_NAME;
+            this._discoverable = true;
+            const advertisingManager = await LEAdvertisingManager1.Connect(constants.systemBus)
+            await advertisingManager.UnregisterAdvertisement(this._path);
+            log.info(label("unregister") + "Unregistered Adertisement, path=" + this._path);
+        } catch(e){
+            log.error(label("unregister") + "Unregister Adertisement, error=" + JSON.stringify(e));
+        }
+    } 
     public get Type(): AdvertisingType {
         return this._advertisingType;
     }
@@ -158,6 +189,9 @@ export interface ManufacturerDataDict{
     }
     public get LocalName(): string {
         return this._localName;
+    }
+    public get Appearance(): number {
+        return this._appearance;
     }
     public get Discoverable(): boolean {
         return this._discoverable;
