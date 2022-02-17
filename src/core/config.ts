@@ -4,7 +4,6 @@ import * as os from 'os';
 import { config } from 'process';
 
 interface Options {
-    PRIMARY_SERVICE: string;
     BLUETOOTH: string;
     COLOR: string;
     SERIAL_NUMBER: string;
@@ -30,7 +29,6 @@ class Config implements Options {
     }
     private static defaults(): Options {
         return {
-            PRIMARY_SERVICE: '',
             BLUETOOTH: (process.arch === 'arm' || process.arch === 'arm64')? process.arch : '',
             COLOR: '#0000cc',
             SERIAL_NUMBER: os.hostname(),
@@ -51,7 +49,6 @@ class Config implements Options {
     } 
     private reset() {
         Config.env = {
-            PRIMARY_SERVICE: process.env.PRIMARY_SERVICE,
             BLUETOOTH: process.env.BLUETOOTH, // set to true/Linux to enable if not process.arch as defaults above
             COLOR: process.env.COLOR,
             SERIAL_NUMBER: process.env.SERIAL_NUMBER,
@@ -79,8 +76,6 @@ class Config implements Options {
            } 
         } 
     }
-    get PRIMARY_SERVICE() { return Config.options.PRIMARY_SERVICE; }
-    set PRIMARY_SERVICE(value: string) { Config.options.PRIMARY_SERVICE = value; }
     
     get BLUETOOTH() :string { return Config.options.BLUETOOTH; }
 
