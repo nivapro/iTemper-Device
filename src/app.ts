@@ -21,10 +21,11 @@ import { USBController } from './features/sensors/usb-controller';
 
 import * as ruuvi from './features/ruuvi/ruuvi-tag';
 
+import { UUID_Designator, getUuid } from './features/ble/gatt-server/uuid'
+
 import * as logService from './features/sensors/sensor-log-service';
 
 import * as wifi from './features/wifi';
-
 
 import * as shutdown from './core/shutdown';
 // Init itemper modules
@@ -34,12 +35,8 @@ Device.init();
 USBController.init();
 wifi.init();
 if (conf.BLUETOOTH !== '') {
-    if (conf.PRIMARY_SERVICE !== '') {
-        log.info('Enabling Bluetooth GATT server,  Primary Service: ' + conf.PRIMARY_SERVICE);
+        log.info('Enabling Bluetooth GATT server,  Primary Service: ' + getUuid(UUID_Designator.PrimaryService));
         ble.init();
-    } else {
-        log.info('Set env PRIMARY_SERVICE=<UUID> to configure Bluetooth GATT server'); 
-    }
     if (conf.RUUVI_TAGS !== '') {
         log.info('Enabling Ruuvi tags Bluetooth sensors');
         ruuvi.init();
