@@ -1,6 +1,6 @@
 /**  GAP Avdertisment mdoule */
 import dbus from 'dbus-next';
-import { LEAdvertisingManager1 } from './bluez/org.bluez-gatt-class';
+import { LEAdvertisingManager1 } from '../bluez/org.bluez-gatt-class';
 import * as constants from './gatt-constants';
 import { log } from '../../../core/logger';
 import { DbusMembers } from './gatt-utils';

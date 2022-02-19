@@ -1,5 +1,5 @@
 import * as characteristic from './gatt-characteristic';
-import { GattManager1 } from './bluez/org.bluez-gatt-class';
+import { GattManager1 } from '../bluez/org.bluez-gatt-class';
 
 import * as constants from './gatt-constants';
 import { log } from '../../../core/logger';
