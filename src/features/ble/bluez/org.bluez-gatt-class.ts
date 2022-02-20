@@ -390,7 +390,7 @@ export class OrgfreedesktopDBusProperties extends EventEmitter {
 /***** Signals for org.freedesktop.DBus.Properties *****/
 export declare interface OrgfreedesktopDBusProperties {
     //@signal({ name: 'PropertiesChanged', signature: 'sa{sv}as' })
-    on(evt: "PropertiesChanged", cb: (interface: string, changed_properties: {[key: string]: DBus.Variant}, invalidated_properties: Array<string>) => void): this;
+    on(evt: "PropertiesChanged", cb: (iface: string, changed_properties: {[key: string]: DBus.Variant}, invalidated_properties: Array<string>) => void): this;
     
     on(event: string, listener: Function): this;
 }
