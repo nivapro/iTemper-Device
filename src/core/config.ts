@@ -30,10 +30,10 @@ class Config implements Options {
     private static defaults(): Options {
         return {
             BLUETOOTH: (process.arch === 'arm' || process.arch === 'arm64')? process.arch : '',
-            COLOR: '#0000cc',
+            COLOR: '#00AA00FF',
             SERIAL_NUMBER: os.hostname(),
-            ITEMPER_URL: 'https://itemper.io',
-            WS_URL: 'wss://itemper.io/ws',
+            ITEMPER_URL: 'https://userapi.itemper.io',
+            WS_URL: 'wss://userapi.itemper.io/ws',
             WS_ORIGIN: 'https://itemper.io',
             POLL_INTERVAL: '60000',
             ERROR_LOG_FILE: 'itemper-error.log',

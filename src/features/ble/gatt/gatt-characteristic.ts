@@ -78,6 +78,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     static ValueChanged<T>(iface: Characteristic<T>) {
         dbus.interface.Interface.emitPropertiesChanged(iface, {Value: iface.Value }, []);
     }
+
     constructor(
                 protected _service: Service,
                 protected _uuid: string,

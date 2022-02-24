@@ -72,8 +72,9 @@ export async function init() {
     });
     try{
       await gattServer.init();
+      log.info(label("init") + "GATT server initaited");
       await startAdvertising();
-      log.info(label("init") + "Completed");
+      log.info(label("init") + "Advertising BLE GATT service");
     } catch (e){
       log.error(label("init") + "error="+ JSON.stringify(e));
     } 
