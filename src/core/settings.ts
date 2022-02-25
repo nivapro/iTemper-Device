@@ -51,7 +51,7 @@ export class Settings {
             'This device \'s hostname', Settings.READONLY);
         Settings.add(Settings.ITEMPER_URL, 'iTemper URL', conf.ITEMPER_URL, 'https://itemper.io',
             'The device use\'s this URL when connecting to iTemper', !Settings.READONLY);
-        Settings.add(Settings.POLL_INTERVAL, 'Sensor poll interval', +conf.POLL_INTERVAL, 5000,
+        Settings.add(Settings.POLL_INTERVAL, 'Sensor poll interval', +conf.POLL_INTERVAL, 60000,
             'Interval (ms) between polling the sensors', !Settings.READONLY);
         Settings.add(Settings.WS_ORIGIN, 'WebSocket origin', conf.WS_ORIGIN, 'https://itemper.io',
             'Origin used when connecting to iTemper with WebSockets', !Settings.READONLY);
