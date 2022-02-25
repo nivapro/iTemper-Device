@@ -31,12 +31,8 @@ const advertisment = new Adertisement(DOMAIN_PATH,
 const namePrefix = 'itemper ';
 
 
-// function AdvertisedName() {
-//   return namePrefix + Settings.get(Settings.SERIAL_NUMBER).value.toString();
-// }
-const now = Date.now()
 function AdvertisedName() {
-  return namePrefix + now.toString().slice(7);
+  return namePrefix + Settings.get(Settings.SERIAL_NUMBER).value.toString();
 }
 async function initAdvertisement() {
   try{
@@ -50,7 +46,7 @@ async function initAdvertisement() {
 }
 async function startAdvertising() {
   try{
-    advertisment.setLocalName(AdvertisedName());
+    advertisment.setLocalName(AdvertisedName()); // Changing name allowed after setting changes?
     await advertisment.register();
     log.info(label("startAdvertising"));
   } catch (e){
