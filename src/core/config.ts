@@ -66,18 +66,17 @@ class Config implements Options {
             ITEMPER_PERSIST_DIR: process.env.ITEMPER_PERSIST_DIR,
         };
         let key: keyof Options;
-        for (key in Config.options){
-            if (Config.env[key]){
-                Config.options[key] = <string>Config.env[key]; 
-                console.info(chalk.yellow('Config.reset: Found environment variable ' + key + '=' + Config.options[key])); 
-           } 
-           else{
-            console.info(chalk.green('Config.reset: Using defaults for ' + key + '=' + Config.options[key])); 
-           } 
-        } 
+        for (key in Config.options) {
+            if (Config.env[key]) {
+                Config.options[key] = <string>Config.env[key];
+                console.info(chalk.yellow('Config.reset: Found environment variable ' +
+                             key + '=' + Config.options[key]));
+           } else {
+            console.info(chalk.green('Config.reset: Using defaults for ' + key + '=' + Config.options[key]));
+           }
+        }
     }
-    
-    get BLUETOOTH() :string { return Config.options.BLUETOOTH; }
+    get BLUETOOTH(): string { return Config.options.BLUETOOTH; }
 
     get COLOR() { return Config.options.COLOR; }
     set COLOR(value: string) { Config.options.COLOR=value; }
@@ -92,7 +91,7 @@ class Config implements Options {
     get WS_ORIGIN(): string { return Config.options.WS_ORIGIN; }
 
     get POLL_INTERVAL(): string { return Config.options.POLL_INTERVAL; }
-    set POLL_INTERVAL(value: string) { Config.options.POLL_INTERVAL = value }
+    set POLL_INTERVAL(value: string) { Config.options.POLL_INTERVAL = value; }
 
     get ERROR_LOG_FILE() { return Config.options.ERROR_LOG_FILE; }
 
@@ -108,7 +107,7 @@ class Config implements Options {
     public set SHARED_ACCESS_KEY(value: string) { Config.options.SHARED_ACCESS_KEY=value; this.saveSharedKey(value); }
 
     get ITEMPER_CONFIG_FILE() { return Config.options.ITEMPER_CONFIG_FILE; }
-    
+
     get ITEMPER_PERSIST_DIR() { return Config.options.ITEMPER_PERSIST_DIR ; }
 
     private readSharedKey(): void {
