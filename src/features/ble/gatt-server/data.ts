@@ -84,7 +84,7 @@ export function isDeviceNameValid(raw: unknown): boolean {
         valid = valid
         && 'name' in data && typeof data.name === 'string'
         if (!valid) {
-            log.error(m + 'not valid');
+            log.error(m + 'not valid data=' + JSON.stringify(data));
         }
     }
     return valid;
