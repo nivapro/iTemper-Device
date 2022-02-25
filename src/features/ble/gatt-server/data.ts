@@ -1,6 +1,15 @@
 import { log } from '../../../core/logger';
 import { SensorData } from '../../sensors/sensor-data';
 
+export interface DeviceName {
+    name: string ;
+}
+export interface DeviceColor {
+    color: string ;
+}
+export interface DeviceKey {
+    key: string ;
+}  
 export interface DeviceData {
      name: string ;
      deviceID: string ;
@@ -57,9 +66,55 @@ export function isDeviceDataValid(raw: unknown): boolean {
         valid = valid
         && 'deviceID' in data && typeof data.deviceID === 'string'
         && 'name' in data && typeof data.name === 'string'
+        && 'color' in data && typeof data.color === 'string'
         && 'key' in data && typeof data.key === 'string';
         if (!valid) {
             log.error('device-characteristic-data.isDeviceDataValid - not valid');
+        }
+    }
+    return valid;
+}
+export function isDeviceNameValid(raw: unknown): boolean {
+    const m = 'device-characteristic-data.isDeviceNameValid - ';
+    let valid = isObject(raw);
+    if (!valid) {
+        log.error(m + 'not an object');
+    } else {
+        const data = raw as Partial<{name: string}>;
+        valid = valid
+        && 'name' in data && typeof data.name === 'string'
+        if (!valid) {
+            log.error(m + 'not valid data=' + JSON.stringify(data));
+        }
+    }
+    return valid;
+}
+export function isDeviceColorValid(raw: unknown): boolean {
+    const m = 'device-characteristic-data.isDeviceColorValid - ';
+    let valid = isObject(raw);
+    if (!valid) {
+        log.error(m + 'not an object');
+    } else {
+        const data = raw as Partial<{color: string}>;
+        valid = valid
+        && 'color' in data && typeof data.color === 'string'
+        if (!valid) {
+            log.error(m + 'not valid');
+        }
+    }
+    return valid;
+}
+export function isDeviceKeyValid(raw: unknown): boolean {
+    const m = 'device-characteristic-data.isDeviceKeyValid - ';
+    let valid = isObject(raw);
+    if (!valid) {
+        log.error(m + 'not an object');
+    } else {
+        const data = raw as Partial<{key: string}>;
+        valid = valid
+        && 'key' in data && typeof data.key === 'string'
+        if (!valid) {
+            log.error(m + 'not valid');
         }
     }
     return valid;

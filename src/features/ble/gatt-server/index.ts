@@ -5,6 +5,9 @@ import { getUuid, UUID_Designator} from './uuid';
 import { AvailableWiFiCharacteristic } from './available-wifi-characteristics';
 import { CurrentWiFiCharacteristic } from './current-wifi-characteristics';
 import { DeviceInfoCharacteristic } from './device-info-characteristics';
+import { DeviceNameCharacteristic } from './device-name-characteristics';
+import { DeviceColorCharacteristic } from './device-color-characteristics';
+import { DeviceKeyCharacteristic } from './device-key-characteristics';
 
 export const DOMAIN_PATH = '/io/itemper';
 export const DOMAIN_NAME = 'io.itemper';
@@ -16,6 +19,9 @@ export class GattServer {
     _deviceInfoChar = new DeviceInfoCharacteristic(this._service);
     _currentWiFiChar = new CurrentWiFiCharacteristic(this._service);
     _availableWiFiChar = new AvailableWiFiCharacteristic(this._service);
+    _deviceName = new DeviceNameCharacteristic(this._service);
+    _deviceColor = new DeviceColorCharacteristic(this._service);
+    _deviceKey = new DeviceKeyCharacteristic(this._service);
     public init(){
         this._app.init();
     } 

@@ -78,6 +78,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     static ValueChanged<T>(iface: Characteristic<T>) {
         dbus.interface.Interface.emitPropertiesChanged(iface, {Value: iface.Value }, []);
     }
+
     constructor(
                 protected _service: Service,
                 protected _uuid: string,
@@ -184,7 +185,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
             this._readValueAsync = <() => Promise<T>> readValueFn;
 
         } else {
-            this._readValueFn = <() => T> readValueFn;
+            this._readValueFn = <() => T> readValueFn.bind(this);
         } 
 
         this.addMethod('ReadValue', { inSignature: 'a{sv}', outSignature: 'ay' });
@@ -195,15 +196,15 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
             this._writeValueAsync = <(value: T) => Promise<void>> writeValueFn;
 
         } else {
-            this._writeValueFn = <(value: T) => void> writeValueFn;
+            this._writeValueFn = <(value: T) => void> writeValueFn.bind(this);
         } 
-        this._isValidFn = isValidFn;
+        this._isValidFn = isValidFn.bind(this);
         this.addMethod('WriteValue', { inSignature: 'aya{sv}', outSignature: '' });
     }
     public enableNotify(startNotifyFn: () => void, stopNotifyFn: () => void, flags: NotifyFlag[] = ['notify'] ) {
         this.addFlags(flags);
-        this._startNotifyFn = startNotifyFn;
-        this._stopNotifyFn = stopNotifyFn;
+        this._startNotifyFn = startNotifyFn.bind(this);
+        this._stopNotifyFn = stopNotifyFn.bind(this);
         this.addMethod('StartNotify', { inSignature: '', outSignature: '' });
         this.addMethod('StopNotify',{ inSignature: '', outSignature: '' });
         this.addProperty('Value', { signature: 'ay', access: dbus.interface.ACCESS_READ })
@@ -226,13 +227,20 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         }
         const decoded = decode(data);
         log.info(label('decode') + 'decoded=' + decoded);
-        const raw = JSON.parse(decoded); 
-        log.info(label('decode') + 'raw=' + JSON.stringify(raw));
-        if (this._isValidFn(raw)){
-            return <T>raw;
-        } else {
-            throw new FailedException('WriteValue, received invalid data', constants.GATT_CHARACTERISTIC_INTERFACE);
-        };
+        try{
+            const raw = JSON.parse(decoded); 
+            log.info(label('decode') + 'raw=' + JSON.stringify(raw));
+            if (this._isValidFn(raw)){
+                return <T>raw;
+            } else {
+                throw new FailedException('WriteValue.convert, received invalid data', constants.GATT_CHARACTERISTIC_INTERFACE);
+            };
+        } catch (e){
+            log.error('convert. Cannot parse JSON.' + e);
+            throw new FailedException('WriteValue.convert, cannot convert value' + e, constants.GATT_CHARACTERISTIC_INTERFACE);
+        } 
+
+
     } 
     protected  ReadValue(options: ReadValueOptions): Promise<Buffer> | Buffer  {
         if ( this._readValueAsync !== undefined) {
@@ -252,10 +260,13 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     protected WriteValue(data: Buffer, options: WriteValueOptions): Promise<void> | void  {
         log.info(label('WriteValue') + 'options=' + JSON.stringify(options));
         log.info(label('WriteValue') + 'data=' + JSON.stringify(data));
+        const value = this.convert(data, options);
         if (this._writeValueAsync !== undefined) {
-            return this._writeValueAsync (this.convert(data, options));
+            log.debug(label('WriteValue') + '_writeValueAsync');
+            return this._writeValueAsync (value);
         } else if (this._writeValueFn !== undefined){
-            this._writeValueFn(this.convert(data, options));
+            log.debug(label('WriteValue') + '_writeValueFn');
+            this._writeValueFn(value);
         } else {
             throw new NotSupportedDBusError('WriteValue', constants.GATT_CHARACTERISTIC_INTERFACE);
         } 
