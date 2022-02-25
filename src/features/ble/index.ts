@@ -34,16 +34,16 @@ const namePrefix = 'itemper ';
 // function AdvertisedName() {
 //   return namePrefix + Settings.get(Settings.SERIAL_NUMBER).value.toString();
 // }
-
+const now = Date.now()
 function AdvertisedName() {
-  return namePrefix + Date.now().toString().slice(9);
+  return namePrefix + now.toString().slice(7);
 }
 async function startAdvertising() {
   try{
     advertisment.addServiceUUID(SERVICE0_UUID);
     advertisment.setLocalName(AdvertisedName());
     await advertisment.publish();
-    log.info(label("startAdvertising") + "Completed");
+    log.info(label("startAdvertising") + "service=" + SERVICE0_UUID + ", name=" + AdvertisedName());
   } catch (e){
     log.error(label("startAdvertising") + "error="+ JSON.stringify(e));
   } 
