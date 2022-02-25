@@ -19,13 +19,13 @@ import * as ble from './features/ble';
 import { Device } from './features/device/device';
 import { USBController } from './features/sensors/usb-controller';
 
-// import { initBLE } from './features/ble';
-
 import * as ruuvi from './features/ruuvi/ruuvi-tag';
+
+import { UUID_Designator, getUuid } from './features/ble/gatt-server/uuid'
+
 import * as logService from './features/sensors/sensor-log-service';
 
 import * as wifi from './features/wifi';
-
 
 import * as shutdown from './core/shutdown';
 // Init itemper modules
@@ -34,14 +34,18 @@ logService.init();
 Device.init();
 USBController.init();
 wifi.init();
-if (conf.BLUETOOTH) {
-    log.info('Enabling Bluetooth support');
-    ruuvi.init();
-    ble.init();
+if (conf.BLUETOOTH !== '') {
+        log.info('Enabling Bluetooth GATT server,  Primary Service: ' + getUuid(UUID_Designator.PrimaryService));
+        ble.init();
+    if (conf.RUUVI_TAGS !== '') {
+        log.info('Enabling Ruuvi tags Bluetooth sensors');
+        ruuvi.init();
+    } else {
+        log.info('Set env RUUVI_TAGS=true to enable support for Ruuvi tags Bluetooth sensors'); 
+    }
 } else {
-    log.info('No Bluetooth support');
+    log.info('Bluetooth not enabled');
 }
-
 
 // Init itemper device server
 const app = express();

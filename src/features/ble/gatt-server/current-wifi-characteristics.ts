@@ -1,16 +1,18 @@
-
+import * as gatt from '../gatt';
 import wifi from 'node-wifi';
 import { stringify } from '../../../core/helpers';
 import { log } from '../../../core/logger';
 import { WiFi } from '../../device/device-status';
-import { getUuid, UUID_Designator} from '../ble-uuid';
-import { BaseCharacteristic } from './base-characteristic';
-import { isWiFiRequestValid, WiFiData, WiFiRequest } from './characteristic-data';
+import { getUuid, UUID_Designator} from './uuid';
+import { isWiFiRequestValid, WiFiData, WiFiRequest } from './data';
 
-export class CurrentWiFiCharacteristic extends  BaseCharacteristic<WiFiData> {
+export class CurrentWiFiCharacteristic extends  gatt.Characteristic<WiFiData>{
   public static UUID = getUuid(UUID_Designator.CurrentWiFi);
-  constructor() {
-    super(CurrentWiFiCharacteristic.UUID, 'Current WiFi',  ['read', 'write']);
+  constructor(protected _service: gatt.Service) {
+    super(_service, CurrentWiFiCharacteristic.UUID);
+    this.enableReadValue(this.handleReadRequest);
+    this.enableWriteValue(this.handleWriteRequest, isWiFiRequestValid);
+    // const descriptor = new gatt.UserDescriptor('Device settings', this);
   }
   async handleReadRequest(): Promise<WiFiData> {
     return new Promise((resolve, reject) => {
@@ -31,14 +33,14 @@ export class CurrentWiFiCharacteristic extends  BaseCharacteristic<WiFiData> {
     });
   }
 
- async handleWriteRequest(raw: unknown): Promise<boolean> {
+ async handleWriteRequest(raw: unknown): Promise<void> {
     return new Promise((resolve, reject) => {
       if (isWiFiRequestValid(raw)) {
         const network = raw as WiFiRequest;
         wifi.connect(network)
         .then(() => {
           log.info('current-wifi-characteristic.handleWriteRequest - successfully connected to WiFi: ' + network.ssid);
-          resolve(true);
+          resolve();
         })
         .catch((e: any) => {
           log.error('current-wifi-characteristic.handleWriteRequest - cannot connect to wireless network: '
@@ -47,7 +49,7 @@ export class CurrentWiFiCharacteristic extends  BaseCharacteristic<WiFiData> {
         });
       } else {
         log.error('current-wifi-characteristic.handleWriteRequest - invalid WiFi request');
-        reject (false);
+        reject ('Writevalue: invalid data');
       }
     });
   }

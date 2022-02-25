@@ -116,7 +116,6 @@ export class SensorLogService implements  ISensorLogService {
         this.WS_URL = Settings.get(Settings.WS_URL).value.toString();
         this.WS_ORIGIN = Settings.get(Settings.WS_ORIGIN).value.toString();
         this.ITEMPER_URL = Settings.get(Settings.ITEMPER_URL).value.toString();
-        // this.AZURE_CONNECTION_STRING = Settings.get(Settings.AZURE_CONNECTION_STRING).value.toString();
 
         Settings.onChange('SHARED_ACCESS_KEY', (setting: Setting) => {
             this.SHARED_ACCESS_KEY = setting.value.toString();
@@ -139,9 +138,6 @@ export class SensorLogService implements  ISensorLogService {
             this.ITEMPER_URL = setting.value.toString();
             log.info('SensorLog.settingChanged: ITEMPER_URL=' +  this.ITEMPER_URL);
             this.axios = this.createAxiosInstance();
-        });
-        Settings.onChange('AZURE_CONNECTION_STRING', (setting: Setting)=> {
-            log.info('settingChanged: AZURE_CONNECTION_STRING not implemented value=' + setting.value.toString());
         });
     }
     public registerSensor(registration: Registration): Promise<Descriptor> {

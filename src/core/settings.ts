@@ -24,7 +24,6 @@ export class Settings {
     private static listeners: SettingListener[] = [];
     public static COLOR= 'COLOR';
     public static SERIAL_NUMBER = 'SERIAL_NUMBER';
-    public static AZURE_CONNECTION_STRING: string = 'AZURE_CONNECTION_STRING';
     public static CONSOLE_LEVEL = 'CONSOLE_LEVEL';
     public static ERROR_LEVEL= 'ERROR_LEVEL';
     public static ERROR_LOG_FILE = 'ERROR_LOG_FILE';
@@ -42,8 +41,6 @@ export class Settings {
         'Color', !Settings.READONLY);
         Settings.add(Settings.SERIAL_NUMBER, 'Serial Number', conf.SERIAL_NUMBER,  '',
         'Serial Number (SN)', !Settings.READONLY);
-        Settings.add(Settings.AZURE_CONNECTION_STRING, 'Azure connection string', conf.AZURE_CONNECTION_STRING,  '',
-            'Connection string to AZURE IOT HUB', !Settings.READONLY);
         Settings.add(Settings.CONSOLE_LEVEL, 'Console log level', conf.CONSOLE_LEVEL, 'info',
             'Event level logged on console: error | info | debug', !Settings.READONLY);
         Settings.add(Settings.ERROR_LEVEL, 'Error file log level', conf.ERROR_LEVEL, 'error',
@@ -54,7 +51,7 @@ export class Settings {
             'This device \'s hostname', Settings.READONLY);
         Settings.add(Settings.ITEMPER_URL, 'iTemper URL', conf.ITEMPER_URL, 'https://itemper.io',
             'The device use\'s this URL when connecting to iTemper', !Settings.READONLY);
-        Settings.add(Settings.POLL_INTERVAL, 'Sensor poll interval', conf.POLL_INTERVAL, 5000,
+        Settings.add(Settings.POLL_INTERVAL, 'Sensor poll interval', +conf.POLL_INTERVAL, 5000,
             'Interval (ms) between polling the sensors', !Settings.READONLY);
         Settings.add(Settings.WS_ORIGIN, 'WebSocket origin', conf.WS_ORIGIN, 'https://itemper.io',
             'Origin used when connecting to iTemper with WebSockets', !Settings.READONLY);

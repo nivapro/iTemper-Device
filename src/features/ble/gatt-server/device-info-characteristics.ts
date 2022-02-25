@@ -1,45 +1,37 @@
-// import bleno from 'bleno';
-// import * as util from 'util';
+import * as gatt from '../gatt';
+
 import { stringify } from '../../../core/helpers';
 import { log } from '../../../core/logger';
 import { Settings } from '../../../core/settings';
-import { getUuid, UUID_Designator} from '../ble-uuid';
-import { BaseCharacteristic } from './base-characteristic';
-import { DeviceData, isDeviceDataValid } from './characteristic-data';
+import { getUuid, UUID_Designator} from './uuid';
+import { DeviceData, isDeviceDataValid } from './data';
 
-export class DeviceCharacteristic extends  BaseCharacteristic<DeviceData> {
+export class DeviceInfoCharacteristic extends  gatt.Characteristic<DeviceData> {
   public static UUID = getUuid(UUID_Designator.DeviceInfo);
-  constructor() {
-    super(DeviceCharacteristic.UUID, 'Device settings',  ['read', 'write']);
+  constructor(protected _service: gatt.Service) {
+    super(_service, DeviceInfoCharacteristic.UUID);
+    this.enableReadValue(this.handleReadRequest);
+    this.enableWriteValue(this.handleWriteRequest, isDeviceDataValid);
+    // const descriptor = new gatt.UserDescriptor('Device settings', this);
   }
-  handleReadRequest(): Promise<DeviceData> {
-    return new Promise((resolve) => {
+  handleReadRequest(): DeviceData {
       const data = {
           name: Settings.get(Settings.SERIAL_NUMBER).value as string,
           color:  Settings.get(Settings.COLOR).value as string,
           deviceID: '123',
           key: Settings.get(Settings.SHARED_ACCESS_KEY).value as string,
       };
-      log.info('device-characteristic.handleReadRequest: successfully retrieving device data='
-      + stringify(data));
-      resolve(data);
-    });
+      log.info('device-characteristic.handleReadRequest: success device data=' + stringify(data));
+      return data;
+
   }
 
-  handleWriteRequest(raw: unknown): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      if (isDeviceDataValid(raw)) {
-        const deviceData = raw as DeviceData;
+  handleWriteRequest(deviceData: DeviceData): void {
         this.update(Settings.SERIAL_NUMBER, deviceData.name);
         this.update(Settings.SHARED_ACCESS_KEY, deviceData.key);
         if (deviceData.color ) {
           this.update(Settings.COLOR, deviceData.color);
         }
-        resolve(true);
-      } else {
-        reject();
-      }
-    });
   }
 
   update(setting: string, value: string) {
