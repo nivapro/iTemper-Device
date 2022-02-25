@@ -254,8 +254,10 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         log.info(label('WriteValue') + 'options=' + JSON.stringify(options));
         log.info(label('WriteValue') + 'data=' + JSON.stringify(data));
         if (this._writeValueAsync !== undefined) {
+            log.debug(label('WriteValue') + '_writeValueAsync');
             return this._writeValueAsync (this.convert(data, options));
         } else if (this._writeValueFn !== undefined){
+            log.debug(label('WriteValue') + '_writeValueFn');
             this._writeValueFn(this.convert(data, options));
         } else {
             throw new NotSupportedDBusError('WriteValue', constants.GATT_CHARACTERISTIC_INTERFACE);
