@@ -185,7 +185,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
             this._readValueAsync = <() => Promise<T>> readValueFn;
 
         } else {
-            this._readValueFn = <() => T> readValueFn;
+            this._readValueFn = <() => T> readValueFn.bind(this);
         } 
 
         this.addMethod('ReadValue', { inSignature: 'a{sv}', outSignature: 'ay' });
@@ -196,15 +196,15 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
             this._writeValueAsync = <(value: T) => Promise<void>> writeValueFn;
 
         } else {
-            this._writeValueFn = <(value: T) => void> writeValueFn;
+            this._writeValueFn = <(value: T) => void> writeValueFn.bind(this);
         } 
         this._isValidFn = isValidFn;
         this.addMethod('WriteValue', { inSignature: 'aya{sv}', outSignature: '' });
     }
     public enableNotify(startNotifyFn: () => void, stopNotifyFn: () => void, flags: NotifyFlag[] = ['notify'] ) {
         this.addFlags(flags);
-        this._startNotifyFn = startNotifyFn;
-        this._stopNotifyFn = stopNotifyFn;
+        this._startNotifyFn = startNotifyFn.bind(this);
+        this._stopNotifyFn = stopNotifyFn.bind(this);
         this.addMethod('StartNotify', { inSignature: '', outSignature: '' });
         this.addMethod('StopNotify',{ inSignature: '', outSignature: '' });
         this.addProperty('Value', { signature: 'ay', access: dbus.interface.ACCESS_READ })
