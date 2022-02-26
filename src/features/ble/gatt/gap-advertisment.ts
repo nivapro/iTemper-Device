@@ -39,7 +39,7 @@ export interface ManufacturerDataDict{
     constructor(path: string,
                 index: number = 0,
                 private _advertisingType: AdvertisingType = 'peripheral',
-                private _appearance: number = constants.apperance.GenericUnknown,
+                private _appearance: number = constants.apperance.IoTGateway,
                 private _includeTxPower: boolean = true,
                 private _bus: dbus.MessageBus = constants.systemBus,
         ) {
@@ -138,19 +138,20 @@ export interface ManufacturerDataDict{
             // const objectManager = await OrgfreedesktopDBusObjectManager.Connect(this._bus);
             // const managedObjects = await objectManager.GetManagedObjects();
             // log.info(label("publish") + "managedObjects=" + JSON.stringify(managedObjects));
-            const advertisingManager = await LEAdvertisingManager1.Connect(constants.systemBus)
+            const advertisingManager = await LEAdvertisingManager1.Connect(constants.systemBus, adapterPath)
             await advertisingManager.RegisterAdvertisement(this._path, {});
             this._isAdvertising = true;
-            log.info(label("register") + "Registered Adertisement, path=" + this._path);
+            log.info(label("register") + "Registered Advertisement, path=" + this._path);
         } catch(e){
-            log.error(label("register") + "Register Adertisement, error=" + JSON.stringify(e));
+            log.error(label("register") + "Register Advertisement, error=" + JSON.stringify(e));
+            this._isAdvertising = false;
         }
     } 
     async unregister(){
         try {
             const adapterPath = constants.BLUEZ_NAMESPACE + constants.ADAPTER_NAME;
             this._discoverable = false;
-            const advertisingManager = await LEAdvertisingManager1.Connect(constants.systemBus)
+            const advertisingManager = await LEAdvertisingManager1.Connect(constants.systemBus, adapterPath)
             await advertisingManager.UnregisterAdvertisement(this._path);
             this._isAdvertising = false;
             log.info(label("unregister") + "Unregistered Adertisement, path=" + this._path);
