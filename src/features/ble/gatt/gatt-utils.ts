@@ -1,27 +1,28 @@
 import dbus from 'dbus-next';
 import { log } from '../../../core/logger';
-import * as util from 'util';
-import * as constants from './gatt-constants'
 
-const m = "gatt-utils"
-function label(f: string = ""){
-    return m + "." + f + ": ";
-} 
+import * as util from 'util';
+
+import * as constants from './gatt-constants';
+
+const m = 'gatt-utils';
+function label(f: string = '') {
+    return m + '.' + f + ':';
+}
 
 const systemBus: dbus.MessageBus = dbus.systemBus();
 export async function setBusName(name: string ){
   const BUS_NAME = name;
   try{
     await systemBus.requestName(BUS_NAME, 0);
-    log.info(label("setDBusName") + 'DBus name set to ' + BUS_NAME);
-  }
-  catch (e){
-    log.error(label("setDBusName") + 'Could not request name ' + BUS_NAME +', error=' + e);
+    log.info(label('setDBusName') + 'DBus name set to ' + BUS_NAME);
+  } catch (e) {
+    log.error(label('setDBusName') + 'Could not request name ' + BUS_NAME +', error=' + e);
   }
 }
 export function getBus(): dbus.MessageBus{
   return systemBus;
-} 
+}
 
 
 export type DbusMembers = {
