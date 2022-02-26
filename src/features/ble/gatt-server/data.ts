@@ -9,7 +9,7 @@ export interface DeviceColor {
 }
 export interface DeviceKey {
     key: string ;
-}  
+}
 export interface DeviceData {
      name: string ;
      deviceID: string ;
@@ -112,7 +112,7 @@ export function isDeviceKeyValid(raw: unknown): boolean {
     } else {
         const data = raw as Partial<{key: string}>;
         valid = valid
-        && 'key' in data && typeof data.key === 'string'
+        && 'key' in data && typeof data.key === 'string';
         if (!valid) {
             log.error(m + 'not valid');
         }
@@ -199,3 +199,29 @@ export function isDeviceStateValid(raw: unknown): boolean {
     }
     return valid;
 }
+
+export const CmdMap: Map<string, number> = new Map();
+CmdMap.set('COLOR', 1);
+CmdMap.set('SERIAL_NUMBER', 2);
+CmdMap.set('CONSOLE_LEVEL', 3);
+CmdMap.set('ERROR_LEVEL', 4);
+CmdMap.set('ERROR_LOG_FILE', 5);
+CmdMap.set('HOSTNAME', 6);
+CmdMap.set('ITEMPER_URL', 7);
+CmdMap.set('POLL_INTERVAL', 8);
+CmdMap.set('WS_ORIGIN', 9);
+CmdMap.set('WS_URL', 10);
+CmdMap.set('SHARED_ACCESS_KEY', 11);
+
+export const SettingMap: Map<number, string> = new Map();
+SettingMap.set(1,'COLOR');
+SettingMap.set(2,'SERIAL_NUMBER');
+SettingMap.set(3,'CONSOLE_LEVEL');
+SettingMap.set(4,'ERROR_LEVEL');
+SettingMap.set(5,'ERROR_LOG_FILE');
+SettingMap.set(6,'HOSTNAME');
+SettingMap.set(7,'ITEMPER_URL');
+SettingMap.set(8,'POLL_INTERVAL');
+SettingMap.set(9,'WS_ORIGIN');
+SettingMap.set(10,'WS_URL');
+SettingMap.set(11,'SHARED_ACCESS_KEY');
