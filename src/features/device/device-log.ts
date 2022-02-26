@@ -24,11 +24,11 @@ export class DeviceLog {
     private onDataReceivedError = false;
 
     private createAxiosInstance(): AxiosInstance {
-        const rejectUnauthorized = !this.ITEMPER_URL.includes('https') && !this.ITEMPER_URL.includes('localhost');
+        const rejectUnauthorized = !this.ITEMPER_URL.includes('localhost');
         return this.axios = axios.create({
             baseURL: this.ITEMPER_URL + '/device',
             headers: {'Content-Type': 'application/json'},
-            httpsAgent: rejectUnauthorized ? new https.Agent({rejectUnauthorized: false}) : undefined
+            httpsAgent: rejectUnauthorized ? undefined :  new https.Agent({rejectUnauthorized: false}),
         });
     }
 

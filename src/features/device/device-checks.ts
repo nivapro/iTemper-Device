@@ -36,13 +36,14 @@ export class DeviceChecks extends DeviceState {
         const ifaceNamePattern = /\*[0-9]$/; // looking for interface names that ends with a digit, eg eth0, wlan0
         const ExternalIPv4s: NetworkInterfaceInfo = {};
         for (const ifaceName in nets) {
-            if (ifaceNamePattern.test(ifaceName)) {
                 for (const net of nets[ifaceName]) {
                     if (net.family === 'IPv4' && !net.internal) {
+                        if (!ExternalIPv4s[ifaceName]) {
+                            ExternalIPv4s[ifaceName] = []; 
+                        } 
                         ExternalIPv4s[ifaceName].push(net);
                     }
                 }
-            }
         }
         return ExternalIPv4s;
     }
