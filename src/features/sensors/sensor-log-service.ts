@@ -73,15 +73,16 @@ export class SensorLogService implements  ISensorLogService {
 
     private openWebSocket(): WebSocket {
         const self = this;
-        // const wsTestUrl = 'wss://test.itemper.io/ws';
-        const wsTestUrl = this.WS_URL;
-        const origin = this.WS_ORIGIN;
+        const url = this.WS_URL;
         const protocol = 'device';
-        const socket = new WebSocket (wsTestUrl, { protocol, origin, perMessageDeflate: false });
+        const origin = this.WS_ORIGIN;
+        const perMessageDeflate = false;
+        const rejectUnauthorized = !this.ITEMPER_URL.includes('wss') && !this.ITEMPER_URL.includes('localhost');
+        const socket = new WebSocket (url, { protocol, origin, perMessageDeflate, rejectUnauthorized });
 
         socket.on('open', () => {
             if (self.webSocketError) {
-                log.info('SensorLog.openWebSocket.on(open): Device.SensorLog connected to backend!');
+                log.info('SensorLog.openWebSocket.on(open): ' + url);
                 self.webSocketError = false;
             }
         });

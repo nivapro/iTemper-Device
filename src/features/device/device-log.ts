@@ -1,4 +1,5 @@
-import axios, { AxiosError, AxiosInstance } from 'axios';
+import * as https  from 'https';
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
 import { log } from '../../core/logger';
 import { DeviceState } from './device-state';
 import { DeviceStatus } from './device-status';
@@ -23,9 +24,12 @@ export class DeviceLog {
     private onDataReceivedError = false;
 
     private createAxiosInstance(): AxiosInstance {
+        const rejectUnauthorized = !this.ITEMPER_URL.includes('https') && !this.ITEMPER_URL.includes('localhost');
         return this.axios = axios.create({
             baseURL: this.ITEMPER_URL + '/device',
-            headers: {'Content-Type': 'application/json'}});
+            headers: {'Content-Type': 'application/json'},
+            httpsAgent: rejectUnauthorized ? new https.Agent({rejectUnauthorized: false}) : undefined
+        });
     }
 
     constructor(state: DeviceState) {
