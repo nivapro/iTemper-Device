@@ -36,10 +36,10 @@ export type NotifyFlag = 'notify' | 'encrypt-notify' | 'encrypt-authenticated-no
 
 export type indicateFlag = 'indicate' | 'encrypt-indicate' | 'encrypt-authenticated-indicate' | 'secure-indicate';
 
-const m = "gatt-characteristic"
-function label(f: string = ""){
-    return m + "." + f + ": ";
-} 
+const m = 'gatt-characteristic';
+function label(f: string = '') {
+    return m + '.' + f + ': ';
+}
 export interface CharacteristicProperties {
     Service: dbus.Variant<dbus.ObjectPath>;
     UUID: dbus.Variant<string>;
@@ -61,7 +61,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     private _path: string = '';
     private _descriptors: GattDescriptor1[] =[];
     private _descriptorIndex = 0;
-    private _flags: string[] = []; 
+    private _flags: string[] = [];
     private _readValueFn: () => T ;
     private _readValueAsync: () => Promise<T> ;
     private _writeValueFn: (value: T) => void ;
@@ -85,9 +85,9 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
                 flags: FlagArray = [],
                 protected _bus: dbus.MessageBus = constants.systemBus) {
         super(constants.GATT_CHARACTERISTIC_INTERFACE);
-        
+
         this._service.addCharacteristic(this);
-        
+
         this.addFlags(flags);
         this.addProperty('UUID', { signature: 's', access: dbus.interface.ACCESS_READ});
         this.addProperty('Service', { signature: 'o', access: dbus.interface.ACCESS_READ});
@@ -117,7 +117,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         };
         return properties;
     }
-    public export(): void {  
+    public export(): void {
         Characteristic.configureMembers(this._members);
         this._bus.export(this.getPath(), this);
         this._descriptors.forEach(desc => desc.export());
@@ -155,7 +155,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     }
     protected set MTU(value: number) {
         this._mtu = value;
-    } 
+    }
     private addFlags(flags: string[]): void {
         flags.forEach(flag => {
             if (this._flags.indexOf(flag) === -1) {
@@ -166,19 +166,19 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     public addMethod(methodName: string, options: MethodOptions) {
         if (!this._members.methods){
             this._members['methods'] = { }
-        } 
+        }
         this._members.methods[methodName] = options;
         log.info(label('addMethod') + JSON.stringify( this._members.methods));
-    } 
+    }
     public addProperty(propertyName: string, options: PropertyOptions) {
         if (!this._members.properties){
             this._members['properties'] = { }
-        } 
+        }
         if (!this._members.properties[propertyName]) {
             this._members.properties[propertyName] = options;
             log.info(label('addProperty') + 'Added '+ JSON.stringify( this._members.properties)); 
         }
-    }    
+    }
     public enableReadValue(readValueFn: () => Promise<T> | T , flags: ReadFlag[] = ['read']) {
         this.addFlags(flags);
         if (readValueFn.constructor === Promise){
@@ -190,7 +190,8 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
 
         this.addMethod('ReadValue', { inSignature: 'a{sv}', outSignature: 'ay' });
     }
-    public enableWriteValue( writeValueFn: (value: T) => Promise<void> | void , isValidFn: (raw: unknown) => boolean, flags: WriteFlag[] = ['write']) {
+    public enableWriteValue( writeValueFn: (value: T) => Promise<void> | void,
+                             isValidFn: (raw: unknown) => boolean, flags: WriteFlag[] = ['write']) {
         this.addFlags(flags);
         if (writeValueFn.constructor === Promise){
             this._writeValueAsync = <(value: T) => Promise<void>> writeValueFn;
@@ -223,7 +224,8 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     private convert(data: Buffer, options: WriteValueOptions): T {
         const offset = options.offset? options.offset : 0;
         if (offset > 0) {
-            throw new NotSupportedDBusError('Write with offset > 0 not supported, offset=' + offset, constants.GATT_CHARACTERISTIC_INTERFACE);
+            throw new NotSupportedDBusError('Write with offset > 0 not supported, offset=' +
+            offset, constants.GATT_CHARACTERISTIC_INTERFACE);
         }
         const decoded = decode(data);
         log.info(label('decode') + 'decoded=' + decoded);
@@ -233,15 +235,15 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
             if (this._isValidFn(raw)){
                 return <T>raw;
             } else {
-                throw new FailedException('WriteValue.convert, received invalid data', constants.GATT_CHARACTERISTIC_INTERFACE);
+                throw new FailedException('WriteValue.convert, received invalid data',
+                constants.GATT_CHARACTERISTIC_INTERFACE);
             };
         } catch (e){
             log.error('convert. Cannot parse JSON.' + e);
-            throw new FailedException('WriteValue.convert, cannot convert value' + e, constants.GATT_CHARACTERISTIC_INTERFACE);
-        } 
-
-
-    } 
+            throw new FailedException('WriteValue.convert, cannot convert value' + e,
+            constants.GATT_CHARACTERISTIC_INTERFACE);
+        }
+    }
     protected  ReadValue(options: ReadValueOptions): Promise<Buffer> | Buffer  {
         if ( this._readValueAsync !== undefined) {
             return new Promise((resolve) => {
@@ -255,7 +257,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
             return this.encode(this._readValueFn(), options);
         }  else {
             throw new NotSupportedDBusError('ReadValue', constants.GATT_CHARACTERISTIC_INTERFACE);
-        } 
+        }
     }
     protected WriteValue(data: Buffer, options: WriteValueOptions): Promise<void> | void  {
         log.info(label('WriteValue') + 'options=' + JSON.stringify(options));
@@ -269,7 +271,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
             this._writeValueFn(value);
         } else {
             throw new NotSupportedDBusError('WriteValue', constants.GATT_CHARACTERISTIC_INTERFACE);
-        } 
+        }
     }
     protected StartNotify(): void {
         if (!this._startNotifyFn) {
@@ -282,9 +284,9 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     protected StopNotify(): void {
         if (!this._stopNotifyFn) {
             throw new NotSupportedDBusError('StopNotify', constants.GATT_CHARACTERISTIC_INTERFACE);
-        } else{
+        } else {
             this.Notifying = false;
             this._stopNotifyFn();
-        } 
+        }
     }
 }
