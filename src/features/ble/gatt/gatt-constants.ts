@@ -1,7 +1,7 @@
 import dbus from 'dbus-next';
 import * as utils from './gatt-utils'; 
 
-export const ADAPTER_NAME = 'hci1';
+export const ADAPTER_NAME = 'hci0';
 
 export const BLUEZ_SERVICE_NAME = 'org.bluez';
 export const BLUEZ_NAMESPACE = '/org/bluez/';
