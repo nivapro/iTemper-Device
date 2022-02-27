@@ -1,6 +1,6 @@
 {
     "name": "itemper-device",
-    "version": "0.0.59",
+    "version": "0.1.0",
     "description": "This application reads and publish local temperatures on the Internet",
     "homepage": "https://github.com/vadintor/",
     "main": "build/main.js",
@@ -22,8 +22,7 @@
         "start": "node build/app.js",
         "start_dev": "node -r dotenv/config build/app.js",
         "desktop": "electron build/main.js",
-        "build": "tsc -p .",
-        "gulp": "rm -rf ./build && gulp build",
+        "build": "npm run --if-present rm -rf ./build && gulp build",
         "watch": "gulp watch",
         "lint": "tslint -t stylish -c tslint.json \"src/**/*.ts\""
     },
