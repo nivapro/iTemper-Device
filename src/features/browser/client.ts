@@ -103,10 +103,10 @@ export interface Setting {
 }
 
 const sensors: SensorLog[] = [];
-// let settings = [];
 
-const url = 'ws://' + '192.168.20.93';
+const url = 'ws://' + window.location.host;
 let socket = new WebSocket(url);
+
 socket.onopen = function() {
     setConnectionStatus(true);
     socket.send(JSON.stringify({command: 'getSensors'}));
