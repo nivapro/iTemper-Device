@@ -1,3 +1,4 @@
+import * as https  from 'https';
 import axios, { AxiosError, AxiosInstance } from 'axios';
 
 import { log } from '../../core/logger';
@@ -66,22 +67,28 @@ export class SensorLogService implements  ISensorLogService {
     private writeSensorLogError = false;
 
     private createAxiosInstance(): AxiosInstance {
+        const rejectUnauthorized = !this.ITEMPER_URL.includes('localhost');
         return this.axios = axios.create({
             baseURL: this.ITEMPER_URL + '/sensors',
-            headers: {'Content-Type': 'application/json'}});
+            headers: {'Content-Type': 'application/json'},
+            httpsAgent: rejectUnauthorized ? undefined :  new https.Agent({rejectUnauthorized: false}),
+        });
     }
 
     private openWebSocket(): WebSocket {
         const self = this;
-        // const wsTestUrl = 'wss://test.itemper.io/ws';
-        const wsTestUrl = this.WS_URL;
-        const origin = this.WS_ORIGIN;
+        const url = this.WS_URL;
         const protocol = 'device';
-        const socket = new WebSocket (wsTestUrl, { protocol, origin, perMessageDeflate: false });
+        const origin = this.WS_ORIGIN;
+        const perMessageDeflate = false;
+        const rejectUnauthorized = !this.ITEMPER_URL.includes('localhost');
+        const options = { protocol, origin, perMessageDeflate, rejectUnauthorized: rejectUnauthorized };
+        const socket = new WebSocket (url, options);
+        log.info('SensorLog.openWebSocket, new WebSocket options=' + JSON.stringify(options, null, 2));
 
         socket.on('open', () => {
             if (self.webSocketError) {
-                log.info('SensorLog.openWebSocket.on(open): Device.SensorLog connected to backend!');
+                log.info('SensorLog.openWebSocket.on(open): ' + url);
                 self.webSocketError = false;
             }
         });
