@@ -4,6 +4,7 @@ import * as os from 'os';
 import { config } from 'process';
 
 interface Options {
+    ADAPTER_NAME: string;
     BLUETOOTH: string;
     COLOR: string;
     SERIAL_NUMBER: string;
@@ -29,6 +30,7 @@ class Config implements Options {
     }
     private static defaults(): Options {
         return {
+            ADAPTER_NAME:'hci0',
             BLUETOOTH: (process.arch === 'arm' || process.arch === 'arm64')? process.arch : '',
             COLOR: '#00AA00FF',
             SERIAL_NUMBER: os.hostname(),
@@ -49,6 +51,7 @@ class Config implements Options {
     } 
     private reset() {
         Config.env = {
+            ADAPTER_NAME: process.env.ADAPTER_NAME,
             BLUETOOTH: process.env.BLUETOOTH, // set to true/Linux to enable if not process.arch as defaults above
             COLOR: process.env.COLOR,
             SERIAL_NUMBER: process.env.SERIAL_NUMBER,
@@ -76,6 +79,8 @@ class Config implements Options {
            }
         }
     }
+    get ADAPTER_NAME(): string { return Config.options.ADAPTER_NAME; }
+
     get BLUETOOTH(): string { return Config.options.BLUETOOTH; }
 
     get COLOR() { return Config.options.COLOR; }
