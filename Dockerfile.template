@@ -25,6 +25,7 @@ COPY package.json package.json
 COPY README.md README.md 
 COPY CHANGELOG.md CHANGELOG.md
 
+# Copy security settings for Bluez
 COPY security/prod/io.temper.conf /etc/dbus-1/system.d/
 
 # Install npm dependencies
