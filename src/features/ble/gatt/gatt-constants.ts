@@ -1,5 +1,5 @@
 import dbus from 'dbus-next';
-import { conf } from '@/core/config';
+import { conf } from '../../../core/config';
 import * as utils from './gatt-utils'; 
 
 export const ADAPTER_NAME = conf.ADAPTER_NAME;
