@@ -26,8 +26,8 @@ COPY README.md README.md
 COPY CHANGELOG.md CHANGELOG.md
 
 # Copy security settings for Bluez
-COPY security/prod/io.temper.conf /etc/dbus-1/system.d/
-
+COPY security/prod/io.itemper.conf /etc/dbus-1/system.d/
+ENV DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
 # Install npm dependencies
 # RUN JOBS=MAX npm install -g node-gyp@7.1.0
 RUN JOBS=MAX npm install node-hid@0.7.9 --build-from-source
