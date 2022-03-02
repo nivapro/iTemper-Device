@@ -93,10 +93,13 @@ export class DeviceLog {
                     // that falls out of the range of 2xx
                     if (!self.onDataReceivedError) {
                         self.onDataReceivedError = true;
-                        log.error(m + 'response status: ' +  error.response.status +
-                        ', baseURL: ' + error.config.baseURL);
+                        const statusText = error.response.status === 422 
+                        ? JSON.stringify(error.response.data, undefined, 2)
+                        :  error.response.statusText;
+                        log.error(m + ': status=' + error.response.status + ': ' +
+                                    statusText + ', url: ' + url);
                     }
-                    log.debug(m + 'response data: ' + JSON.stringify(error.response.data));
+                    log.debug(m + 'response data: ' + JSON.stringify(error.response.data) + ', url: ' + url);
                 } else if (error.request) {
                     // The request was made but no response was received
                     if (!self.onDataReceivedError) {
