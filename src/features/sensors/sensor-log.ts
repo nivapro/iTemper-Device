@@ -47,16 +47,14 @@ export class SensorLog {
         return this.logging;
     }
     public startLogging(filter?: FilterConfig): void {
-        log.info('sensor-log.startLogging: ' + this.state.getAttr().model + ', ' +
-                  this.state.getAttr().sensorCategory());
+        log.info('sensor-log.startLogging: ' + JSON.stringify(filter));
         if (filter) {
             this.dataFilter = filter;
         }
         this.logging = true;
     }
     public stopLogging(): void {
-        log.info('sensor-log.stopLogging: ' + this.state.getAttr().model + ', ' +
-                  this.state.getAttr().sensorCategory());
+        log.info('sensor-log.stopLogging');
         this.logging = false;
     }
 
@@ -66,7 +64,7 @@ export class SensorLog {
         if (this.status !== LogStatus.Registered) {
             this.registerSensor(data);
         } else if (this.logging) {
-            const desc = { SN: this.state.getAttr().SN, port: data.getPort()};
+            const desc = { SN: this.state.getAttr(data.getPort()).SN, port: data.getPort()};
             const samples = [{date: data.timestamp(), value: data.getValue()}];
             const sensorLogData: SensorLogData = { desc, samples };
             this.logService.PostSensorLog(sensorLogData)
@@ -94,13 +92,8 @@ export class SensorLog {
     private registerSensor(data: SensorData): void {
         const m = 'sensor-log.registerSensor: ';
         if (this.status !== LogStatus.Registered) {
-            const stateAttr = this.state.getAttr();
-            const attr = { model: stateAttr.model,
-                            category: Category[stateAttr.category],
-                            accuracy: stateAttr.accuracy,
-                            resolution: stateAttr.resolution,
-                            maxSampleRate: stateAttr.maxSampleRate};
-            const desc = { SN: stateAttr.SN, port: data.getPort()};
+            const attr = this.state.getAttr(data.getPort());
+            const desc = { SN: attr.SN, port: data.getPort()};
             const registration = { desc, attr };
             log.debug(m + 'desc=' + stringify(desc));
             const self = this;
@@ -121,7 +114,7 @@ export class SensorLog {
         }
     }
     private onMonitor(data: SensorData): void {
-        const desc = { SN: this.state.getAttr().SN, port: data.getPort()};
+        const desc = { SN: this.state.getAttr(data.getPort()).SN, port: data.getPort()};
         const samples = [{date: data.timestamp(), value: data.getValue()}];
         const sensorLog = { desc, samples };
         this.logService.writeSensorLog(sensorLog);

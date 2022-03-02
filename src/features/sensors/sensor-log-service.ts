@@ -1,6 +1,5 @@
-import * as https  from 'https';
 import axios, { AxiosError, AxiosInstance } from 'axios';
-
+import * as https from 'https';
 import { log } from '../../core/logger';
 
 import { stringify } from '../../core/helpers';
@@ -82,7 +81,7 @@ export class SensorLogService implements  ISensorLogService {
         const origin = this.WS_ORIGIN;
         const perMessageDeflate = false;
         const rejectUnauthorized = !this.ITEMPER_URL.includes('localhost');
-        const options = { protocol, origin, perMessageDeflate, rejectUnauthorized: rejectUnauthorized };
+        const options = { protocol, origin, perMessageDeflate, rejectUnauthorized };
         const socket = new WebSocket (url, options);
         log.info('SensorLog.openWebSocket, new WebSocket options=' + JSON.stringify(options, null, 2));
 
@@ -177,7 +176,7 @@ export class SensorLogService implements  ISensorLogService {
             .then (function() {
                 if (self.PostSensorLogError) {
                     self.PostSensorLogError = false;
-                    log.info('sensor-log-service.PostSensorLog data=%s', data)
+                    log.info('sensor-log-service.PostSensorLog data=%s', data);
                 }
                 resolve(data.desc);
             })
@@ -226,7 +225,7 @@ export class SensorLogService implements  ISensorLogService {
         let status = 1;
         if (error.response) {
             if (!this.PostSensorLogError) {
-                const statusText = error.response.status === 422 
+                const statusText = error.response.status === 422
                     ? JSON.stringify(error.response.data, undefined, 2)
                     :  error.response.statusText;
                 log.error('sensor-log-service.handleError: status=' +

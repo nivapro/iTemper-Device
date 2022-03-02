@@ -107,11 +107,11 @@ function sensorSample(data: SensorData): SensorSample {
 }
 function AddSensorLogs(sensorLogs: SensorLog[], state: SensorState): void {
 
-    const attr: SensorAttributes = state.getAttr(); // Common attributes for all sensors connected
     const sensorData: SensorData[] = state.getSensorData(); // one sensorData for each sensor
 
     for (const sensor of sensorData) {
         const samples: SensorSample[] = [];
+        const attr: SensorAttributes = state.getAttr(sensor.getPort());
         samples.push(sensorSample(sensor));
         sensorLogs.push({ desc: description(attr, sensor), attr, samples});
     }

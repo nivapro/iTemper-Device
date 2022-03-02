@@ -24,8 +24,8 @@ export class Temper8 extends SensorState implements USBReporter {
             0.5, 1, 0.2));
 
         Settings.onChange(Settings.SERIAL_NUMBER, (setting: Setting) => {
-            this.attr.SN = setting.value.toString();
-            log.info('SensorLog.settingChanged: SERIAL_NUMBER=' + this.attr.SN);
+            this.sensors.forEach((s) => s.attr.SN = setting.value.toString());
+            log.info('Temper8.settingChanged: SERIAL_NUMBER=' + setting.value.toString());
         });
     }
 
