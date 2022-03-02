@@ -21,7 +21,7 @@ import { USBController } from './features/sensors/usb-controller';
 
 import * as ruuvi from './features/ruuvi/ruuvi-tag';
 
-import { UUID_Designator, getUuid } from './features/ble/gatt-server/uuid'
+import { getUuid, UUID_Designator } from './features/ble/gatt-server/uuid';
 
 import * as logService from './features/sensors/sensor-log-service';
 
@@ -37,12 +37,12 @@ wifi.init();
 if (conf.BLUETOOTH !== '') {
         log.info('Enabling Bluetooth GATT server,  Primary Service: ' + getUuid(UUID_Designator.PrimaryService));
         ble.init();
-    if (conf.RUUVI_TAGS !== '') {
-        log.info('Enabling Ruuvi tags Bluetooth sensors');
-        ruuvi.init();
-    } else {
-        log.info('Set env RUUVI_TAGS=true to enable support for Ruuvi tags Bluetooth sensors'); 
-    }
+        if (conf.RUUVI_TAGS !== '') {
+            log.info('Enabling Ruuvi tags Bluetooth sensors');
+            ruuvi.init();
+        } else {
+            log.info('Set env RUUVI_TAGS=true to enable support for Ruuvi tags Bluetooth sensors'); 
+        }
 } else {
     log.info('Bluetooth not enabled');
 }
