@@ -226,7 +226,8 @@ export class SensorLogService implements  ISensorLogService {
         let status = 1;
         if (error.response) {
             if (!this.PostSensorLogError) {
-                log.error('sensor-log-service.handleError: Error=' + JSON.stringify(error.response));
+                log.error('sensor-log-service.handleError: status=' +
+                    error.response.status + ': ' + error.response.statusText);
             }
             status = error.response.status;
             if (error.response.status === 308) {
