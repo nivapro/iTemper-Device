@@ -19,11 +19,15 @@ export class Sensor {
     public a: SensorData;
     public b: SensorData;
     public latest: SensorData;
+    updateError: boolean = false;
+    reportTime: number = 0;
+}
+interface SensorError {
+    [port: number]: boolean;
 }
 export class SensorState {
     protected sensors: Sensor[] = [];
-    private updateSensorError = false;
-
+    protected updateSensorError = false;
     protected sensorDataListeners: SensorDataListener[] = [];
 
     constructor(protected defaultAttr: SensorAttributes ) {
@@ -104,6 +108,7 @@ export class SensorState {
         if (this.sensors !== null) {
             const sensor: Sensor | undefined = this.sensors.find(s => s.latest.getPort() === port);
             if (sensor) {
+                this.updateSensorError = false;
                 if (sensor.latest === sensor.a) {
                     sensor.b.setValue(sampleValue);
                     sensor.latest = sensor.b;
@@ -113,8 +118,12 @@ export class SensorState {
                     sensor.latest = sensor.a;
                     this.updateSensorDataListeners(sensor.latest, sensor.b);
                 }
-                if (this.updateSensorError) {
-                    this.updateSensorError = false;
+                if (sensor.updateError) {
+                    sensor.updateError= false;
+                    sensor.reportTime = sensor.latest.timestamp();
+                    log.info(m + 'Sensor updated, port=' + port + ', sampleValue=' + sampleValue);
+                } else if (sensor.latest.timestamp() - sensor.reportTime > 60000) {
+                    sensor.reportTime = sensor.latest.timestamp();
                     log.info(m + 'Sensor updated, port=' + port + ', sampleValue=' + sampleValue);
                 }
             } else {
