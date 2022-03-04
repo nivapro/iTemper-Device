@@ -33,9 +33,11 @@ export class RuuviSensorState extends SensorState {
                 return port;
             }
         });
+        log.debug('ruuvi-sensor-state.findPort, port=' + category.toString() +':'+ port);
         return port;
     }
     public update(data: RuuviData5) {
+        log.debug('ruuvi-sensor-state.update, data=' + JSON.stringify(data, undefined, 2));
         this.sensors.forEach((sensor, port) => {
             switch (sensor.attr.category) {
                 case Category.AbsoluteHumidity:
@@ -55,7 +57,6 @@ export class RuuviSensorState extends SensorState {
                     break;
                 case Category.Humidity:
                     this.updateSensor(port, data.humidity);
-
                     break;
                 case Category.RelativeHumidity:
                     this.updateSensor(port, data.humidity);

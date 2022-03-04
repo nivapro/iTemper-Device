@@ -1,16 +1,11 @@
-import persist from 'node-persist';
 import ruuvi from 'node-ruuvitag';
-import { conf } from '../../core/config';
 import { log } from '../../core/logger';
 import { SensorAttributes } from '../sensors/sensor-attributes';
 import { SensorLog } from '../sensors/sensor-log';
 import { Category, sensorLogService } from '../sensors/sensor-log-service';
 
 import { RuuviData, RuuviData5 } from './ruuvi-data';
-
 import { RuuviSensorState } from './ruuvi-sensor-state';
-
-
 
 export interface PeripheralData {
     id: string;
@@ -32,24 +27,17 @@ export interface TagStatus {
 export interface Tag {
     state: RuuviSensorState;
     log: SensorLog;
-    // sensors: Sensor[];
     data: PeripheralData;
     status: TagStatus;
 }
 export interface Tags {
     [index: string]: Tag;
 }
-const nextAvailablePortKey = 'nextAvailablePort';
 export async function init() {
     log.info('ruuvi.initRuuvi');
-    await persist.init({
-        dir: conf.ITEMPER_PERSIST_DIR,
-    });
-    if (!persist.getItem(nextAvailablePortKey)) {
-        persist.setItem(nextAvailablePortKey, 1); // TODO: we let USB has port zero;
-    }
+
     ruuvi.on('found', (tag: Peripheral) => {
-        log.info('Found RuuviTag=: ' + JSON.stringify(tag));
+        log.info('Found RuuviTag=: ' + JSON.stringify(tag, undefined, 2));
         createPeripheral(tag);
     });
     ruuvi.on('warning', (message: any) => {
@@ -109,6 +97,8 @@ async function createPeripheral(peripheral: Peripheral) {
                 mac: data.mac,
             };
             tags[peripheral.id].state.update(data);
+        } else {
+            log.error('ruuvi-tags.createPeripheral.invalid Ruuvi Data=' + JSON.stringify(raw));
         }
     });
     peripheral.on('error', (data: any)  => {
