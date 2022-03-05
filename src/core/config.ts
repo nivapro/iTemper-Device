@@ -47,8 +47,7 @@ class Config implements Options {
             ITEMPER_CONFIG_FILE: './itemper.config',
             ITEMPER_PERSIST_DIR: './data',
         } ;
-    
-    } 
+    }
     private reset() {
         Config.env = {
             ADAPTER_NAME: process.env.ADAPTER_NAME,
