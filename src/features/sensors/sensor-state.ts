@@ -58,8 +58,16 @@ export class SensorState {
         this.sensorDataListeners.push ({publish: onSensorDataReceived, filter});
     }
     private SNChanged(setting: Setting) {
-        const sn = <string>setting.value;
-        this.sensors.forEach((s) => s.attr.SN = sn);
+        const sn = setting.value.toString();
+        this.sensors.forEach((s) => {
+            const parts = s.attr.SN.split('--');
+            if (parts[1] !== '') {
+                s.attr.SN = sn + '--' + parts[1];
+            } else {
+                s.attr.SN = sn;
+            }
+
+        });
         log.info('SensorState.SNChanged to ' + sn);
     }
     private round(data: SensorData, resolution: number): number {
@@ -148,10 +156,12 @@ export class SensorState {
                 const a = new SensorData(ports[port]);
                 const b = new SensorData(ports[port]);
                 const latest = b;
-                this.sensors[port] = { attr: this.defaultAttr, a, b, latest };
+                this.sensors[port] = { attr: this.defaultAttr, a, b, latest, updateError: false, reportTime: 0 };
             }
         }
     }
+    updateError: boolean = false;
+    reportTime: number = 0;
     // Don't call addSensor and connectSensor in the same inherited state.
     // Use addSensor when the port no has no particular meaning oth than separating
     // sensors on the same device, e.g. Ruuvi tags.
@@ -160,6 +170,6 @@ export class SensorState {
         const a = new SensorData(port);
         const b = new SensorData(port);
         const latest = b;
-        this.sensors.push ({ attr, a, b, latest });
+        this.sensors.push ({ attr, a, b, latest, updateError: false, reportTime: 0 });
     }
 }

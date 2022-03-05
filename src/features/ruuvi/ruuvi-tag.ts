@@ -1,5 +1,6 @@
 import ruuvi from 'node-ruuvitag';
 import { log } from '../../core/logger';
+import { Setting, Settings } from '../../core/settings';
 import { SensorAttributes } from '../sensors/sensor-attributes';
 import { SensorLog } from '../sensors/sensor-log';
 import { Category, sensorLogService } from '../sensors/sensor-log-service';
@@ -62,8 +63,10 @@ export function StopLogging(tagID: string, category: Category) {
 }
 
 function RuuviAttr(tag: Tag, category: Category): SensorAttributes {
+    const sn = Settings.get(Settings.SERIAL_NUMBER).value.toString();
+    const ruuviSN = sn + '--' + tag.data.id;
     const attr: SensorAttributes = new SensorAttributes(
-        tag.data.id,
+        ruuviSN,
         'Ruuvi Tag:',
         category,
         2,

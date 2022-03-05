@@ -16,11 +16,6 @@ export class RuuviSensorState extends SensorState {
 
     constructor() {
         super(RuuviSensorState.defaultAttr);
-
-        Settings.onChange(Settings.SERIAL_NUMBER, (setting: Setting) => {
-            this.sensors.forEach((s) => s.attr.SN = setting.value.toString());
-            log.info('Ruuvi.settingChanged: SERIAL_NUMBER=' + setting.value.toString());
-        });
     }
     public addSensor(attr: SensorAttributes) {
         this.connectSensor(attr);
