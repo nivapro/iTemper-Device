@@ -61,7 +61,7 @@ export class SensorState {
         const sn = setting.value.toString();
         this.sensors.forEach((s) => {
             const parts = s.attr.SN.split('--');
-            if (parts[1] !== '') {
+            if (parts.length > 1 && parts[1] !== '') {
                 s.attr.SN = sn + '--' + parts[1];
             } else {
                 s.attr.SN = sn;
