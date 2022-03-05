@@ -27,7 +27,7 @@ export interface TagStatus {
 }
 export interface Tag {
     state: RuuviSensorState;
-    log: SensorLog;
+    // log: SensorLog;
     data: PeripheralData;
     status: TagStatus;
 }
@@ -37,9 +37,10 @@ export interface Tags {
 export async function init() {
     log.info('ruuvi.initRuuvi');
 
-    ruuvi.on('found', (tag: Peripheral) => {
-        log.info('Found RuuviTag=: ' + JSON.stringify(tag, undefined, 2));
-        createPeripheral(tag);
+    ruuvi.on('found', (peripheral: Peripheral) => {
+        log.info('Found RuuviTag=: ' + JSON.stringify(peripheral, undefined, 2));
+        const tag = createTag(peripheral);
+        SensorLog.createSensorLog(tag.state);
     });
     ruuvi.on('warning', (message: any) => {
         log.error('ruuvi.ruuvi.on(warning): ' + JSON.stringify(message));
@@ -53,15 +54,6 @@ export function getRuuviTags(): string[] {
     Object.keys(tags).map(key => ids.push(key));
     return ids;
 }
-export function startLogging(tagID: string, category: Category) {
-    const ports = [tags[tagID].state.findPort(category)];
-    tags[tagID].log.startLogging({ports});
-}
-export function StopLogging(tagID: string, category: Category) {
-    const ports = [tags[tagID].state.findPort(category)];
-    tags[tagID].log.stopLogging();
-}
-
 function RuuviAttr(tag: Tag, category: Category): SensorAttributes {
     const sn = Settings.get(Settings.SERIAL_NUMBER).value.toString();
     const ruuviSN = sn + '--' + tag.data.id;
@@ -75,12 +67,11 @@ function RuuviAttr(tag: Tag, category: Category): SensorAttributes {
     return attr;
 }
 const tags: Tags = {};
-async function createPeripheral(peripheral: Peripheral) {
+function createTag(peripheral: Peripheral): Tag {
     const state = new RuuviSensorState();
-    const sensorLog = new SensorLog(state, sensorLogService);
     const status: TagStatus = {dataFormat: 0, rssi: 0, battery: 0, txPower: 0, mac: peripheral.address};
     const tag = {
-        state, log: sensorLog,
+        state, // log: sensorLog,
         data: peripheral as PeripheralData,
         status,
     };
@@ -107,7 +98,7 @@ async function createPeripheral(peripheral: Peripheral) {
     peripheral.on('error', (data: any)  => {
         log.error('ruuvi-tag.createPeripheral.on(error): ' + JSON.stringify(data));
     });
-    tags[peripheral.id].log.startLogging();
+    return tag;
 }
 function isObject(raw: unknown) {
     return typeof raw === 'object' && raw !== null;

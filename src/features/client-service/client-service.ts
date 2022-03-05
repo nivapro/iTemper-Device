@@ -5,7 +5,9 @@ import { log } from '../../core/logger';
 import { Setting, Settings } from '../../core/settings';
 import { SensorAttributes } from '../sensors/sensor-attributes';
 import { SensorData } from '../sensors/sensor-data';
+import { SensorLog } from '../sensors/sensor-log';
 import { SensorState } from '../sensors/sensor-state';
+
 import { USBController } from '../sensors/usb-controller';
 
 export interface InboundMessage {
@@ -94,7 +96,7 @@ export interface SensorSample {
     value: number;
     date: number;
 }
-export interface SensorLog {
+export interface SensorLogData {
     desc: SensorDescription;
     attr: SensorAttributes;
     samples: SensorSample[];
@@ -105,7 +107,7 @@ function description(attr: SensorAttributes, data: SensorData): SensorDescriptio
 function sensorSample(data: SensorData): SensorSample {
     return {value: data.getValue(), date: data.timestamp()};
 }
-function AddSensorLogs(sensorLogs: SensorLog[], state: SensorState): void {
+function AddSensorLogs(sensorLogs: SensorLogData[], state: SensorState): void {
 
     const sensorData: SensorData[] = state.getSensorData(); // one sensorData for each sensor
 
@@ -117,9 +119,9 @@ function AddSensorLogs(sensorLogs: SensorLog[], state: SensorState): void {
     }
 }
 export function getSensors(ws: WebSocket) {
-    const loggers = USBController.getLoggers();
+    const loggers = SensorLog.getLoggers();
     const command = 'sensors';
-    const data: SensorLog[] = [];
+    const data: SensorLogData[] = [];
     for (const logger of loggers) {
         const state = logger.getState();
         AddSensorLogs(data, state);
@@ -187,9 +189,9 @@ export function stopMonitor(ws: WebSocket, desc: SensorDescription[]) {
 }
 
 function logSensorData() {
-    const loggers = USBController.getLoggers();
+    const loggers = SensorLog.getLoggers();
     const command = 'log';
-    const data: SensorLog[] = [];
+    const data: SensorLogData[] = [];
     for (const logger of loggers) {
         const state = logger.getState();
         AddSensorLogs(data, state);

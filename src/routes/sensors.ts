@@ -5,14 +5,14 @@ import * as express from 'express';
 const router: express.Router = express.Router();
 import cors from 'cors';
 
-import { USBController } from '../features/sensors/usb-controller';
+import { SensorLog } from '../features/sensors/sensor-log';
 
 import { log } from '../core/logger';
 
 router.get('/', cors(), (_req: express.Request, res: express.Response) => {
 
     const sensorLogger =
-    USBController.getLoggers().find(logger=> logger.getState !== undefined);
+    SensorLog.getLoggers().find(logger=> logger.getState !== undefined);
 
     res.setHeader('Content-Type', 'application/json');
     if (sensorLogger) {

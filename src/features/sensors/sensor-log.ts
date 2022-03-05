@@ -1,4 +1,3 @@
-
 import { SensorData } from './sensor-data';
 import { FilterConfig, SensorState } from './sensor-state';
 
@@ -6,7 +5,7 @@ import { log } from '../../core/logger';
 
 import { stringify } from '../../core/helpers';
 
-import { Category, Descriptor, ISensorLogService, SensorLogError } from './sensor-log-service';
+import { Descriptor, ISensorLogService, SensorLogError, sensorLogService } from './sensor-log-service';
 
 enum LogStatus { Unregistered, Registering, Registered}
 
@@ -23,6 +22,7 @@ export interface SensorLogData {
     samples: Sample[];
 }
 export class SensorLog {
+    private static loggers: SensorLog[] = [];
     private logging: boolean = false;
     private status: LogStatus = LogStatus.Unregistered;
     private onDataReceivedError: boolean = false;
@@ -36,6 +36,14 @@ export class SensorLog {
         this.logging = false;
         this.state.addSensorDataListener(this.onDataReceived.bind(this));
         this.state.addSensorDataListener(this.onMonitor.bind(this));
+    }
+    public static createSensorLog(sensorState: SensorState) {
+        const sensorLog = new SensorLog(sensorState, sensorLogService);
+        SensorLog.loggers.push(sensorLog);
+        sensorLog.startLogging();
+    }
+    public static getLoggers(): SensorLog[] {
+        return SensorLog.loggers;
     }
     public getState(): SensorState {
         return this.state;

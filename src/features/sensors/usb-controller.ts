@@ -31,15 +31,9 @@ export function isTemper8(device: HID.Device): boolean {
 }
 export class USBController {
     private static devices: USBDevice[] = [];
-    private static loggers: SensorLog[] = [];
 
-    public static getLoggers(): SensorLog[] {
-        return USBController.loggers;
-    }
     private static createSensorLog(sensorState: SensorState) {
-        const sensorLog = new SensorLog(sensorState, sensorLogService);
-        USBController.loggers.push(sensorLog);
-        sensorLog.startLogging();
+        SensorLog.createSensorLog(sensorState);
     }
     private static createUSBDevice(path: string, reporter: USBReporter) {
         const hid = new HID.HID(path);
