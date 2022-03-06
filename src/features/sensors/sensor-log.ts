@@ -66,6 +66,7 @@ export class SensorLog {
     }
     private onDataReceived(data: SensorData): void {
         const m = 'sensor-log.onDataReceived: ';
+        log.debug(m + ', data=' + JSON.stringify(data));
         const self = this;
         if (this.status !== LogStatus.Registered) {
             this.registerSensor(data);
@@ -73,7 +74,9 @@ export class SensorLog {
             const desc = { SN: this.state.getAttr(data.getPort()).SN, port: data.getPort()};
             const samples = [{date: data.timestamp(), value: data.getValue()}];
             const sensorLogData: SensorLogData = { desc, samples };
+
             this.logService.writeSensorLog(sensorLogData);
+
             const lastTime = this.state.getLastTime(data.getPort());
             const interval = Settings.toNum(Settings.get(Settings.POLL_INTERVAL));
             if (this.logging && (Date.now() - lastTime) > interval) {
@@ -100,7 +103,6 @@ export class SensorLog {
                 const debug = {status: LogStatus[this.status], logging: this.logging, data };
                 log.debug(m + stringify(debug));
             }
-
         }
     }
     private registerSensor(data: SensorData): void {
