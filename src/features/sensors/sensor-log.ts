@@ -79,12 +79,14 @@ export class SensorLog {
             if (this.logging && (Date.now() - lastTime) > interval) {
                 this.logService.PostSensorLog(sensorLogData)
                 .then((desc: Descriptor) => {
+                    log.debug(m + '.PostSensorLog desc=' +stringify(desc));
                     if (self.onDataReceivedError) {
                         self.onDataReceivedError = false;
-                        log.info(m + 'sensor data posted, desc=' + JSON.stringify(desc));
+                        log.info(m + '.PostSensorLog posted, desc=' + JSON.stringify(desc));
                     }
                 })
                 .catch((error: SensorLogError) => {
+                    log.debug(m + '.PostSensorLog catch error=' + stringify(error));
                     if (!self.onDataReceivedError) {
                         self.onDataReceivedError = true;
                         log.error(m + stringify(error));
