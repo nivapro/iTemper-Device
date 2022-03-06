@@ -117,6 +117,7 @@ export class SensorLog {
                 log.info(m + 'sensor registered, desc=' + stringify(desc));
             })
             .catch(function(error: SensorLogError) {
+                log.debug(m + 'catch error=' +stringify(error));
                 if (!self.registerSensorError) {
                     self.registerSensorError = true;
                     log.error(m + stringify(error));
