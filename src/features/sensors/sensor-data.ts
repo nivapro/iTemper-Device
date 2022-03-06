@@ -2,7 +2,7 @@ export class SensorData  {
     private port: number = -1;     // The sensor knows which port it is connected to.
     private value: number = 85.0;         // Temperature value in degrees celsius
     private date: number = 0;
-    constructor(port: number = -1, value: number = 85.0) {
+    constructor(port: number = -1, value: number = 0.0) {
         this.port = port;
         this.value = value;
         this.date = Date.now();

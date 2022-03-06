@@ -6,6 +6,7 @@ import { log } from '../../core/logger';
 import { stringify } from '../../core/helpers';
 
 import { Descriptor, ISensorLogService, SensorLogError, sensorLogService } from './sensor-log-service';
+import { Settings } from '@/core/settings';
 
 enum LogStatus { Unregistered, Registering, Registered}
 
@@ -65,36 +66,41 @@ export class SensorLog {
         log.info('sensor-log.stopLogging');
         this.logging = false;
     }
-
     private onDataReceived(data: SensorData): void {
         const m = 'sensor-log.onDataReceived: ';
         const self = this;
         if (this.status !== LogStatus.Registered) {
             this.registerSensor(data);
-        } else if (this.logging) {
+        } else {
             const desc = { SN: this.state.getAttr(data.getPort()).SN, port: data.getPort()};
             const samples = [{date: data.timestamp(), value: data.getValue()}];
             const sensorLogData: SensorLogData = { desc, samples };
-            this.logService.PostSensorLog(sensorLogData)
-            .then((desc: Descriptor) => {
-                if (self.onDataReceivedError) {
-                    self.onDataReceivedError = false;
-                    log.info(m + 'sensor data posted, desc=' + JSON.stringify(desc));
-                }
-            })
-            .catch((error: SensorLogError) => {
-                if (!self.onDataReceivedError) {
-                    self.onDataReceivedError = true;
-                    log.error(m + stringify(error));
-                }
-                if (error.status === 404) {
-                    self.status = LogStatus.Unregistered;
-                    self.registerSensor(data);
-                }
-            });
-        } else {
-            const debug = {status: LogStatus[this.status], logging: this.logging, data };
-            log.debug(m + stringify(debug));
+            this.logService.writeSensorLog(sensorLogData);
+            const lastTime = this.state.getLastTime(data.getPort());
+            const interval = Settings.toNum(Settings.get(Settings.POLL_INTERVAL));
+            if (this.logging && (Date.now() - lastTime) > interval) {
+                this.logService.PostSensorLog(sensorLogData)
+                .then((desc: Descriptor) => {
+                    if (self.onDataReceivedError) {
+                        self.onDataReceivedError = false;
+                        log.info(m + 'sensor data posted, desc=' + JSON.stringify(desc));
+                    }
+                })
+                .catch((error: SensorLogError) => {
+                    if (!self.onDataReceivedError) {
+                        self.onDataReceivedError = true;
+                        log.error(m + stringify(error));
+                    }
+                    if (error.status === 404) {
+                        self.status = LogStatus.Unregistered;
+                        self.registerSensor(data);
+                    }
+                });
+            } else {
+                const debug = {status: LogStatus[this.status], logging: this.logging, data };
+                log.debug(m + stringify(debug));
+            }
+
         }
     }
     private registerSensor(data: SensorData): void {

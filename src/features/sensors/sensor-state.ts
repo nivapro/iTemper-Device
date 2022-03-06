@@ -22,9 +22,6 @@ export class Sensor {
     updateError: boolean = false;
     reportTime: number = 0;
 }
-interface SensorError {
-    [port: number]: boolean;
-}
 export class SensorState {
     protected sensors: Sensor[] = [];
     protected updateSensorError = false;
@@ -41,7 +38,9 @@ export class SensorState {
     public setAttr(port: number, attr: SensorAttributes): void {
         this.sensors[port].attr = attr;
     }
-
+    public getLastTime(port: number): number {
+        return this.sensors[port].latest.timestamp();
+    }
     public maxSampleRate(): number {
         const maxSampleRates = this.sensors.map((s) => s.attr.maxSampleRate);
         return  Math.max(...maxSampleRates);
