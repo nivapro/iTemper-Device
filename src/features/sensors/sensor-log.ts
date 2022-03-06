@@ -1,12 +1,10 @@
-import { SensorData } from './sensor-data';
-import { FilterConfig, SensorState } from './sensor-state';
-
-import { log } from '../../core/logger';
-
 import { stringify } from '../../core/helpers';
+import { log } from '../../core/logger';
+import { Settings } from '../../core/settings';
 
+import { SensorData } from './sensor-data';
 import { Descriptor, ISensorLogService, SensorLogError, sensorLogService } from './sensor-log-service';
-import { Settings } from '@/core/settings';
+import { FilterConfig, SensorState } from './sensor-state';
 
 enum LogStatus { Unregistered, Registering, Registered}
 
