@@ -92,7 +92,7 @@ export class SensorLogService implements  ISensorLogService {
             }
         });
         socket.on('message', (data: WebSocket.Data): void => {
-            log.info('SensorLog.openWebSocket.on(message): ' + data);
+            log.debug('SensorLog.openWebSocket.on(message): ' + data);
         });
         socket.on('error', (self: WebSocket, error: Error) => {
             if (!this.webSocketError) {
