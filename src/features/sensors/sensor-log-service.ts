@@ -77,7 +77,7 @@ export class SensorLogService implements  ISensorLogService {
     private openWebSocket(): WebSocket {
         const self = this;
         const url = this.WS_URL;
-        const protocol = 'device';
+        const protocol = 'iot-gateway';
         const origin = this.WS_ORIGIN;
         const perMessageDeflate = false;
         const rejectUnauthorized = !this.ITEMPER_URL.includes('localhost');
@@ -85,9 +85,9 @@ export class SensorLogService implements  ISensorLogService {
         const socket = new WebSocket (url, options);
         log.info('SensorLog.openWebSocket, new WebSocket options=' + JSON.stringify(options, null, 2));
 
-        socket.on('open', () => {
+        socket.on('open', (s: WebSocket) => {
             if (self.webSocketError) {
-                log.info('SensorLog.openWebSocket.on(open): ' + url);
+                log.info('SensorLog.openWebSocket.on(open): url' + url + 'protocol' + s.protocol);
                 self.webSocketError = false;
             }
         });
