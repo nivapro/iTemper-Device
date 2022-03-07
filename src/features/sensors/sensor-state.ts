@@ -19,8 +19,8 @@ export class Sensor {
     public a: SensorData;
     public b: SensorData;
     public latest: SensorData;
+    logTime: number = 0;
     updateError: boolean = false;
-    reportTime: number = 0;
 }
 export class SensorState {
     protected sensors: Sensor[] = [];
@@ -38,8 +38,11 @@ export class SensorState {
     public setAttr(port: number, attr: SensorAttributes): void {
         this.sensors[port].attr = attr;
     }
-    public getLastTime(port: number): number {
-        return this.sensors[port].latest.timestamp();
+    public getLogTime(port: number): number {
+        return this.sensors[port].logTime;
+    }
+    public setLogTime(port: number) {
+        this.sensors[port].logTime = Date.now();
     }
     public maxSampleRate(): number {
         const maxSampleRates = this.sensors.map((s) => s.attr.maxSampleRate);
@@ -125,14 +128,6 @@ export class SensorState {
                     sensor.latest = sensor.a;
                     this.updateSensorDataListeners(sensor.latest, sensor.b);
                 }
-                if (sensor.updateError) {
-                    sensor.updateError= false;
-                    sensor.reportTime = sensor.latest.timestamp();
-                    log.info(m + 'Sensor updated, port=' + port + ', sampleValue=' + sampleValue);
-                } else if (sensor.latest.timestamp() - sensor.reportTime > 60000) {
-                    sensor.reportTime = sensor.latest.timestamp();
-                    log.info(m + 'Sensor updated, port=' + port + ', sampleValue=' + sampleValue);
-                }
             } else {
                 if (!this.updateSensorError) {
                     this.updateSensorError = true;
@@ -155,12 +150,10 @@ export class SensorState {
                 const a = new SensorData(ports[port]);
                 const b = new SensorData(ports[port]);
                 const latest = b;
-                this.sensors[port] = { attr: this.defaultAttr, a, b, latest, updateError: false, reportTime: 0 };
+                this.sensors[port] = { attr: this.defaultAttr, a, b, latest, updateError: false, logTime: 0 };
             }
         }
     }
-    updateError: boolean = false;
-    reportTime: number = 0;
     // Don't call addSensor and connectSensor in the same inherited state.
     // Use addSensor when the port no has no particular meaning oth than separating
     // sensors on the same device, e.g. Ruuvi tags.
@@ -169,6 +162,6 @@ export class SensorState {
         const a = new SensorData(port);
         const b = new SensorData(port);
         const latest = b;
-        this.sensors.push ({ attr, a, b, latest, updateError: false, reportTime: 0 });
+        this.sensors.push ({ attr, a, b, latest, updateError: false, logTime: 0 });
     }
 }

@@ -77,16 +77,16 @@ export class SensorLog {
 
             this.logService.writeSensorLog(sensorLogData);
 
-            const lastTime = this.state.getLastTime(data.getPort());
-            const interval = Settings.toNum(Settings.get(Settings.POLL_INTERVAL));
-            if (this.logging && (Date.now() - lastTime) > interval) {
+            const lastTime = this.state.getLogTime(data.getPort());
+            const pollInterval = Settings.toNum(Settings.get(Settings.POLL_INTERVAL));
+            const period = Date.now() - lastTime;
+
+            if (this.logging && period > pollInterval) {
                 this.logService.PostSensorLog(sensorLogData)
                 .then((desc: Descriptor) => {
+                    this.state.setLogTime(data.getPort());
+                    self.onDataReceivedError = false;
                     log.debug(m + '.PostSensorLog desc=' +stringify(desc));
-                    if (self.onDataReceivedError) {
-                        self.onDataReceivedError = false;
-                        log.info(m + '.PostSensorLog posted, desc=' + JSON.stringify(desc));
-                    }
                 })
                 .catch((error: SensorLogError) => {
                     log.debug(m + '.PostSensorLog catch error=' + stringify(error));
