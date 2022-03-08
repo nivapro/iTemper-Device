@@ -20,6 +20,7 @@ export enum Category {
     AccelerationZ = 'AccelerationZ',
     Battery = 'Battery',
     TxPower = 'TxPower',
+    MovementCounter = 'MovementCounter',
 }
 export interface Sample {
     value: number;

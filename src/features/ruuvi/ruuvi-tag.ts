@@ -77,8 +77,12 @@ function createTag(peripheral: Peripheral): Tag {
     };
     tags[peripheral.id] = tag;
 
+    // never change the order
     state.addSensor(RuuviAttr(tag, Category.Temperature));
     state.addSensor(RuuviAttr(tag, Category.Humidity));
+    state.addSensor(RuuviAttr(tag, Category.rssi));
+    state.addSensor(RuuviAttr(tag, Category.MovementCounter));
+    state.addSensor(RuuviAttr(tag, Category.TxPower));
 
     peripheral.on('updated', (raw: RuuviData)  => {
         if (isRuuviData5Valid(raw)) {
