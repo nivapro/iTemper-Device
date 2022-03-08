@@ -227,7 +227,7 @@ function stopMonitor(sensors: SensorLog[]) {
 function unit(category: Category): string {
     switch (category) {
         case Category.AbsoluteHumidity || Category.RelativeHumidity || Category.Humidity:
-            return ' %';
+            return ' \%';
         case Category.Temperature:
             return ' °C';
          default:
@@ -259,7 +259,7 @@ function log(sensorData: SensorLog[]) {
         if (log) {
             const date = new Date(sensor.samples[0].date);
             const value = sensor.samples[0].value;
-            log.innerHTML = categoryName(sensor.attr.category) + ' ' + value + unit(sensor.attr.category);
+            log.innerHTML = categoryName(sensor.attr.category) + ': ' + value + unit(sensor.attr.category);
         }
         const desc = document.getElementById(sensorId(sensor.desc));
         if (desc) {
