@@ -35,7 +35,16 @@ export class RuuviSensorState extends SensorState {
         log.debug('ruuvi-sensor-state.update, data=' + JSON.stringify(data, undefined, 2));
         this.sensors.forEach((sensor, port) => {
             switch (sensor.attr.category) {
+                case Category.Temperature:
+                    this.updateSensor(port, data.temperature);
+                    break;
+                case Category.Humidity:
+                    this.updateSensor(port, data.humidity);
+                    break;
                 case Category.AbsoluteHumidity:
+                    this.updateSensor(port, data.humidity);
+                    break;
+                case Category.RelativeHumidity:
                     this.updateSensor(port, data.humidity);
                     break;
                 case Category.AirPressure:
@@ -50,14 +59,11 @@ export class RuuviSensorState extends SensorState {
                 case Category.AccelerationZ:
                     this.updateSensor(port, data.accelerationZ);
                     break;
-                case Category.Humidity:
-                    this.updateSensor(port, data.humidity);
+                case Category.rssi:
+                    this.updateSensor(port, data.rssi);
                     break;
-                case Category.RelativeHumidity:
-                    this.updateSensor(port, data.humidity);
-                    break;
-                case Category.Temperature:
-                    this.updateSensor(port, data.temperature);
+                case Category.MovementCounter:
+                    this.updateSensor(port, data.movementCounter);
                     break;
             }
         });
