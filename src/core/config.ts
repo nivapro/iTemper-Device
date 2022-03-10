@@ -121,7 +121,7 @@ class Config implements Options {
             Config.options.SHARED_ACCESS_KEY = conf.SHARED_ACCESS_KEY;       // no implicit saving here
         } catch (error) {
             const msg = 'config.readSharedKey: Cannot read SHARED_ACCESS_KEY from ' +
-             this.ITEMPER_CONFIG_FILE +'error=' + error;
+             this.ITEMPER_CONFIG_FILE +', error=' + error;
             console.error(chalk.red(msg));
         }
     }
@@ -132,7 +132,7 @@ class Config implements Options {
             console.info(chalk.yellow('config.writeSharedKey: saved conf=' + JSON.stringify(conf)));
         } catch (error) {
             const msg =  'config.saveSharedKey: cannot save SHARED_ACCESS_KEY to ' +
-                        this.ITEMPER_CONFIG_FILE +'error=' + error;
+                        this.ITEMPER_CONFIG_FILE +', error=' + error;
             console.error(chalk.red(msg));
         }
     }
