@@ -64,7 +64,7 @@ class Config implements Options {
             HOSTNAME : process.env.HOSTNAME,
             RUUVI_TAGS: process.env.RUUVI_TAGS,  // set to true to enable
             SHARED_ACCESS_KEY: process.env.SHARED_ACCESS_KEY,
-            ITEMPER_CONFIG_FILE: process.env.ITEMPER_CONFIG_FIL,
+            ITEMPER_CONFIG_FILE: process.env.ITEMPER_CONFIG_FILE,
             ITEMPER_PERSIST_DIR: process.env.ITEMPER_PERSIST_DIR,
         };
         let key: keyof Options;
@@ -120,7 +120,8 @@ class Config implements Options {
             console.info(chalk.yellow('config.readSharedKey: Found conf=' + JSON.stringify(conf)));
             Config.options.SHARED_ACCESS_KEY = conf.SHARED_ACCESS_KEY;       // no implicit saving here
         } catch (error) {
-            const msg = 'config.readSharedKey: Cannot read SHARED_ACCESS_KEY from ' + this.ITEMPER_CONFIG_FILE;
+            const msg = 'config.readSharedKey: Cannot read SHARED_ACCESS_KEY from ' +
+             this.ITEMPER_CONFIG_FILE +'error=' + error;
             console.error(chalk.red(msg));
         }
     }
@@ -130,7 +131,8 @@ class Config implements Options {
             fs.writeJSONSync( this.ITEMPER_CONFIG_FILE, conf);
             console.info(chalk.yellow('config.writeSharedKey: saved conf=' + JSON.stringify(conf)));
         } catch (error) {
-            const msg =  'config.saveSharedKey: cannot save SHARED_ACCESS_KEY to ' + this.ITEMPER_CONFIG_FILE;
+            const msg =  'config.saveSharedKey: cannot save SHARED_ACCESS_KEY to ' +
+                        this.ITEMPER_CONFIG_FILE +'error=' + error;
             console.error(chalk.red(msg));
         }
     }
