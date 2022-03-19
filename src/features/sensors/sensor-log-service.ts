@@ -88,7 +88,8 @@ export class SensorLogService implements  ISensorLogService {
 
         socket.on('open', (s: WebSocket) => {
             if (self.webSocketError) {
-                log.info('SensorLog.openWebSocket.on(open): url' + url + 'protocol' + s.protocol);
+                const protocolInfo = ', WebSocket=' + JSON.stringify(s);
+                log.info('SensorLog.openWebSocket.on(open): url' + url + protocolInfo);
                 self.webSocketError = false;
             }
         });
