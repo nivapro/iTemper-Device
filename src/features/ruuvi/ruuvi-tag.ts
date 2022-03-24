@@ -1,40 +1,12 @@
-import persist from 'node-persist';
 import ruuvi from 'node-ruuvitag';
-import { conf } from '../../core/config';
 import { log } from '../../core/logger';
+import { Setting, Settings } from '../../core/settings';
 import { SensorAttributes } from '../sensors/sensor-attributes';
 import { SensorLog } from '../sensors/sensor-log';
 import { Category, sensorLogService } from '../sensors/sensor-log-service';
+
+import { RuuviData, RuuviData5 } from './ruuvi-data';
 import { RuuviSensorState } from './ruuvi-sensor-state';
-
-
-interface RuuviData5 {
-    dataFormat: number; // check === 5
-    rssi: number;
-    temperature: number;
-    humidity: number;
-    pressure: number;
-    accelerationX: number;
-    accelerationY: number;
-    accelerationZ: number;
-    battery: number;
-    txPower: number;
-    movementCounter: number;
-    measurementSequenceNumber: number;
-    mac: string; // "F6:93:9B:47:10:75"
-}
-interface RuuviData2or4 {
-    url: string;
-    dataFormat: number;
-    rssi: number;
-    humidity: number;
-    temperature: number;
-    pressure: number;
-    eddystoneId: string;
-}
-type RuuviData = RuuviData2or4 | RuuviData5;
-
-type Sensor  = { state: RuuviSensorState, log: SensorLog };
 
 export interface PeripheralData {
     id: string;
@@ -54,25 +26,21 @@ export interface TagStatus {
     mac: string;
 }
 export interface Tag {
-    sensors: Sensor[];
+    state: RuuviSensorState;
+    // log: SensorLog;
     data: PeripheralData;
     status: TagStatus;
 }
 export interface Tags {
     [index: string]: Tag;
 }
-const nextAvailablePortKey = 'nextAvailablePort';
 export async function init() {
     log.info('ruuvi.initRuuvi');
-    await persist.init({
-        dir: conf.ITEMPER_PERSIST_DIR,
-    });
-    if (!persist.getItem(nextAvailablePortKey)) {
-        persist.setItem(nextAvailablePortKey, 1); // TODO: we let USB has port zero;
-    }
-    ruuvi.on('found', (tag: Peripheral) => {
-        log.info('Found RuuviTag=: ' + JSON.stringify(tag));
-        createPeripheral(tag);
+
+    ruuvi.on('found', (peripheral: Peripheral) => {
+        log.info('Found RuuviTag=: ' + JSON.stringify(peripheral, undefined, 2));
+        const tag = createTag(peripheral);
+        SensorLog.createSensorLog(tag.state);
     });
     ruuvi.on('warning', (message: any) => {
         log.error('ruuvi.ruuvi.on(warning): ' + JSON.stringify(message));
@@ -86,101 +54,54 @@ export function getRuuviTags(): string[] {
     Object.keys(tags).map(key => ids.push(key));
     return ids;
 }
-export function startLogging(tagID: string, category: Category) {
-    const found = tags[tagID].sensors.find((sensor) => sensor.state.getAttr().category === category);
-    if (found) {
-        found.log.startLogging();
-    }
-}
-export function StopLogging(tagID: string, category: Category) {
-    const found = tags[tagID].sensors.find((sensor) => sensor.state.getAttr().category === category);
-    if (found) {
-        found.log.stopLogging();
-    }
-}
-async function allocatePort(tag: Peripheral, category: Category): Promise<number> {
-    const sensorKey = tag.id + '-' + category;
-    let port = await persist.getItem(sensorKey);
-    if (!port) {
-        let nextAvailablePort = await persist.getItem(nextAvailablePortKey);
-        port = nextAvailablePort;
-        nextAvailablePort++;
-        await persist.setItem(nextAvailablePortKey, nextAvailablePort);
-        await persist.setItem(sensorKey, port);
-    }
-    return port;
-}
-
-async function newSensor(tag: Peripheral, category: Category) {
+function RuuviAttr(tag: Tag, category: Category): SensorAttributes {
+    const sn = Settings.get(Settings.SERIAL_NUMBER).value.toString();
+    const ruuviSN = sn + '--' + tag.data.id;
     const attr: SensorAttributes = new SensorAttributes(
-        'SN',
-        'RuuviTag:' + tag.address,
+        ruuviSN,
+        'Ruuvi Tag:',
         category,
         2,
         2,
         1);
-
-    const port = await allocatePort(tag, category);
-    const state = new RuuviSensorState(attr, port);
-    const log = new SensorLog(state, sensorLogService);
-    return { state, log };
+    return attr;
 }
 const tags: Tags = {};
-async function createPeripheral(tag: Peripheral) {
-    const status: TagStatus = {dataFormat: 0, rssi: 0, battery: 0, txPower: 0, mac: tag.address};
-    tags[tag.id] = {
-        sensors: [
-            await newSensor(tag, Category.Temperature),
-            await newSensor(tag, Category.Humidity),
-            await newSensor(tag, Category.AirPressure),
-        ],
-        data: tag as PeripheralData,
+function createTag(peripheral: Peripheral): Tag {
+    const state = new RuuviSensorState();
+    const status: TagStatus = {dataFormat: 0, rssi: 0, battery: 0, txPower: 0, mac: peripheral.address};
+    const tag = {
+        state, // log: sensorLog,
+        data: peripheral as PeripheralData,
         status,
     };
-    tag.on('updated', (raw: RuuviData)  => {
+    tags[peripheral.id] = tag;
+
+    // never change the order
+    state.addSensor(RuuviAttr(tag, Category.Temperature));
+    state.addSensor(RuuviAttr(tag, Category.Humidity));
+    state.addSensor(RuuviAttr(tag, Category.rssi));
+    state.addSensor(RuuviAttr(tag, Category.MovementCounter));
+
+    peripheral.on('updated', (raw: RuuviData)  => {
         if (isRuuviData5Valid(raw)) {
             const data = raw as RuuviData5;
-            tags[tag.id].status = {
+            tags[tag.data.id].status = {
                 dataFormat: data.dataFormat,
                 rssi: data.rssi,
                 battery: data.battery,
                 txPower: data.txPower,
                 mac: data.mac,
             };
-            tags[tag.id].sensors.forEach((sensor) => {
-                switch (sensor.state.getAttr().category) {
-                    case Category.AbsoluteHumidity:
-                        sensor.state.update(data.humidity);
-                        break;
-                    case Category.AirPressure:
-                        sensor.state.update(data.pressure);
-                        break;
-                    case Category.AccelerationX:
-                        sensor.state.update(data.accelerationX);
-                        break;
-                    case Category.AccelerationY:
-                        sensor.state.update(data.accelerationY);
-                        break;
-                    case Category.AccelerationZ:
-                        sensor.state.update(data.accelerationZ);
-                        break;
-                    case Category.Humidity:
-                        sensor.state.update(data.humidity);
-                        break;
-                    case Category.RelativeHumidity:
-                        sensor.state.update(data.humidity);
-                        break;
-                    case Category.Temperature:
-                        sensor.state.update(data.temperature);
-                        break;
-                }
-            });
+            tags[peripheral.id].state.update(data);
+        } else {
+            log.error('ruuvi-tags.createPeripheral.invalid Ruuvi Data=' + JSON.stringify(raw));
         }
     });
-    tag.on('error', (data: any)  => {
+    peripheral.on('error', (data: any)  => {
         log.error('ruuvi-tag.createPeripheral.on(error): ' + JSON.stringify(data));
     });
-    tags[tag.id].sensors.forEach(sensor => sensor.log.startLogging());
+    return tag;
 }
 function isObject(raw: unknown) {
     return typeof raw === 'object' && raw !== null;

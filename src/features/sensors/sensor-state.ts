@@ -14,29 +14,39 @@ export interface SensorDataListener {
     publish: (sensor: SensorData) => void;
     filter?: FilterConfig;
 }
-export class Sensor { public a: SensorData; public b: SensorData; public latest: SensorData;}
+export class Sensor {
+    public attr: SensorAttributes;
+    public a: SensorData;
+    public b: SensorData;
+    public latest: SensorData;
+    logTime: number = 0;
+    updateError: boolean = false;
+}
 export class SensorState {
-    protected attr: SensorAttributes;
     protected sensors: Sensor[] = [];
-    private updateSensorError = false;
-
+    protected updateSensorError = false;
     protected sensorDataListeners: SensorDataListener[] = [];
 
-    constructor(attr: SensorAttributes) {
-        this.attr = attr;
-        Settings.onChange(Settings.SERIAL_NUMBER, this.SNChanged.bind(this));
+    constructor(protected defaultAttr: SensorAttributes ) {
+           Settings.onChange(Settings.SERIAL_NUMBER, this.SNChanged.bind(this));
     }
 
-    public getAttr(): SensorAttributes {
-        return this.attr;
+    public getAttr(port: number): SensorAttributes {
+        return this.sensors[port].attr;
     }
 
-    public setAttr(attr: SensorAttributes): void {
-        this.attr = attr;
+    public setAttr(port: number, attr: SensorAttributes): void {
+        this.sensors[port].attr = attr;
     }
-
+    public getLogTime(port: number): number {
+        return this.sensors[port].logTime;
+    }
+    public setLogTime(port: number) {
+        this.sensors[port].logTime = Date.now();
+    }
     public maxSampleRate(): number {
-        return this.attr.maxSampleRate;
+        const maxSampleRates = this.sensors.map((s) => s.attr.maxSampleRate);
+        return  Math.max(...maxSampleRates);
     }
 
     public getSensorData(): SensorData[] {
@@ -50,8 +60,16 @@ export class SensorState {
         this.sensorDataListeners.push ({publish: onSensorDataReceived, filter});
     }
     private SNChanged(setting: Setting) {
-        const sn = <string>setting.value;
-        this.attr.SN = sn;
+        const sn = setting.value.toString();
+        this.sensors.forEach((s) => {
+            const parts = s.attr.SN.split('--');
+            if (parts.length > 1 && parts[1] !== '') {
+                s.attr.SN = sn + '--' + parts[1];
+            } else {
+                s.attr.SN = sn;
+            }
+
+        });
         log.info('SensorState.SNChanged to ' + sn);
     }
     private round(data: SensorData, resolution: number): number {
@@ -100,6 +118,7 @@ export class SensorState {
         if (this.sensors !== null) {
             const sensor: Sensor | undefined = this.sensors.find(s => s.latest.getPort() === port);
             if (sensor) {
+                this.updateSensorError = false;
                 if (sensor.latest === sensor.a) {
                     sensor.b.setValue(sampleValue);
                     sensor.latest = sensor.b;
@@ -108,10 +127,6 @@ export class SensorState {
                     sensor.a.setValue(sampleValue);
                     sensor.latest = sensor.a;
                     this.updateSensorDataListeners(sensor.latest, sensor.b);
-                }
-                if (this.updateSensorError) {
-                    this.updateSensorError = false;
-                    log.info(m + 'Sensor updated, port=' + port + ', sampleValue=' + sampleValue);
                 }
             } else {
                 if (!this.updateSensorError) {
@@ -126,6 +141,8 @@ export class SensorState {
             }
         }
     }
+    // USe connectSensors to mimic a physical device where sensors can be plugged in different ports
+    // and where all sensors have the same category.
     protected connectSensors(ports: number[]) {
         if (this.sensors.length === 0) {
             this.sensors = new Array<Sensor>(ports.length);
@@ -133,8 +150,18 @@ export class SensorState {
                 const a = new SensorData(ports[port]);
                 const b = new SensorData(ports[port]);
                 const latest = b;
-                this.sensors[port] = { a, b, latest};
+                this.sensors[port] = { attr: this.defaultAttr, a, b, latest, updateError: false, logTime: 0 };
             }
         }
+    }
+    // Don't call addSensor and connectSensor in the same inherited state.
+    // Use addSensor when the port no has no particular meaning oth than separating
+    // sensors on the same device, e.g. Ruuvi tags.
+    protected connectSensor(attr: SensorAttributes) {
+        const port = this.sensors.length;
+        const a = new SensorData(port);
+        const b = new SensorData(port);
+        const latest = b;
+        this.sensors.push ({ attr, a, b, latest, updateError: false, logTime: 0 });
     }
 }

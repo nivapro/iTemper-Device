@@ -31,41 +31,47 @@ const advertisment = new Adertisement(DOMAIN_PATH,
 const namePrefix = 'itemper ';
 
 
-// function AdvertisedName() {
-//   return namePrefix + Settings.get(Settings.SERIAL_NUMBER).value.toString();
-// }
-
 function AdvertisedName() {
-  return namePrefix + Date.now().toString().slice(9);
+  return namePrefix + Settings.get(Settings.SERIAL_NUMBER).value.toString();
 }
-async function startAdvertising() {
+async function initAdvertisement() {
   try{
     advertisment.addServiceUUID(SERVICE0_UUID);
     advertisment.setLocalName(AdvertisedName());
-    await advertisment.publish();
-    log.info(label("startAdvertising") + "Completed");
+    await advertisment.init();
+    log.info(label("startAdvertising") + "service=" + SERVICE0_UUID + ", name=" + AdvertisedName());
   } catch (e){
     log.error(label("startAdvertising") + "error="+ JSON.stringify(e));
   } 
-
-
-  // bleno.startAdvertising(name, [DeviceInfoService.UUID]);
 }
-function stopAdvertising() {
-  log.info('ble.stopAdvertising');
-  // bleno.stopAdvertising();
+async function startAdvertising() {
+  try{
+    advertisment.setLocalName(AdvertisedName()); // Changing name allowed after setting changes?
+    await advertisment.register();
+    log.info(label("startAdvertising"));
+  } catch (e){
+    log.error(label("startAdvertising") + "error="+ JSON.stringify(e));
+  } 
 }
-export function close() {
-  log.debug('ble.close');
-  stopAdvertising();
-  log.info('Bluetooth GATT services closed');
+async function stopAdvertising() {
+  try{
+    await advertisment.unregister();
+    log.info(label("stopAdvertising"));
+  } catch (e){
+    log.error(label("stopAdvertising") + "error="+ JSON.stringify(e));
+  } 
+}
+export async function close() {
+  log.debug(label("close"));
+  await stopAdvertising();
+  log.info(label("close") + 'Bluetooth GATT services closed');
 }
 export async function init() {
-    log.debug('ble.init');
+    log.debug(label("init"));
     Settings.onChange(Settings.SERIAL_NUMBER, async (setting: Setting) => {
-      log.info('ble.init: new SERIAL_NUMBER=' + setting.value.toString());
+      log.info(label("init") + 'new SERIAL_NUMBER=' + setting.value.toString());
       if(advertisment.isAdvertising()){
-        stopAdvertising();
+        await stopAdvertising();
         await startAdvertising();
       } 
 
@@ -73,10 +79,10 @@ export async function init() {
     try{
       await gattServer.init();
       log.info(label("init") + "GATT server initaited");
+      await initAdvertisement();
       await startAdvertising();
       log.info(label("init") + "Advertising BLE GATT service");
     } catch (e){
       log.error(label("init") + "error="+ JSON.stringify(e));
     } 
-
 }

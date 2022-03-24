@@ -7,7 +7,7 @@ import { log } from '../../core/logger';
 export class Device {
     private static loggers: DeviceLog[] = [];
     private static checks: DeviceChecks[] = [];
-    private static POLL_INTERVAL: number = 60000;
+    private static POLL_INTERVAL: number = 120000;
 
     // private POLL_INTERVAL: number = Settings.get('POLL_INTERVAL').value | 5000;
 

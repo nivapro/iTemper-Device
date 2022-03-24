@@ -4,6 +4,7 @@ import * as os from 'os';
 import { config } from 'process';
 
 interface Options {
+    ADAPTER_NAME: string;
     BLUETOOTH: string;
     COLOR: string;
     SERIAL_NUMBER: string;
@@ -29,6 +30,7 @@ class Config implements Options {
     }
     private static defaults(): Options {
         return {
+            ADAPTER_NAME:'hci0',
             BLUETOOTH: (process.arch === 'arm' || process.arch === 'arm64')? process.arch : '',
             COLOR: '#00AA00FF',
             SERIAL_NUMBER: os.hostname(),
@@ -45,10 +47,10 @@ class Config implements Options {
             ITEMPER_CONFIG_FILE: './itemper.config',
             ITEMPER_PERSIST_DIR: './data',
         } ;
-    
-    } 
+    }
     private reset() {
         Config.env = {
+            ADAPTER_NAME: process.env.ADAPTER_NAME,
             BLUETOOTH: process.env.BLUETOOTH, // set to true/Linux to enable if not process.arch as defaults above
             COLOR: process.env.COLOR,
             SERIAL_NUMBER: process.env.SERIAL_NUMBER,
@@ -62,22 +64,23 @@ class Config implements Options {
             HOSTNAME : process.env.HOSTNAME,
             RUUVI_TAGS: process.env.RUUVI_TAGS,  // set to true to enable
             SHARED_ACCESS_KEY: process.env.SHARED_ACCESS_KEY,
-            ITEMPER_CONFIG_FILE: process.env.ITEMPER_CONFIG_FIL,
+            ITEMPER_CONFIG_FILE: process.env.ITEMPER_CONFIG_FILE,
             ITEMPER_PERSIST_DIR: process.env.ITEMPER_PERSIST_DIR,
         };
         let key: keyof Options;
-        for (key in Config.options){
-            if (Config.env[key]){
-                Config.options[key] = <string>Config.env[key]; 
-                console.info(chalk.yellow('Config.reset: Found environment variable ' + key + '=' + Config.options[key])); 
-           } 
-           else{
-            console.info(chalk.green('Config.reset: Using defaults for ' + key + '=' + Config.options[key])); 
-           } 
-        } 
+        for (key in Config.options) {
+            if (Config.env[key]) {
+                Config.options[key] = <string>Config.env[key];
+                console.info(chalk.yellow('Config.reset: Found environment variable ' +
+                             key + '=' + Config.options[key]));
+           } else {
+            console.info(chalk.green('Config.reset: Using defaults for ' + key + '=' + Config.options[key]));
+           }
+        }
     }
-    
-    get BLUETOOTH() :string { return Config.options.BLUETOOTH; }
+    get ADAPTER_NAME(): string { return Config.options.ADAPTER_NAME; }
+
+    get BLUETOOTH(): string { return Config.options.BLUETOOTH; }
 
     get COLOR() { return Config.options.COLOR; }
     set COLOR(value: string) { Config.options.COLOR=value; }
@@ -92,7 +95,7 @@ class Config implements Options {
     get WS_ORIGIN(): string { return Config.options.WS_ORIGIN; }
 
     get POLL_INTERVAL(): string { return Config.options.POLL_INTERVAL; }
-    set POLL_INTERVAL(value: string) { Config.options.POLL_INTERVAL = value }
+    set POLL_INTERVAL(value: string) { Config.options.POLL_INTERVAL = value; }
 
     get ERROR_LOG_FILE() { return Config.options.ERROR_LOG_FILE; }
 
@@ -108,7 +111,7 @@ class Config implements Options {
     public set SHARED_ACCESS_KEY(value: string) { Config.options.SHARED_ACCESS_KEY=value; this.saveSharedKey(value); }
 
     get ITEMPER_CONFIG_FILE() { return Config.options.ITEMPER_CONFIG_FILE; }
-    
+
     get ITEMPER_PERSIST_DIR() { return Config.options.ITEMPER_PERSIST_DIR ; }
 
     private readSharedKey(): void {
@@ -117,7 +120,8 @@ class Config implements Options {
             console.info(chalk.yellow('config.readSharedKey: Found conf=' + JSON.stringify(conf)));
             Config.options.SHARED_ACCESS_KEY = conf.SHARED_ACCESS_KEY;       // no implicit saving here
         } catch (error) {
-            const msg = 'config.readSharedKey: Cannot read SHARED_ACCESS_KEY from ' + this.ITEMPER_CONFIG_FILE;
+            const msg = 'config.readSharedKey: Cannot read SHARED_ACCESS_KEY from ' +
+             this.ITEMPER_CONFIG_FILE +', error=' + error;
             console.error(chalk.red(msg));
         }
     }
@@ -127,7 +131,8 @@ class Config implements Options {
             fs.writeJSONSync( this.ITEMPER_CONFIG_FILE, conf);
             console.info(chalk.yellow('config.writeSharedKey: saved conf=' + JSON.stringify(conf)));
         } catch (error) {
-            const msg =  'config.saveSharedKey: cannot save SHARED_ACCESS_KEY to ' + this.ITEMPER_CONFIG_FILE;
+            const msg =  'config.saveSharedKey: cannot save SHARED_ACCESS_KEY to ' +
+                        this.ITEMPER_CONFIG_FILE +', error=' + error;
             console.error(chalk.red(msg));
         }
     }

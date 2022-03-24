@@ -39,7 +39,7 @@ export interface ManufacturerDataDict{
     constructor(path: string,
                 index: number = 0,
                 private _advertisingType: AdvertisingType = 'peripheral',
-                private _appearance: number = constants.apperance.GenericUnknown,
+                private _appearance: number = constants.apperance.IoTGateway,
                 private _includeTxPower: boolean = true,
                 private _bus: dbus.MessageBus = constants.systemBus,
         ) {
@@ -64,8 +64,8 @@ export interface ManufacturerDataDict{
         this._localName = name;
         log.info(label("setLocalName") + "LocalName=" + name);
     }
-    /** Call publish to advertise the services to the clients */
-    public async publish(): Promise<void> {
+    /** Call init to setup advertisement of the services to the clients */
+    public async init(): Promise<void> {
         const members: DbusMembers  = {
             properties: {
                 Type: {
@@ -126,25 +126,10 @@ export interface ManufacturerDataDict{
         try{
             Adertisement.configureMembers(members);
             this._bus.export(this.getPath(), this);
-            this._isAdvertising = true;
             log.info(label("publish") + "Export Adertisement, members=" + JSON.stringify(members));
         } catch (e){
             log.error(label("publish") + "Export Adertisement, error=" + JSON.stringify(e));
-        } 
-
-        try {
-            const adapterPath = constants.BLUEZ_NAMESPACE + constants.ADAPTER_NAME;
-            this._discoverable = true;
-            // const objectManager = await OrgfreedesktopDBusObjectManager.Connect(this._bus);
-            // const managedObjects = await objectManager.GetManagedObjects();
-            // log.info(label("publish") + "managedObjects=" + JSON.stringify(managedObjects));
-            const advertisingManager = await LEAdvertisingManager1.Connect(constants.systemBus)
-            await advertisingManager.RegisterAdvertisement(this._path, {});
-            log.info(label("publish") + "Registered Adertisement, path=" + this._path);
-        } catch(e){
-            log.error(label("publish") + "Registered Adertisement, error=" + JSON.stringify(e));
-        } 
-
+        }
     }
     async register(){
         try {
@@ -153,20 +138,22 @@ export interface ManufacturerDataDict{
             // const objectManager = await OrgfreedesktopDBusObjectManager.Connect(this._bus);
             // const managedObjects = await objectManager.GetManagedObjects();
             // log.info(label("publish") + "managedObjects=" + JSON.stringify(managedObjects));
-            const advertisingManager = await LEAdvertisingManager1.Connect(constants.systemBus)
+            const advertisingManager = await LEAdvertisingManager1.Connect(constants.systemBus, adapterPath)
             await advertisingManager.RegisterAdvertisement(this._path, {});
-            log.info(label("publish") + "Registered Adertisement, path=" + this._path);
+            this._isAdvertising = true;
+            log.info(label("register") + "Registered Advertisement, path=" + this._path);
         } catch(e){
-            log.error(label("publish") + "Register Adertisement, error=" + JSON.stringify(e));
+            log.error(label("register") + "Register Advertisement, error=" + JSON.stringify(e));
+            this._isAdvertising = false;
         }
     } 
-
     async unregister(){
         try {
             const adapterPath = constants.BLUEZ_NAMESPACE + constants.ADAPTER_NAME;
-            this._discoverable = true;
-            const advertisingManager = await LEAdvertisingManager1.Connect(constants.systemBus)
+            this._discoverable = false;
+            const advertisingManager = await LEAdvertisingManager1.Connect(constants.systemBus, adapterPath)
             await advertisingManager.UnregisterAdvertisement(this._path);
+            this._isAdvertising = false;
             log.info(label("unregister") + "Unregistered Adertisement, path=" + this._path);
         } catch(e){
             log.error(label("unregister") + "Unregister Adertisement, error=" + JSON.stringify(e));

@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
-
+import * as https from 'https';
 import { log } from '../../core/logger';
 
 import { stringify } from '../../core/helpers';
@@ -20,6 +20,7 @@ export enum Category {
     AccelerationZ = 'AccelerationZ',
     Battery = 'Battery',
     TxPower = 'TxPower',
+    MovementCounter = 'MovementCounter',
 }
 export interface Sample {
     value: number;
@@ -66,27 +67,34 @@ export class SensorLogService implements  ISensorLogService {
     private writeSensorLogError = false;
 
     private createAxiosInstance(): AxiosInstance {
+        const rejectUnauthorized = !this.ITEMPER_URL.includes('localhost');
         return this.axios = axios.create({
             baseURL: this.ITEMPER_URL + '/sensors',
-            headers: {'Content-Type': 'application/json'}});
+            headers: {'Content-Type': 'application/json'},
+            httpsAgent: rejectUnauthorized ? undefined :  new https.Agent({rejectUnauthorized: false}),
+        });
     }
 
     private openWebSocket(): WebSocket {
         const self = this;
-        // const wsTestUrl = 'wss://test.itemper.io/ws';
-        const wsTestUrl = this.WS_URL;
+        const url = this.WS_URL;
+        const protocol = 'iot-gateway';
         const origin = this.WS_ORIGIN;
-        const protocol = 'device';
-        const socket = new WebSocket (wsTestUrl, { protocol, origin, perMessageDeflate: false });
+        const perMessageDeflate = false;
+        const rejectUnauthorized = !this.ITEMPER_URL.includes('localhost');
+        const options = { protocol, origin, perMessageDeflate, rejectUnauthorized };
+        const socket = new WebSocket (url, options);
+        log.info('SensorLog.openWebSocket, new WebSocket options=' + JSON.stringify(options, null, 2));
 
-        socket.on('open', () => {
+        socket.on('open', (s: WebSocket) => {
             if (self.webSocketError) {
-                log.info('SensorLog.openWebSocket.on(open): Device.SensorLog connected to backend!');
+                const protocolInfo = ', WebSocket=' + JSON.stringify(s);
+                log.info('SensorLog.openWebSocket.on(open): url' + url + protocolInfo);
                 self.webSocketError = false;
             }
         });
         socket.on('message', (data: WebSocket.Data): void => {
-            log.info('SensorLog.openWebSocket.on(message): ' + data);
+            log.debug('SensorLog.openWebSocket.on(message): ' + data);
         });
         socket.on('error', (self: WebSocket, error: Error) => {
             if (!this.webSocketError) {
@@ -170,7 +178,7 @@ export class SensorLogService implements  ISensorLogService {
             .then (function() {
                 if (self.PostSensorLogError) {
                     self.PostSensorLogError = false;
-                    log.info('sensor-log-service.PostSensorLog data=%s', data)
+                    log.info('sensor-log-service.PostSensorLog data=%s', data);
                 }
                 resolve(data.desc);
             })
@@ -219,7 +227,11 @@ export class SensorLogService implements  ISensorLogService {
         let status = 1;
         if (error.response) {
             if (!this.PostSensorLogError) {
-                log.error('sensor-log-service.handleError: Error=' + error.response.statusText);
+                const statusText = error.response.status === 422
+                    ? JSON.stringify(error.response.data, undefined, 2)
+                    :  error.response.statusText;
+                log.error('sensor-log-service.handleError: status=' +
+                    error.response.status + ': ' + statusText);
             }
             status = error.response.status;
             if (error.response.status === 308) {

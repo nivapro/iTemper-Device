@@ -7,13 +7,14 @@ import * as os from 'os';
 
 import { log } from '../../core/logger';
 
+type NetworkInterfaceInfo =  { [index: string]: os.NetworkInterfaceInfo[] };
+
 export class DeviceChecks extends DeviceState {
     // Interface methods implementation
 
     constructor() {
         super();
     }
-
     public check(): void {
         const data: DeviceStatus = new DeviceStatus();
         data.timestamp = Date.now();
@@ -23,7 +24,7 @@ export class DeviceChecks extends DeviceState {
         data.freemem = os.freemem();
         data.totalmem = os.totalmem();
         data.release = os.release();
-        data.networkInterfaces = os.networkInterfaces();
+        data.networkInterfaces = this.stdExternalIPv4Of(os.networkInterfaces());
         data.userInfo = os.userInfo();
         data.memoryUsage = process.memoryUsage();
         data.cpuUsage = process.cpuUsage();
@@ -31,6 +32,20 @@ export class DeviceChecks extends DeviceState {
         log.debug('DeviceChecks.check data=' + JSON.stringify(data.memoryUsage));
         this.updateDeviceData(data);
     }
-
-
+    private stdExternalIPv4Of(nets: NetworkInterfaceInfo): NetworkInterfaceInfo {
+        const ifaceNamePattern = /\*[0-9]$/; // looking for interface names that ends with a digit, eg eth0, wlan0
+        const ExternalIPv4s: NetworkInterfaceInfo = {};
+        for (const ifaceName in nets) {
+                for (const net of nets[ifaceName]) {
+                    if (net.family === 'IPv4' && !net.internal) {
+                        if (!ExternalIPv4s[ifaceName]) {
+                            ExternalIPv4s[ifaceName] = []; 
+                        } 
+                        ExternalIPv4s[ifaceName].push(net);
+                    }
+                }
+        }
+        return ExternalIPv4s;
+    }
 }
+

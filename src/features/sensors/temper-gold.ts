@@ -21,8 +21,8 @@ export class TemperGold extends SensorState implements USBReporter {
             2.0, 1, 1));
         this.connectSensors([0]);
         Settings.onChange(Settings.SERIAL_NUMBER, (setting: Setting) => {
-            this.attr.SN = setting.value.toString();
-            log.info('TemperGold.settingChanged: SERIAL_NUMBER=' + this.attr.SN);
+            this.sensors.forEach((s) => s.attr.SN = setting.value.toString());
+            log.info('TemperGold.settingChanged: SERIAL_NUMBER=' + setting.value.toString());
         });
     }
 

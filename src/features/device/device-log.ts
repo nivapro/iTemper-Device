@@ -1,4 +1,5 @@
-import axios, { AxiosError, AxiosInstance } from 'axios';
+import * as https  from 'https';
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
 import { log } from '../../core/logger';
 import { DeviceState } from './device-state';
 import { DeviceStatus } from './device-status';
@@ -23,9 +24,12 @@ export class DeviceLog {
     private onDataReceivedError = false;
 
     private createAxiosInstance(): AxiosInstance {
+        const rejectUnauthorized = !this.ITEMPER_URL.includes('localhost');
         return this.axios = axios.create({
             baseURL: this.ITEMPER_URL + '/device',
-            headers: {'Content-Type': 'application/json'}});
+            headers: {'Content-Type': 'application/json'},
+            httpsAgent: rejectUnauthorized ? undefined :  new https.Agent({rejectUnauthorized: false}),
+        });
     }
 
     constructor(state: DeviceState) {
@@ -89,10 +93,13 @@ export class DeviceLog {
                     // that falls out of the range of 2xx
                     if (!self.onDataReceivedError) {
                         self.onDataReceivedError = true;
-                        log.error(m + 'response status: ' +  error.response.status +
-                        ', baseURL: ' + error.config.baseURL);
+                        const statusText = error.response.status === 422 
+                        ? JSON.stringify(error.response.data, undefined, 2)
+                        :  error.response.statusText;
+                        log.error(m + ': status=' + error.response.status + ': ' +
+                                    statusText + ', url: ' + url);
                     }
-                    log.debug(m + 'response data: ' + JSON.stringify(error.response.data));
+                    log.debug(m + 'response data: ' + JSON.stringify(error.response.data) + ', url: ' + url);
                 } else if (error.request) {
                     // The request was made but no response was received
                     if (!self.onDataReceivedError) {

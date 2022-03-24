@@ -58,7 +58,19 @@ export class Application extends dbus.interface.Interface  {
     public getServices(): service.GATTService1[] {
         return this._services;
     }
+    public async close(): Promise<void> {
+        const adapterPath = constants.BLUEZ_NAMESPACE + constants.ADAPTER_NAME;
+        try{
+            const gattManager = await GattManager1.Connect(this._bus, adapterPath);
+            await gattManager. UnregisterApplication(this._path);
+            log.info(label("publish") + 'Application unregistered');
+        } catch(e){
+            log.error(label("publish") + "Could not unregister application, error\n=" + JSON.stringify(e));
+        } 
+
+    } 
     public async init(): Promise<void> {
+        const adapterPath = constants.BLUEZ_NAMESPACE + constants.ADAPTER_NAME;
         const members: DbusMembers  = {
             methods: {
                 GetManagedObjects: {
@@ -75,8 +87,8 @@ export class Application extends dbus.interface.Interface  {
         this._services.forEach((serv) => serv.export());
         log.debug(label("publish") + "Application configured");
         try{
-            const gattManager = await GattManager1.Connect(this._bus);
-            gattManager.RegisterApplication(this._path, {});
+            const gattManager = await GattManager1.Connect(this._bus, adapterPath);
+            await gattManager.RegisterApplication(this._path, {});
             log.info(label("publish") + "Application registered on path " + this._path);
         } catch(e){
             log.error(label("publish") + "Could not register application on path " + this._path + ", error\n=" + JSON.stringify(e));

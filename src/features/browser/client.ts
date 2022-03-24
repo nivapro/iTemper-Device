@@ -1,5 +1,21 @@
 import {SensorAttributes} from '../sensors/sensor-attributes';
 
+enum Category {
+    Temperature = 'Temperature',
+    AbsoluteHumidity = 'AbsoluteHumidity',
+    RelativeHumidity = 'RelativeHumidity',
+    WindSpeed = 'WindSpeed',
+    rssi = 'rssi',
+    Humidity = 'Humidity',
+    AirPressure = 'AirPressure',
+    AccelerationX = 'AccelerationX',
+    AccelerationY = 'AccelerationY',
+    AccelerationZ = 'AccelerationZ',
+    Battery = 'Battery',
+    TxPower = 'TxPower',
+    MovementCounter = 'MovementCounter',
+}
+
 init();
 
 function init() {
@@ -103,10 +119,10 @@ export interface Setting {
 }
 
 const sensors: SensorLog[] = [];
-// let settings = [];
 
-const url = 'ws://' + '192.168.20.93';
+const url = 'ws://' + window.location.host;
 let socket = new WebSocket(url);
+
 socket.onopen = function() {
     setConnectionStatus(true);
     socket.send(JSON.stringify({command: 'getSensors'}));
@@ -147,7 +163,7 @@ socket.onerror = function() {
 
 
 function sensorName(desc: SensorDescription): string {
-    return desc.SN + ', port ' + desc.port;
+    return desc.SN.replace('--', '/') + '/' + desc.port;
 }
 
 function sensorId(desc: SensorDescription): string {
@@ -208,6 +224,34 @@ function stopMonitor(sensors: SensorLog[]) {
     }
     socket.send(JSON.stringify({command, data}));
 }
+function unit(category: Category): string {
+    switch (category) {
+        case Category.AbsoluteHumidity || Category.RelativeHumidity || Category.Humidity:
+            return ' \%';
+        case Category.Temperature:
+            return ' °C';
+         default:
+            return '';
+    }
+}
+function categoryName(category: Category): string {
+    switch (category) {
+        case Category.AbsoluteHumidity:
+            return 'Absolute Humidity';
+        case Category.RelativeHumidity:
+            return 'Relative Humidity';
+        case Category.Humidity:
+            return 'Humidity';
+        case Category.Temperature:
+            return 'Temperature';
+        case Category.rssi:
+            return 'RSSI';
+        case Category.MovementCounter:
+            return 'Movement Counter';
+         default:
+            return category.toString();
+    }
+}
 let logTimer: any;
 function log(sensorData: SensorLog[]) {
     for (const sensor of sensorData) {
@@ -215,7 +259,7 @@ function log(sensorData: SensorLog[]) {
         if (log) {
             const date = new Date(sensor.samples[0].date);
             const value = sensor.samples[0].value;
-            log.innerHTML = value + ' °C';
+            log.innerHTML = categoryName(sensor.attr.category) + ': ' + value + unit(sensor.attr.category);
         }
         const desc = document.getElementById(sensorId(sensor.desc));
         if (desc) {

@@ -23,6 +23,7 @@ export class DeviceNameCharacteristic extends  gatt.Characteristic<DeviceName> {
 
   }
   handleWriteRequest(deviceData: DeviceName): void {
+    log.info('device-name-characteristic.handleWriteRequest: success device data=' + stringify(deviceData));
         if (deviceData.name ) {
           this.update(Settings.SERIAL_NUMBER, deviceData.name);
         }
