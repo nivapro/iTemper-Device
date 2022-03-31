@@ -1,6 +1,6 @@
 import dbus from 'dbus-next';
 import { conf } from '../../../core/config';
-import * as utils from './gatt-utils'; 
+import { getBus } from  '../../../core/dbus'
 
 export const ADAPTER_NAME = conf.ADAPTER_NAME;
 
@@ -22,7 +22,7 @@ export const ADVERTISEMENT_INTERFACE = BLUEZ_SERVICE_NAME + '.LEAdvertisement1';
 export const ADVERTISING_MANAGER_INTERFACE = BLUEZ_SERVICE_NAME + '.LEAdvertisingManager1';
 
 // System bus
-export const systemBus = utils.getBus();
+export const systemBus = getBus();
 
 export namespace apperance {
     export const GenericUnknown = 0x0000;

@@ -1,3 +1,4 @@
+import * as util from 'util';
 import { log } from './logger';
 export function stringify(o: any) {
     const cache: object[] = [];
@@ -17,5 +18,15 @@ export function stringify(o: any) {
         }
         return value;
     });
+}
 
+// helper functions to encode/decode messages
+export function decode(buf: Buffer): string {
+    const decoder = new util.TextDecoder('utf-8');
+    const decoded = decoder.decode(buf);
+    return decoded;
+  }
+export function encode(value: string ): BufferSource {
+    const enc = new util.TextEncoder();
+    return enc.encode(value);
 }
