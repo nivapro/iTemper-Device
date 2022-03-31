@@ -139,8 +139,8 @@ export interface NetworkManager extends DBus.ClientInterface {
     //@property({ name: 'Version', signature: 's', access: ACCESS_READ })
     Version(): Promise<string>;
 
-    //@property({ name: 'Capabilities', signature: 'u', access: ACCESS_READ })
-    Capabilities(): Promise<number>;
+    //@property({ name: 'Capabilities', signature: 'au', access: ACCESS_READ })
+    Capabilities(): Promise<Array<number>>;
 
     //@property({ name: 'State', signature: 'u', access: ACCESS_READ })
     State(): Promise<number>;

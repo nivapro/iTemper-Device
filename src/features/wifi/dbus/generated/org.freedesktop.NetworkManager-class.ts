@@ -9,7 +9,7 @@ import { EventEmitter } from 'events';
 // Introspection XML of org.freedesktop.NetworkManager at /org/freedesktop/NetworkManager
 const XMLObjectData = `<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
                       "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
-<!-- GDBus 2.64.6 -->
+<!-- GDBus 2.66.8 -->
 <node>
   <interface name="org.freedesktop.DBus.Properties">
     <method name="Get">
@@ -152,7 +152,7 @@ const XMLObjectData = `<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object I
     <property type="o" name="ActivatingConnection" access="read"/>
     <property type="b" name="Startup" access="read"/>
     <property type="s" name="Version" access="read"/>
-    <property type="u" name="Capabilities" access="read"/>
+    <property type="au" name="Capabilities" access="read"/>
     <property type="u" name="State" access="read"/>
     <property type="u" name="Connectivity" access="read"/>
     <property type="b" name="ConnectivityCheckAvailable" access="read"/>
@@ -160,13 +160,14 @@ const XMLObjectData = `<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object I
     <property type="s" name="ConnectivityCheckUri" access="read"/>
     <property type="a{sv}" name="GlobalDnsConfiguration" access="readwrite"/>
   </interface>
-  <node name="AgentManager"/>
-  <node name="Settings"/>
-  <node name="Devices"/>
   <node name="IP4Config"/>
+  <node name="ActiveConnection"/>
+  <node name="AgentManager"/>
+  <node name="DHCP4Config"/>
+  <node name="Devices"/>
   <node name="DnsManager"/>
   <node name="IP6Config"/>
-  <node name="ActiveConnection"/>
+  <node name="Settings"/>
 </node>
 `;
 
@@ -567,8 +568,8 @@ export class NetworkManager extends EventEmitter {
         return this.propertiesDBusInterface.Get(this.dbusInterfaceName, 'Version').then((variant: DBus.Variant) => variant.value);
     }
 
-    //@property({ name: 'Capabilities', signature: 'u', access: ACCESS_READ })
-    public Capabilities(): Promise<number> {
+    //@property({ name: 'Capabilities', signature: 'au', access: ACCESS_READ })
+    public Capabilities(): Promise<Array<number>> {
         return this.propertiesDBusInterface.Get(this.dbusInterfaceName, 'Capabilities').then((variant: DBus.Variant) => variant.value);
     }
 

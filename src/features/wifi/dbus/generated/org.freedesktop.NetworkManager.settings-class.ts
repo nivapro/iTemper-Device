@@ -9,7 +9,7 @@ import { EventEmitter } from 'events';
 // Introspection XML of org.freedesktop.NetworkManager at /org/freedesktop/NetworkManager/Settings
 const XMLObjectData = `<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
                       "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
-<!-- GDBus 2.64.6 -->
+<!-- GDBus 2.66.8 -->
 <node>
   <interface name="org.freedesktop.DBus.Properties">
     <method name="Get">
@@ -90,9 +90,7 @@ const XMLObjectData = `<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object I
     <property type="s" name="Hostname" access="read"/>
     <property type="b" name="CanModify" access="read"/>
   </interface>
-  <node name="2"/>
   <node name="5"/>
-  <node name="3"/>
   <node name="1"/>
   <node name="4"/>
 </node>
