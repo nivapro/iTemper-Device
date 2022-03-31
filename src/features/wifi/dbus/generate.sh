@@ -21,4 +21,10 @@ objectPath=/org/freedesktop/NetworkManager
 # /org/freedesktop/NetworkManager/Settings interfaces
 objectPath=/org/freedesktop/NetworkManager/Settings
 ./bin/generate-client-interfaces.js --system -t $class --full -o $networkmanagerDir/$dest.settings-class.ts $dest $objectPath 
-./bin/generate-client-interfaces.js --system -t $dts --full -o $networkmanagerDir/$dest.settings-dts.ts $dest $objectPath 
+./bin/generate-client-interfaces.js --system -t $dts --full -o $networkmanagerDir/$dest.settings-dts.ts $dest $objectPath
+
+# /org/freedesktop/NetworkManager/Devices/3 wireless interfaces
+objectPath=/org/freedesktop/NetworkManager/Devices/3
+./bin/generate-client-interfaces.js --system -t $class --full -o $networkmanagerDir/$dest.wireless-class.ts $dest $objectPath 
+./bin/generate-client-interfaces.js --system -t $dts --full -o $networkmanagerDir/$dest.wireless-dts.ts $dest $objectPath 
+
