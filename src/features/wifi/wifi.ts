@@ -83,7 +83,8 @@ export class WiFi {
             this._nm = await NetworkManager.Connect(this._bus);
             const paths = await this._nm.GetAllDevices();
             for (const path of paths){
-                
+                const iface = 'org.freedesktop.NetworkManager.Device';
+
             } 
         } 
     } 
