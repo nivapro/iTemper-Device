@@ -182,9 +182,11 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     public enableReadValue(readValueFn: () => Promise<T> | T , flags: ReadFlag[] = ['read']) {
         this.addFlags(flags);
         if (readValueFn.constructor === Promise){
+            log.info(label('enableReadValue.async') + ', flags='+ JSON.stringify(flags));
             this._readValueAsync = readValueFn;
 
         } else {
+            log.info(label('enableReadValue.synch') + ', flags='+ JSON.stringify(flags));
             this._readValueFn = <() => T> readValueFn.bind(this);
         } 
 
@@ -244,22 +246,24 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
             constants.GATT_CHARACTERISTIC_INTERFACE);
         }
     }
-    protected async ReadValue(options: ReadValueOptions): Promise<Buffer>  {
+    public async ReadValue(options: ReadValueOptions): Promise<Buffer>  {
         return new Promise((resolve) => {
-            if ( this._readValueAsync !== undefined) { 
+            if (this._readValueAsync !== undefined) { 
                 log.info(label('ReadValue') + 'async, options=' + JSON.stringify(options));
                 this._readValueAsync().then ((value: T) => {
+                    log.info(label('ReadValue') + 'async, value=' + JSON.stringify(value));
                     resolve(this.encode(value, options));
                 });
-            } else if (this._readValueFn !== undefined){
+            } else if (this._readValueFn !== undefined) {
                 log.info(label('ReadValue') + 'synch, options=' + JSON.stringify(options));
                 return resolve(this.encode(this._readValueFn(), options));
             }  else {
+                log.error(label('ReadValue'));
                 throw new NotSupportedDBusError('ReadValue', constants.GATT_CHARACTERISTIC_INTERFACE);
             }
         });
     }
-    protected WriteValue(data: Buffer, options: WriteValueOptions): Promise<void> | void  {
+    public WriteValue(data: Buffer, options: WriteValueOptions): Promise<void> | void  {
         log.info(label('WriteValue') + 'options=' + JSON.stringify(options));
         log.info(label('WriteValue') + 'data=' + JSON.stringify(data));
         const value = this.convert(data, options);
