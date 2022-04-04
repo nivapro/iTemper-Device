@@ -26,7 +26,15 @@ export const log: Logger =  createLogger ({
         trans.console,
     ],
   });
-
+  export const wLog: Logger =  createLogger ({
+    format: combine (timestamp(), label ({ label: 'iTemper-device.WiFi:' +
+                                           conf.HOSTNAME}), myFormat),
+    exitOnError: false,
+    level: 'info',
+    transports: [
+        trans.console,
+    ],
+  });
 export function setLevel(level: string): void {
     log.transports[1].level = level;
 }

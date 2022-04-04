@@ -182,7 +182,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     public enableReadValue(readValueFn: () => Promise<T> | T , flags: ReadFlag[] = ['read']) {
         this.addFlags(flags);
         if (readValueFn.constructor === Promise){
-            this._readValueAsync = <() => Promise<T>> readValueFn;
+            this._readValueAsync = readValueFn;
 
         } else {
             this._readValueFn = <() => T> readValueFn.bind(this);
@@ -244,20 +244,20 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
             constants.GATT_CHARACTERISTIC_INTERFACE);
         }
     }
-    protected  ReadValue(options: ReadValueOptions): Promise<Buffer> | Buffer  {
-        if ( this._readValueAsync !== undefined) {
-            return new Promise((resolve) => {
+    protected async ReadValue(options: ReadValueOptions): Promise<Buffer>  {
+        return new Promise((resolve) => {
+            if ( this._readValueAsync !== undefined) { 
                 log.info(label('ReadValue') + 'async, options=' + JSON.stringify(options));
                 this._readValueAsync().then ((value: T) => {
                     resolve(this.encode(value, options));
                 });
-            } )
-        } else if (this._readValueFn !== undefined){
-            log.info(label('ReadValue') + 'synch, options=' + JSON.stringify(options));
-            return this.encode(this._readValueFn(), options);
-        }  else {
-            throw new NotSupportedDBusError('ReadValue', constants.GATT_CHARACTERISTIC_INTERFACE);
-        }
+            } else if (this._readValueFn !== undefined){
+                log.info(label('ReadValue') + 'synch, options=' + JSON.stringify(options));
+                return resolve(this.encode(this._readValueFn(), options));
+            }  else {
+                throw new NotSupportedDBusError('ReadValue', constants.GATT_CHARACTERISTIC_INTERFACE);
+            }
+        });
     }
     protected WriteValue(data: Buffer, options: WriteValueOptions): Promise<void> | void  {
         log.info(label('WriteValue') + 'options=' + JSON.stringify(options));
