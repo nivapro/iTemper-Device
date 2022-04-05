@@ -16,29 +16,56 @@ const trans = {
     console: new (transports.Console)(),
 };
 
-export const log: Logger =  createLogger ({
-    format: combine (timestamp(), label ({ label: 'iTemper-device:' +
-                                           conf.HOSTNAME}), myFormat),
+export const AddFileTransport = true;
+export const newLogger = (component = '', myLevel = conf.CONSOLE_LEVEL, fileTransport = AddFileTransport): Logger => {
+  const mylabel = component === ''
+    ? label ({ label: 'iTemper-device:' + conf.HOSTNAME})
+    : label ({ label: 'iTemper-device.' + component +':'+ conf.HOSTNAME});
+  const myTransports = fileTransport
+    ? [trans.file, trans.console]
+    : [trans.console];
+  return createLogger ({
+    format: combine (timestamp(), mylabel, myFormat),
     exitOnError: false,
-    level: conf.CONSOLE_LEVEL,
-    transports: [
-        trans.file,
-        trans.console,
-    ],
+    level: myLevel,
+    transports: myTransports,
   });
-  export const wLog: Logger =  createLogger ({
-    format: combine (timestamp(), label ({ label: 'iTemper-device.WiFi:' +
-                                           conf.HOSTNAME}), myFormat),
-    exitOnError: false,
-    level: 'info',
-    transports: [
-        trans.console,
-    ],
-  });
-export function setLevel(level: string): void {
+} 
+
+interface ComponentLoggers {
+ [component: string]: Logger; 
+} 
+export const componentLoggers: ComponentLoggers = {};
+
+export function newComponentLogger(component: string): Logger {
+  if ((component in componentLoggers) || component.length === 0){
+    throw new Error('Component logger exists already or invalid component name length')
+  }
+  const logger = newLogger(component, conf.CONSOLE_LEVEL, !AddFileTransport);
+  componentLoggers[component]  = logger;
+  return logger;
+}  
+
+export const log: Logger =  newLogger ();
+
+export const wLog: Logger =  newComponentLogger('WiFi');
+
+export function setLevel(level: string, component = ''): void {
+  if (component === '') {
     log.transports[1].level = level;
+  } else if (component in componentLoggers){
+    componentLoggers[component].transports[0].level = level;
+  } else{
+    throw new Error('Component logger does not exist')
+  }
 }
 
-export function getLevel(): string {
-  return log.transports[1].level + '';
+export function getLevel(component = ''): string {
+  if (component === '') {
+    return log.transports[1].level + '';
+  } else if (component in componentLoggers){
+    return componentLoggers[component].transports[0].level + '';
+  } else{
+    throw new Error('Component logger does not exist')
+  }
 }
