@@ -34,7 +34,7 @@ export class AvailableWiFiCharacteristic extends  gatt.Characteristic<NetworkLis
 
   constructor(protected _service: gatt.Service) {
     super(_service, AvailableWiFiCharacteristic.UUID);
-    this.enableReadValue(handleReadRequest.bind(this));
+    this.enableAsyncReadValue(handleReadRequest.bind(this));
     this.enableNotify(this.startNotify.bind(this), this.stopNotify.bind(this));
   }
 
