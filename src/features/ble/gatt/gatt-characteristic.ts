@@ -74,7 +74,6 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     private _cachedValue: Buffer;
     private _mtu: number = 185;
     private _members: DbusMembers = { };
-
     static ValueChanged<T>(iface: Characteristic<T>) {
         dbus.interface.Interface.emitPropertiesChanged(iface, {Value: iface.Value }, []);
     }
@@ -180,14 +179,14 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         }
     }
     public enableReadValue(readValueFn: () => Promise<T> | T , flags: ReadFlag[] = ['read']) {
+        const readValue = readValueFn.bind(this)
         this.addFlags(flags);
         if (readValueFn.constructor === Promise){
-            log.info(label('enableReadValue.async') + ', flags='+ JSON.stringify(flags));
-            this._readValueAsync = readValueFn;
-
+            console.log(label('enableReadValue.async') + ', flags='+ JSON.stringify(flags));
+            this._readValueAsync = readValue;
         } else {
             log.info(label('enableReadValue.synch') + ', flags='+ JSON.stringify(flags));
-            this._readValueFn = <() => T> readValueFn.bind(this);
+            this._readValueFn = <() => T> readValue;
         } 
 
         this.addMethod('ReadValue', { inSignature: 'a{sv}', outSignature: 'ay' });
@@ -247,16 +246,18 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         }
     }
     public async ReadValue(options: ReadValueOptions): Promise<Buffer>  {
+        const self = this;
+        log.info(label('ReadValue') + ', options=' + JSON.stringify(options));
         return new Promise((resolve) => {
-            if (this._readValueAsync !== undefined) { 
-                log.info(label('ReadValue') + 'async, options=' + JSON.stringify(options));
-                this._readValueAsync().then ((value: T) => {
-                    log.info(label('ReadValue') + 'async, value=' + JSON.stringify(value));
-                    resolve(this.encode(value, options));
+            if (self._readValueAsync !== undefined) { 
+                console.log(label('ReadValue') + 'async');
+                self._readValueAsync().then ((value: T) => {
+                    console.log(label('ReadValue') + 'async, value=' + JSON.stringify(value));
+                    resolve(self.encode(value, options));
                 });
-            } else if (this._readValueFn !== undefined) {
-                log.info(label('ReadValue') + 'synch, options=' + JSON.stringify(options));
-                return resolve(this.encode(this._readValueFn(), options));
+            } else if (self._readValueFn !== undefined) {
+                log.info(label('ReadValue') + 'synch');
+                return resolve(self.encode(self._readValueFn(), options));
             }  else {
                 log.error(label('ReadValue'));
                 throw new NotSupportedDBusError('ReadValue', constants.GATT_CHARACTERISTIC_INTERFACE);

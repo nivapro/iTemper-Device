@@ -6,32 +6,33 @@ import { WiFi } from '../../device/device-status';
 import { getUuid, UUID_Designator} from './uuid';
 import { isWiFiRequestValid, WiFiData, WiFiRequest } from './data';
 
+const handleReadRequest = async (): Promise<WiFiData> => {
+  return new Promise((resolve, reject) => {
+    wifi.getCurrentConnections()
+    .then((networks: WiFi[]) => {
+        const { ssid, security, quality, channel } = networks.length > 0
+        ? networks[0]
+        : {ssid: 'Test', security: 'WPA-2', quality: 75, channel: 1};
+        const data: WiFiData = { ssid, security, quality, channel };
+        log.info('current-wifi-characteristic.handleReadRequest: successfully retrieving network data='
+        + stringify(data));
+        resolve(data);
+    })
+    .catch((e: Error) => {
+      log.error('current-wifi-characteristic.handleReadRequest - error retrieving wireless networks', e);
+      reject(e);
+    });
+  });
+}
 export class CurrentWiFiCharacteristic extends  gatt.Characteristic<WiFiData>{
   public static UUID = getUuid(UUID_Designator.CurrentWiFi);
   constructor(protected _service: gatt.Service) {
     super(_service, CurrentWiFiCharacteristic.UUID);
-    this.enableReadValue(this.handleReadRequest);
+    this.enableReadValue(handleReadRequest.bind(this));
     this.enableWriteValue(this.handleWriteRequest, isWiFiRequestValid);
     // const descriptor = new gatt.UserDescriptor('Device settings', this);
   }
-  async handleReadRequest(): Promise<WiFiData> {
-    return new Promise((resolve, reject) => {
-      wifi.getCurrentConnections()
-      .then((networks: WiFi[]) => {
-          const { ssid, security, quality, channel } = networks.length > 0
-          ? networks[0]
-          : {ssid: 'Test', security: 'WPA-2', quality: 75, channel: 1};
-          const data: WiFiData = { ssid, security, quality, channel };
-          log.info('current-wifi-characteristic.handleReadRequest: successfully retrieving network data='
-          + stringify(data));
-          resolve(data);
-      })
-      .catch((e: Error) => {
-        log.error('current-wifi-characteristic.handleReadRequest - error retrieving wireless networks', e);
-        reject(e);
-      });
-    });
-  }
+
 
  async handleWriteRequest(raw: unknown): Promise<void> {
     return new Promise((resolve, reject) => {
