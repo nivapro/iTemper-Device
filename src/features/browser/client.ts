@@ -360,7 +360,8 @@ class HTMLSetting implements Setting {
     }
 }
 
-function textFieldSettingHtml(setting: Setting) {
+function textFieldHtml(setting: Setting) {
+    // Get the contents of the template
     const template = document.getElementById('template-text-field-setting');
     if (!template) {
         console.error('addSetting: template missing');
@@ -371,31 +372,15 @@ function textFieldSettingHtml(setting: Setting) {
     // replace placeholder tags
     // with actual data, and generate final HTML
 
-    const html = templateHtml.replace(/{{name}}/g, setting.name)
+    return templateHtml.replace(/{{name}}/g, setting.name)
                             .replace(/{{label}}/g, setting.label)
                             .replace(/{{text}}/g, setting.text)
                             .replace(/{{value}}/g, setting.value.toString());
 } 
 function addSetting(setting: Setting, section: HTMLElement) {
     console.log('addSetting: ' + setting.name);
-    // Get the contents of the template
-    const template = document.getElementById('template-setting');
-    if (!template) {
-        console.error('addSetting: template missing');
-        return;
-    }
-    const templateHtml = template.innerHTML;
-
-    // replace placeholder tags
-    // with actual data, and generate final HTML
-
-    const html = templateHtml.replace(/{{name}}/g, setting.name)
-                            .replace(/{{label}}/g, setting.label)
-                            .replace(/{{text}}/g, setting.text)
-                            .replace(/{{value}}/g, setting.value.toString());
-
     const article = document.createElement('article');
-    article.innerHTML = html;
+    article.innerHTML = textFieldHtml(setting);
     section.appendChild(article);
     const editBtn = document.getElementById(setting.name + 'edit');
     const saveBtn = document.getElementById(setting.name + 'save');
