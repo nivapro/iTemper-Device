@@ -11,6 +11,8 @@ import dbus from 'dbus-next';
 
 import { DbusMembers } from './gatt-utils';
 
+import  { setBusName } from '../../../core/dbus';
+
 export interface ManagedObjects {
     [key: string]: service.ServicePropertyDict |
                    characteristic.CharacteristicPropertyDict |
@@ -79,7 +81,7 @@ export class Application extends dbus.interface.Interface  {
                 },
             },
         };
-        await utils.setBusName(this._name);
+        await setBusName(this._name);
         Application.configureMembers(members);
         log.debug(label("publish") + Application.IFACE + ' DBus members configured');
         this._bus.export(this._path, this);
