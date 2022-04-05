@@ -7,6 +7,7 @@ import { getUuid, UUID_Designator} from './uuid';
 import { isWiFiRequestValid, WiFiData, WiFiRequest } from './data';
 
 const handleReadRequest = async (): Promise<WiFiData> => {
+  log.info('current-wifi-characteristic.handleReadRequest');
   return new Promise((resolve, reject) => {
     wifi.getCurrentConnections()
     .then((networks: WiFi[]) => {
@@ -28,7 +29,7 @@ export class CurrentWiFiCharacteristic extends  gatt.Characteristic<WiFiData>{
   public static UUID = getUuid(UUID_Designator.CurrentWiFi);
   constructor(protected _service: gatt.Service) {
     super(_service, CurrentWiFiCharacteristic.UUID);
-    this.enableReadValue(handleReadRequest.bind(this));
+    this.enableAsyncReadValue(handleReadRequest);
     this.enableWriteValue(this.handleWriteRequest, isWiFiRequestValid);
     // const descriptor = new gatt.UserDescriptor('Device settings', this);
   }

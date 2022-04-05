@@ -120,7 +120,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         Characteristic.configureMembers(this._members);
         this._bus.export(this.getPath(), this);
         this._descriptors.forEach(desc => desc.export());
-        log.info(label('export') + 'members=' + JSON.stringify(this._members));
+        log.info(label('export') + this.getPath() + ', members=' + JSON.stringify(this._members, undefined, 2));
     }
     // Properties of org.freedesktop.DBus.Properties.Get | GetAll
     private get Service(): string {
@@ -178,19 +178,16 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
             log.info(label('addProperty') + 'Added '+ JSON.stringify( this._members.properties)); 
         }
     }
-    public enableReadValue(readValueFn: () => Promise<T> | T , flags: ReadFlag[] = ['read']) {
-        const readValue = readValueFn.bind(this)
+    public enableReadValue(readValueFn: () => T , flags: ReadFlag[] = ['read']) {
         this.addFlags(flags);
-        if (readValueFn.constructor === Promise){
-            console.log(label('enableReadValue.async') + ', flags='+ JSON.stringify(flags));
-            this._readValueAsync = readValue;
-        } else {
-            log.info(label('enableReadValue.synch') + ', flags='+ JSON.stringify(flags));
-            this._readValueFn = <() => T> readValue;
-        } 
-
+        this._readValueFn = readValueFn.bind(this);
         this.addMethod('ReadValue', { inSignature: 'a{sv}', outSignature: 'ay' });
     }
+    public enableAsyncReadValue(readValueFn: () => Promise<T> , flags: ReadFlag[] = ['read']) {
+        this._readValueAsync = readValueFn.bind(this);
+        this.addFlags(flags);
+        this.addMethod('ReadValue', { inSignature: 'a{sv}', outSignature: 'ay' });
+    } 
     public enableWriteValue( writeValueFn: (value: T) => Promise<void> | void,
                              isValidFn: (raw: unknown) => boolean, flags: WriteFlag[] = ['write']) {
         this.addFlags(flags);
@@ -245,7 +242,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
             constants.GATT_CHARACTERISTIC_INTERFACE);
         }
     }
-    public async ReadValue(options: ReadValueOptions): Promise<Buffer>  {
+    public async ReadValue(options: ReadValueOptions): Promise<Buffer> {
         const self = this;
         log.info(label('ReadValue') + ', options=' + JSON.stringify(options));
         return new Promise((resolve) => {
