@@ -44,12 +44,12 @@
 
 
     <footer id="itemper-footer">
-        <p>&copy; 2017-2020 Vading management ab. All rights reserved.</p>
+        <p>&copy; 2017-2022 Vading management ab. All rights reserved.</p>
     </footer>
 
     <script src="bundle.js "></script>
 
-    <script id="template-setting" type="text/template">
+    <script id="template-text-field-setting" type="text/template">
         <div class="container">
             <h3>{{label}}</h3>
             <label for="{{name}}value" id="{{name}}-text">{{text}}</label>
@@ -59,5 +59,14 @@
         </div>
     </script>
 
+    <script id="template-switch-setting" type="text/template">
+        <div class="container">
+            <h3>{{label}}</h3>
+            <label for="{{name}}value" id="{{name}}-text">{{text}}</label>
+            <input class="settingReadonly u-full-width" type="checkbox" id="{{name}}value" value="{{value}}" readonly>
+            <button class="button settingEdit" id="{{name}}edit" style="display:block">Edit</button>
+            <button class="button-primary settingSpara" id="{{name}}save" style="display:none">Save</button>
+        </div>
+    </script>
 
 </body>

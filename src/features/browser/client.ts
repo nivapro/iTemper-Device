@@ -360,7 +360,22 @@ class HTMLSetting implements Setting {
     }
 }
 
+function textFieldSettingHtml(setting: Setting) {
+    const template = document.getElementById('template-text-field-setting');
+    if (!template) {
+        console.error('addSetting: template missing');
+        return;
+    }
+    const templateHtml = template.innerHTML;
 
+    // replace placeholder tags
+    // with actual data, and generate final HTML
+
+    const html = templateHtml.replace(/{{name}}/g, setting.name)
+                            .replace(/{{label}}/g, setting.label)
+                            .replace(/{{text}}/g, setting.text)
+                            .replace(/{{value}}/g, setting.value.toString());
+} 
 function addSetting(setting: Setting, section: HTMLElement) {
     console.log('addSetting: ' + setting.name);
     // Get the contents of the template
