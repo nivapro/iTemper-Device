@@ -19,6 +19,9 @@ const handleReadRequest = async (MaxNetworks: number = 5): Promise<NetworkList> 
         { ssid: network.ssid, security: network.security, quality: network.quality, channel: network.channel}));
         log.info('available-wifi-characteristic.handleReadRequest: successfully retrieving network data='
         + stringify(data));
+      if (data.length === 0) {
+        data.push({ ssid: 'Test', security: 'WPA-2', quality: 74, channel: 6});
+      } 
       resolve(data);
     })
     .catch((e: Error) => {
@@ -27,22 +30,22 @@ const handleReadRequest = async (MaxNetworks: number = 5): Promise<NetworkList> 
     });
   });
 }
-export class AvailableWiFiCharacteristic extends  gatt.Characteristic<NetworkList> {
+export class AvailableWiFiCharacteristic extends gatt.Characteristic<NetworkList> {
   public static UUID = getUuid(UUID_Designator.AvailableWiFi);
-  private Interval = 5_000;
+  private Interval = 60_000;
   private timeout: NodeJS.Timeout;
 
   constructor(protected _service: gatt.Service) {
     super(_service, AvailableWiFiCharacteristic.UUID);
     this.enableAsyncReadValue(handleReadRequest.bind(this));
-    this.enableNotify(this.startNotify.bind(this), this.stopNotify.bind(this));
+    this.enableNotify(this.hansleStartNotify.bind(this), this.handleStopNotify.bind(this));
   }
 
   public async handleWriteRequest(raw: unknown): Promise<boolean> {
       throw Error('AvailableWiFiCharacteristic: handleWriteRequest not implemented: received' + JSON.stringify(raw));
   }
 
-  public startNotify(): void {
+  protected hansleStartNotify(): void {
     this.Notifying = true;
     this.publish();
     this.timeout = setInterval(() => {
@@ -51,16 +54,15 @@ export class AvailableWiFiCharacteristic extends  gatt.Characteristic<NetworkLis
       }
     }, this.Interval);
   }
-  public stopNotify(): void {
+  protected handleStopNotify(): void {
     log.info('AvailableWiFiCharacteristic.stopNotify');
     if (this.Notifying) {
       this.Notifying = false;
       clearInterval(this.timeout);
     }
   }
- public publish(): void {
-    log.info('available-wifi-characteristic.publish');
-    handleReadRequest(256)
+ public async publish(): Promise<void> {
+    handleReadRequest(5)
     .then((networks) => {
       for (const network of networks) {
         const valueStr = JSON.stringify(network);
@@ -69,7 +71,7 @@ export class AvailableWiFiCharacteristic extends  gatt.Characteristic<NetworkLis
           log.error('available-wifi-characteristic.publish: value exceeds maxValueSize ' + value.length);
         } else {
           this.Value = value;
-          log.info('available-wifi-characteristic.publish' + valueStr);
+          log.info('available-wifi-characteristic.publish valueStr=' + valueStr);
           if (this.Notifying) {
             AvailableWiFiCharacteristic.ValueChanged<NetworkList>(this);
           }

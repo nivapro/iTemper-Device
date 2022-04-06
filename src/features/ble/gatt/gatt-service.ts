@@ -1,6 +1,6 @@
 import dbus from 'dbus-next';
 import { Application } from './gatt-application';
-import { Characteristic, GATTCharacteristic1 } from './gatt-characteristic';
+import { Characteristic, GATTCharacteristic } from './gatt-characteristic';
 
 import * as constants from './gatt-constants';
 
@@ -18,8 +18,8 @@ export interface ManagedServiceObjects {
 } 
 
 export interface GATTService1 {
-    addCharacteristic(charactseristic: GATTCharacteristic1): void;
-    getCharacteristics(): GATTCharacteristic1[];
+    addCharacteristic(charactseristic: GATTCharacteristic): void;
+    getCharacteristics(): GATTCharacteristic[];
     getPath(): string;
     setPath(path: string): void;
     getProperties(): ServicePropertyDict;
@@ -32,7 +32,7 @@ type DbusMembers = {
 };
 // org.bluez.GattService1 interface implementation
 export class Service extends dbus.interface.Interface implements GATTService1 {
-    _characteristics: GATTCharacteristic1[] = [];
+    _characteristics: GATTCharacteristic[] = [];
     _path: string = '';
     _charPathIndex = 0;
     self: Service;
@@ -47,11 +47,11 @@ export class Service extends dbus.interface.Interface implements GATTService1 {
         // this._objectManager = new ObjectManager(this);
     }
     // Methods for adding characteristics and publishing the interface on DBus.
-    public addCharacteristic(charactseristic: GATTCharacteristic1): void {
+    public addCharacteristic(charactseristic: GATTCharacteristic): void {
         charactseristic.setPath(this.getPath() + '/char' + this._charPathIndex++);
         this._characteristics.push(charactseristic);
     }
-    public getCharacteristics(): GATTCharacteristic1[] {
+    public getCharacteristics(): GATTCharacteristic[] {
         return this._characteristics;
     }
     public export(): void {

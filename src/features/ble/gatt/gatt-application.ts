@@ -47,7 +47,7 @@ export class Application extends dbus.interface.Interface  {
 
             });
         });
-        log.info(label("GetManagedObjects:") + JSON.stringify(response));
+        log.info(label("GetManagedObjects:") + JSON.stringify(response, undefined, 2));
         return response;
     }
     // Methods for adding characteristics and publishing the interface on DBus.
@@ -83,17 +83,18 @@ export class Application extends dbus.interface.Interface  {
         };
         await setBusName(this._name);
         Application.configureMembers(members);
-        log.debug(label("publish") + Application.IFACE + ' DBus members configured');
+        log.debug(label("init") + Application.IFACE + ' DBus members configured');
         this._bus.export(this._path, this);
-        log.debug(label("publish") + 'Interface ' + Application.IFACE + ' exported on path ' +  this._path);
+        log.debug(label("init") + 'Interface ' + Application.IFACE + ' exported on path ' +  this._path);
         this._services.forEach((serv) => serv.export());
-        log.debug(label("publish") + "Application configured");
+        log.debug(label("init") + "Application configured");
         try{
             const gattManager = await GattManager1.Connect(this._bus, adapterPath);
+            log.debug(label("init") + "GATT Manager connected on path " + adapterPath);
             await gattManager.RegisterApplication(this._path, {});
-            log.info(label("publish") + "Application registered on path " + this._path);
+            log.info(label("init") + "Application registered on path " + this._path);
         } catch(e){
-            log.error(label("publish") + "Could not register application on path " + this._path + ", error\n=" + JSON.stringify(e));
+            log.error(label("init") + "Could not register application on path " + this._path + ", error\n=" + JSON.stringify(e));
         } 
     }
 }

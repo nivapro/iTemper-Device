@@ -1,5 +1,5 @@
 import dbus from 'dbus-next';
-import { GATTCharacteristic1 } from './gatt-characteristic';
+import { GATTCharacteristic } from './gatt-characteristic';
 import { DbusMembers, NotSupportedDBusError } from './gatt-utils';
 import { stringify } from '../../../core/helpers'; 
 
@@ -41,7 +41,7 @@ export class Descriptor extends dbus.interface.Interface implements GattDescript
     _writeValueFn: (value: Buffer) => boolean;
 
     constructor(protected _uuid: string,
-                protected _characteristic: GATTCharacteristic1,
+                protected _characteristic: GATTCharacteristic,
                 protected _flags: FlagArray,
                 protected _bus: dbus.MessageBus = constants.systemBus) {
                     super(constants.GATT_DESCRIPTOR_INTERFACE);
@@ -136,7 +136,7 @@ export class Descriptor extends dbus.interface.Interface implements GattDescript
     }
 }
 export class UserDescriptor extends Descriptor {
-    constructor(value: string, protected _characteristic: GATTCharacteristic1){
+    constructor(value: string, protected _characteristic: GATTCharacteristic){
         super('0x2901', _characteristic, ['Read']);
         this._value = Buffer.from(value);
         this.setReadFn(() => this._value)

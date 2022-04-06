@@ -7,6 +7,7 @@ import { stringify } from '../../../core/helpers';
 import { log } from '../../../core/logger';
 import { decode } from './gatt-utils';
 import { FailedException, PropertyOptions } from '.';
+import { resolve } from 'dns';
 // From Bluez 5.53 GATT API specification
 interface ReadValueOptions {
     offset?:number;
@@ -49,7 +50,7 @@ export interface CharacteristicProperties {
 export interface CharacteristicPropertyDict {
     [iface: string]: CharacteristicProperties;
 }
-export interface GATTCharacteristic1 {
+export interface GATTCharacteristic {
     addDescriptor(descriptor: GattDescriptor1): void;
     getDescriptors(): GattDescriptor1[];
     getPath(): string;
@@ -57,11 +58,12 @@ export interface GATTCharacteristic1 {
     getProperties(): CharacteristicPropertyDict;
     export(): void;
 }
-export abstract class Characteristic<T>extends dbus.interface.Interface implements GATTCharacteristic1  {
-    private _path: string = '';
+export abstract class Characteristic<T>extends dbus.interface.Interface implements GATTCharacteristic  {
+    // Class properties GATTCharacteristic implementation 
     private _descriptors: GattDescriptor1[] =[];
     private _descriptorIndex = 0;
-    private _flags: string[] = [];
+    private _path: string = '';
+    // Class properties for org.bluez.GattCharacteristic1 method implementation 
     private _readValueFn: () => T ;
     private _readValueAsync: () => Promise<T> ;
     private _writeValueFn: (value: T) => void ;
@@ -69,13 +71,18 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     private _isValidFn: (raw: unknown) => boolean;
     private _startNotifyFn: () => void;
     private _stopNotifyFn: () => void;
-    private _indicateFn: () => void;
-    private _notifying: boolean = false;
-    private _cachedValue: Buffer;
+    // Class properties for org.bluez.GattCharacteristic1 property implementation 
+    private _flags: string[] = [];
     private _mtu: number = 185;
     private _members: DbusMembers = { };
-    static ValueChanged<T>(iface: Characteristic<T>) {
-        log.info(label('ValueChanged, iface=' + JSON.stringify(iface)));
+    private _notifying: boolean = false;
+    private _cachedValue: Buffer;
+
+    // Check that nothing is added to the DBUS interface after it has been exported.
+    private _exported = false;
+
+    // Is this static needed? Tries to emit when Value changed instead, see below
+    protected static ValueChanged<T>(iface: Characteristic<T>) {
         dbus.interface.Interface.emitPropertiesChanged(iface, {Value: iface.Value }, []);
     }
 
@@ -89,12 +96,14 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         this._service.addCharacteristic(this);
 
         this.addFlags(flags);
-        this.addProperty('UUID', { signature: 's', access: dbus.interface.ACCESS_READ});
         this.addProperty('Service', { signature: 'o', access: dbus.interface.ACCESS_READ});
+        this.addProperty('UUID', { signature: 's', access: dbus.interface.ACCESS_READ});
         this.addProperty('Flags', {signature: 'as', access: dbus.interface.ACCESS_READ });
         this.addProperty('MTU', {signature: 'q', access: dbus.interface.ACCESS_READ });
     }
+    // GATTCharacteristic implementation
     public addDescriptor(descriptor: GattDescriptor1): void {
+        this.checkExported('addDescriptor ');
         descriptor.setPath(this.getPath() + '/desc' + this._descriptorIndex++);
         this._descriptors.push(descriptor);
     }
@@ -109,13 +118,15 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     }
     public getProperties(): CharacteristicPropertyDict {
         const properties: CharacteristicPropertyDict  = {};
+        const descriptorPaths: string[] = []; 
+        this._descriptors.forEach(desc => descriptorPaths.push(desc.getPath()));
         properties[constants.GATT_CHARACTERISTIC_INTERFACE] =  {
             Service: new dbus.Variant<dbus.ObjectPath>('o', this.Service),
             UUID: new dbus.Variant<string>('s', this.UUID),
             Flags: new dbus.Variant<string[]>('as', this.Flags),
-            Descriptors:  this.Descriptors.length === 0
+            Descriptors:  descriptorPaths.length === 0
                 ? undefined
-                : new dbus.Variant<dbus.ObjectPath[]>('ao', this.Descriptors),
+                : new dbus.Variant<dbus.ObjectPath[]>('ao', descriptorPaths),
         };
         return properties;
     }
@@ -123,34 +134,18 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         Characteristic.configureMembers(this._members);
         this._bus.export(this.getPath(), this);
         this._descriptors.forEach(desc => desc.export());
+        this._exported = true;
         log.info(label('export') + this.getPath());
     }
-    // Properties of org.freedesktop.DBus.Properties.Get | GetAll
-    private get Service(): string {
+    // Mandatory properties of org.bluez.GattCharacteristic1
+    protected get Service(): string {
         return this._service.getPath();
     }
-    private get UUID(): string {
+    protected get UUID(): string {
         return this._uuid;
     }
-    private get Flags(): string[] {
+    protected get Flags(): string[] {
         return this._flags;
-    }
-    private get Descriptors(): string[] {
-        const result: string[] = [];
-        this._descriptors.forEach(desc => result.push(desc.getPath()));
-        return result;
-    }
-    protected get Value(): Buffer {
-        return this._cachedValue;
-    }
-    protected set Value(value: Buffer) {
-        this._cachedValue = value;
-    }
-    protected get Notifying(): boolean {
-        return this._notifying;
-    }
-    protected set Notifying(value: boolean) {
-        this._notifying = value;
     }
     protected get MTU(): number {
         return this._mtu;
@@ -158,14 +153,95 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     protected set MTU(value: number) {
         this._mtu = value;
     }
-    private addFlags(flags: string[]): void {
+    // Optional properties of org.bluez.GattCharacteristic1
+    protected get Value(): Buffer {
+        return this._cachedValue;
+    }
+    protected set Value(value: Buffer) {
+        if (this._cachedValue !== value) {
+            this._cachedValue = value;
+            dbus.interface.Interface.emitPropertiesChanged(this, {Value: this.Value }, []);
+        } 
+    }
+    protected get Notifying(): boolean {
+        return this._notifying;
+    }
+    protected set Notifying(value: boolean) {
+        this._notifying = value;
+    }
+    // Methods of org.bluez.GattCharacteristic1
+    protected async ReadValue(options: ReadValueOptions): Promise<Buffer> {
+        const self = this;
+        log.debug(label('ReadValue') + ', options=' + JSON.stringify(options));
+        return new Promise((resolve) => {
+            if (self._readValueAsync !== undefined) { 
+                log.debug(label('ReadValue') + 'async');
+                self._readValueAsync().then ((value: T) => {
+                    log.info(label('ReadValue') + 'async, value=' + JSON.stringify(value));
+                    this.Value = self.encode(value, options);
+                    resolve(this.Value);
+                });
+            } else if (self._readValueFn !== undefined) {
+                log.info(label('ReadValue') + 'synch');
+                this.Value = self.encode(self._readValueFn(), options);
+                resolve(this.Value);
+            }  else {
+                log.error(label('ReadValue') + 'Not supported DBus error');
+                throw new NotSupportedDBusError('ReadValue', constants.GATT_CHARACTERISTIC_INTERFACE);
+            }
+        });
+    }
+    protected async WriteValue(data: Buffer, options: WriteValueOptions): Promise<void>   {
+        const self = this;
+        return new Promise((resolve, reject) => {
+            log.info(label('WriteValue') + 'options=' + JSON.stringify(options));
+            log.info(label('WriteValue') + 'data=' + JSON.stringify(data));
+            const value = self.convert(data, options);
+            if (self._writeValueAsync !== undefined) {
+                log.debug(label('WriteValue') + '_writeValueAsync');
+                self._writeValueAsync (value).then (() => resolve());
+            } else if (self._writeValueFn !== undefined){
+                log.debug(label('WriteValue') + '_writeValueFn');
+                self._writeValueFn(value);
+                resolve();
+            } else {
+                log.error(label('WriteValue') + 'Not supported DBus error');
+                reject('WriteValue'+ constants.GATT_CHARACTERISTIC_INTERFACE);
+            }
+        } )
+
+    }
+    protected StartNotify(): void {
+        if (!this._startNotifyFn) {
+            log.error(label('StartNotify') + 'Not supported DBus error');
+            throw new NotSupportedDBusError('StartNotify', constants.GATT_CHARACTERISTIC_INTERFACE);
+        } else{
+            this.Notifying = true;
+            this._startNotifyFn();
+            log.info(label('StartNotify'));
+        } 
+    }
+    protected StopNotify(): void {
+        if (!this._stopNotifyFn) {
+            log.error(label('StopNotify') + 'Not supported DBus error');
+            throw new NotSupportedDBusError('StopNotify', constants.GATT_CHARACTERISTIC_INTERFACE);
+        } else {
+            this.Notifying = false;
+            this._stopNotifyFn();
+            log.info(label('StartNotify'));
+        }
+    }
+    // Class Methods
+    protected addFlags(flags: string[]): void {
+        this.checkExported('addFlags [' + flags.map((f, index )=> index !== 0 ? ',':'' + f) + ']');
         flags.forEach(flag => {
             if (this._flags.indexOf(flag) === -1) {
                 this._flags.push(flag);
             }
         });
     }
-    public addMethod(methodName: string, options: MethodOptions) {
+    protected addMethod(methodName: string, options: MethodOptions) {
+        this.checkExported('addMethod: ' + methodName);
         if (!this._members.methods) {
             this._members['methods'] = {};
         }
@@ -176,7 +252,8 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
             throw new Error('Method ' + methodName + 'exists already')
         } 
     }
-    public addProperty(propertyName: string, options: PropertyOptions) {
+    protected addProperty(propertyName: string, options: PropertyOptions) {
+        this.checkExported('addProperty: ' + propertyName);
         if (!this._members.properties) {
             this._members['properties'] = {};
         }
@@ -187,39 +264,54 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
             throw new Error('Property' + propertyName + 'exists already')
         } 
     }
-    public enableReadValue(readValueFn: () => T , flags: ReadFlag[] = ['read']) {
+    // ReadValue can be sync or async
+    protected enableReadValue(readValueFn: () => T , flags: ReadFlag[] = ['read']) {
+        this.checkExported('enableReadValue');
         this.addFlags(flags);
+        this.addMethod('ReadValue', { inSignature: 'a{sv}', outSignature: 'ay' });
         this._readValueFn = readValueFn.bind(this);
-        this.addMethod('ReadValue', { inSignature: 'a{sv}', outSignature: 'ay' });
     }
-    public enableAsyncReadValue(readValueFn: () => Promise<T> , flags: ReadFlag[] = ['read']) {
-        this._readValueAsync = readValueFn.bind(this);
+    protected enableAsyncReadValue(readValueFn: () => Promise<T> , flags: ReadFlag[] = ['read']) {
+        this.checkExported('enableAsyncReadValue');
         this.addFlags(flags);
         this.addMethod('ReadValue', { inSignature: 'a{sv}', outSignature: 'ay' });
-    } 
-    public enableWriteValue( writeValueFn: (value: T) => void,
+        this._readValueAsync = readValueFn.bind(this);
+    }
+     // WriteValue can be sync or async
+    protected enableWriteValue( writeValueFn: (value: T) => void,
                              isValidFn: (raw: unknown) => boolean, flags: WriteFlag[] = ['write']) {
+        this.checkExported('enableWriteValue');
         this.addFlags(flags);
+        this.addMethod('WriteValue', { inSignature: 'aya{sv}', outSignature: '' });
         this._writeValueFn = writeValueFn.bind(this);
         this._isValidFn = isValidFn.bind(this);
-        this.addMethod('WriteValue', { inSignature: 'aya{sv}', outSignature: '' });
     }
-    public enableAsyncWriteValue( writeValueFn: (value: T) => Promise<void>,
+    protected enableAsyncWriteValue( writeValueFn: (value: T) => Promise<void>,
                              isValidFn: (raw: unknown) => boolean, flags: WriteFlag[] = ['write']) {
+        this.checkExported('enableAsyncWriteValue');
         this.addFlags(flags);
+        this.addMethod('WriteValue', { inSignature: 'aya{sv}', outSignature: '' });
         this._writeValueAsync = writeValueFn.bind(this);
         this._isValidFn = isValidFn.bind(this);
-        this.addMethod('WriteValue', { inSignature: 'aya{sv}', outSignature: '' });
     }
-    public enableNotify(startNotifyFn: () => void, stopNotifyFn: () => void, flags: NotifyFlag[] = ['notify'] ) {
+    protected enableNotify(startNotifyFn: () => void, stopNotifyFn: () => void, flags: NotifyFlag[] = ['notify'] ) {
+        this.checkExported('enableNotify');
         this.addFlags(flags);
+        this.addMethod('StartNotify', {});
+        this.addMethod('StopNotify', {});
+        this.addProperty('Value', { signature: 'ay', access: dbus.interface.ACCESS_READ });
+        this.addProperty('Notifying', {signature: 'b', access: dbus.interface.ACCESS_READ });
         this._startNotifyFn = startNotifyFn.bind(this);
         this._stopNotifyFn = stopNotifyFn.bind(this);
-        this.addMethod('StartNotify', { inSignature: '', outSignature: '' });
-        this.addMethod('StopNotify',{ inSignature: '', outSignature: '' });
-        this.addProperty('Value', { signature: 'ay', access: dbus.interface.ACCESS_READ })
-        this.addProperty('Notifying', {signature: 'b', access: dbus.interface.ACCESS_READ })
     }
+    // Private class methods
+    private checkExported(m: string) {
+        log.info(label(m) +'UUID=' + this.UUID);
+        if (this._exported) {
+            log.error(label(m) +'UUID=' + this.UUID + ' interface members exported already');
+            throw new Error('UUID=' + this.UUID + ' interface members exported already');
+        } 
+    } 
     private encode (value: T, options: ReadValueOptions): Buffer {
         const buffer = Buffer.from(stringify(value));
         const offset = options && options.offset ? options.offset : 0;
@@ -229,6 +321,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
             throw new FailedException('offset larger than buffer size', constants.GATT_CHARACTERISTIC_INTERFACE);
         }
     }
+
     // Takes a stringified data buffer, checks validity and convert it to T
     private convert(data: Buffer, options: WriteValueOptions): T {
         const offset = options.offset? options.offset : 0;
@@ -252,60 +345,6 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
             log.error('convert. Cannot parse JSON.' + e);
             throw new FailedException('WriteValue.convert, cannot convert value' + e,
             constants.GATT_CHARACTERISTIC_INTERFACE);
-        }
-    }
-    public async ReadValue(options: ReadValueOptions): Promise<Buffer> {
-        const self = this;
-        log.debug(label('ReadValue') + ', options=' + JSON.stringify(options));
-        return new Promise((resolve) => {
-            if (self._readValueAsync !== undefined) { 
-                log.debug(label('ReadValue') + 'async');
-                self._readValueAsync().then ((value: T) => {
-                    log.info(label('ReadValue') + 'async, value=' + JSON.stringify(value));
-                    resolve(self.encode(value, options));
-                });
-            } else if (self._readValueFn !== undefined) {
-                log.info(label('ReadValue') + 'synch');
-                return resolve(self.encode(self._readValueFn(), options));
-            }  else {
-                log.error(label('ReadValue') + 'Not supported DBus error');
-                throw new NotSupportedDBusError('ReadValue', constants.GATT_CHARACTERISTIC_INTERFACE);
-            }
-        });
-    }
-    public WriteValue(data: Buffer, options: WriteValueOptions): Promise<void> | void  {
-        log.info(label('WriteValue') + 'options=' + JSON.stringify(options));
-        log.info(label('WriteValue') + 'data=' + JSON.stringify(data));
-        const value = this.convert(data, options);
-        if (this._writeValueAsync !== undefined) {
-            log.debug(label('WriteValue') + '_writeValueAsync');
-            return this._writeValueAsync (value);
-        } else if (this._writeValueFn !== undefined){
-            log.debug(label('WriteValue') + '_writeValueFn');
-            this._writeValueFn(value);
-        } else {
-            log.error(label('WriteValue') + 'Not supported DBus error');
-            throw new NotSupportedDBusError('WriteValue', constants.GATT_CHARACTERISTIC_INTERFACE);
-        }
-    }
-    public StartNotify(): void {
-        if (!this._startNotifyFn) {
-            log.error(label('StartNotify') + 'Not supported DBus error');
-            throw new NotSupportedDBusError('StartNotify', constants.GATT_CHARACTERISTIC_INTERFACE);
-        } else{
-            this.Notifying = true;
-            this._startNotifyFn();
-            log.info(label('StartNotify'));
-        } 
-    }
-    public StopNotify(): void {
-        if (!this._stopNotifyFn) {
-            log.error(label('StopNotify') + 'Not supported DBus error');
-            throw new NotSupportedDBusError('StopNotify', constants.GATT_CHARACTERISTIC_INTERFACE);
-        } else {
-            this.Notifying = false;
-            this._stopNotifyFn();
-            log.info(label('StartNotify'));
         }
     }
 }
