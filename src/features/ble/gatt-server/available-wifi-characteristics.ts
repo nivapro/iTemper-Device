@@ -42,7 +42,7 @@ export class AvailableWiFiCharacteristic extends  gatt.Characteristic<NetworkLis
       throw Error('AvailableWiFiCharacteristic: handleWriteRequest not implemented: received' + JSON.stringify(raw));
   }
 
-  public async startNotify() {
+  public startNotify(): void {
     this.Notifying = true;
     this.publish();
     this.timeout = setInterval(() => {
@@ -51,14 +51,14 @@ export class AvailableWiFiCharacteristic extends  gatt.Characteristic<NetworkLis
       }
     }, this.Interval);
   }
-  public async stopNotify() {
+  public stopNotify(): void {
     log.info('AvailableWiFiCharacteristic.stopNotify');
     if (this.Notifying) {
       this.Notifying = false;
       clearInterval(this.timeout);
     }
   }
- public async publish(): Promise<void> {
+ public publish(): void {
     log.info('available-wifi-characteristic.publish');
     handleReadRequest(256)
     .then((networks) => {

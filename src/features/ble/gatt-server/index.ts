@@ -4,9 +4,9 @@ import * as gatt from '../gatt'
 import { getUuid, UUID_Designator} from './uuid';
 import { AvailableWiFiCharacteristic } from './available-wifi-characteristics';
 import { CurrentWiFiCharacteristic } from './current-wifi-characteristics';
+import { DeviceColorCharacteristic } from './device-color-characteristics';
 import { DeviceInfoCharacteristic } from './device-info-characteristics';
 import { DeviceNameCharacteristic } from './device-name-characteristics';
-import { DeviceColorCharacteristic } from './device-color-characteristics';
 import { DeviceKeyCharacteristic } from './device-key-characteristics';
 
 export const DOMAIN_PATH = '/io/itemper';
