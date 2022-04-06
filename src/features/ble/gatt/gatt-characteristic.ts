@@ -123,7 +123,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         Characteristic.configureMembers(this._members);
         this._bus.export(this.getPath(), this);
         this._descriptors.forEach(desc => desc.export());
-        log.info(label('export') + this.getPath() + ', members=' + JSON.stringify(this._members, undefined, 2));
+        log.info(label('export') + this.getPath());
     }
     // Properties of org.freedesktop.DBus.Properties.Get | GetAll
     private get Service(): string {
@@ -166,20 +166,26 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         });
     }
     public addMethod(methodName: string, options: MethodOptions) {
-        if (!this._members.methods){
-            this._members['methods'] = { }
+        if (!this._members.methods) {
+            this._members['methods'] = {};
         }
-        this._members.methods[methodName] = options;
-        log.debug(label('addMethod') + JSON.stringify( this._members.methods));
+        if (!(methodName in this._members.methods)) {
+            this._members.methods[methodName] = options;
+        } else {
+            log.error(label('addMethod') + methodName + 'exists already')
+            throw new Error('Method ' + methodName + 'exists already')
+        } 
     }
     public addProperty(propertyName: string, options: PropertyOptions) {
-        if (!this._members.properties){
-            this._members['properties'] = { }
+        if (!this._members.properties) {
+            this._members['properties'] = {};
         }
         if (!(propertyName in this._members.properties)) {
             this._members.properties[propertyName] = options;
-            log.debug(label('addProperty') + 'Added '+ JSON.stringify( this._members.properties)); 
-        }
+        } else {
+            log.error(label('addProperty') + propertyName + 'exists already')
+            throw new Error('Property' + propertyName + 'exists already')
+        } 
     }
     public enableReadValue(readValueFn: () => T , flags: ReadFlag[] = ['read']) {
         this.addFlags(flags);
