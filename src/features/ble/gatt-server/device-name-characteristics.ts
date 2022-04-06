@@ -12,6 +12,7 @@ export class DeviceNameCharacteristic extends  gatt.Characteristic<DeviceName> {
     super(_service, DeviceNameCharacteristic.UUID);
     this.enableReadValue(this.handleReadRequest);
     this.enableWriteValue(this.handleWriteRequest, isDeviceNameValid);
+    DeviceNameCharacteristic.configureMembers(this.getMembers());
     // const descriptor = new gatt.UserDescriptor('Device settings', this);
   }
   handleReadRequest(): DeviceName {

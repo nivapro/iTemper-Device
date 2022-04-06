@@ -56,6 +56,7 @@ export interface GATTCharacteristic {
     getPath(): string;
     setPath(path: string): void;
     getProperties(): CharacteristicPropertyDict;
+    getMembers(): DbusMembers;
     export(): void;
 }
 export abstract class Characteristic<T>extends dbus.interface.Interface implements GATTCharacteristic  {
@@ -130,8 +131,10 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         };
         return properties;
     }
+    public getMembers (){
+        return this._members;
+    } 
     public export(): void {
-        Characteristic.configureMembers(this._members);
         this._bus.export(this.getPath(), this);
         this._descriptors.forEach(desc => desc.export());
         this._exported = true;

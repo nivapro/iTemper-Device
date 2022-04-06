@@ -31,6 +31,7 @@ export class CurrentWiFiCharacteristic extends  gatt.Characteristic<WiFiData>{
     super(_service, CurrentWiFiCharacteristic.UUID);
     this.enableAsyncReadValue(handleReadRequest);
     this.enableWriteValue(this.handleWriteRequest, isWiFiRequestValid);
+    CurrentWiFiCharacteristic.configureMembers(this.getMembers());
     // const descriptor = new gatt.UserDescriptor('Device settings', this);
   }
 

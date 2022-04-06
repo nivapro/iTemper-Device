@@ -39,6 +39,7 @@ export class AvailableWiFiCharacteristic extends gatt.Characteristic<NetworkList
     super(_service, AvailableWiFiCharacteristic.UUID);
     this.enableAsyncReadValue(handleReadRequest.bind(this));
     this.enableNotify(this.hansleStartNotify.bind(this), this.handleStopNotify.bind(this));
+    AvailableWiFiCharacteristic.configureMembers(this.getMembers());
   }
 
   public async handleWriteRequest(raw: unknown): Promise<boolean> {

@@ -12,6 +12,7 @@ export class DeviceKeyCharacteristic extends  gatt.Characteristic<DeviceKey> {
     super(_service, DeviceKeyCharacteristic.UUID);
     this.enableReadValue(this.handleReadRequest);
     this.enableWriteValue(this.handleWriteRequest, isDeviceKeyValid);
+    DeviceKeyCharacteristic.configureMembers(this.getMembers());
   }
   handleReadRequest(): DeviceKey {
       const data = {

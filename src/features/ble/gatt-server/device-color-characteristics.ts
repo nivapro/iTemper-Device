@@ -12,6 +12,7 @@ export class DeviceColorCharacteristic extends  gatt.Characteristic<DeviceColor>
     super(_service, DeviceColorCharacteristic.UUID);
     this.enableReadValue(this.handleReadRequest);
     this.enableWriteValue(this.handleWriteRequest, isDeviceColorValid);
+    DeviceColorCharacteristic.configureMembers(this.getMembers());
   }
   handleReadRequest(): DeviceColor {
       const data = {
