@@ -67,14 +67,14 @@ export class AvailableWiFiCharacteristic extends gatt.Characteristic<NetworkList
     .then((networks) => {
       for (const network of networks) {
         const valueStr = JSON.stringify(network);
-        const value = Buffer.from(valueStr);
-        if (value.length > this.MTU) {
-          log.error('available-wifi-characteristic.publish: value exceeds maxValueSize ' + value.length);
+        const Value = Buffer.from(valueStr);
+        if (Value.length > this.MTU) {
+          log.error('available-wifi-characteristic.publish: value exceeds maxValueSize ' + Value.length);
         } else {
-          this.Value = value;
+          this.Value = Value;
           log.info('available-wifi-characteristic.publish valueStr=' + valueStr);
           if (this.Notifying) {
-            AvailableWiFiCharacteristic.ValueChanged<NetworkList>(this);
+            AvailableWiFiCharacteristic.emitPropertiesChanged(this,{ Value },[]);
           }
         }
       }
