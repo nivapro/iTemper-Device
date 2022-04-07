@@ -47,7 +47,6 @@ export class Application extends dbus.interface.Interface  {
 
             });
         });
-        log.info(label("GetManagedObjects:") + JSON.stringify(response, undefined, 2));
         return response;
     }
     // Methods for adding characteristics and publishing the interface on DBus.

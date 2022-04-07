@@ -9,11 +9,11 @@ import { DeviceInfoCharacteristic } from './device-info-characteristics';
 import { DeviceNameCharacteristic } from './device-name-characteristics';
 import { DeviceKeyCharacteristic } from './device-key-characteristics';
 
-export const DOMAIN_PATH = '/io/itemper';
-export const DOMAIN_NAME = 'io.itemper';
+export const DBUS_APP_PATH = '/io/itemper';
+export const DBUS_DEST_NAME = 'io.itemper';
 export const SERVICE0_UUID = getUuid(UUID_Designator.PrimaryService);
 
-const _app = new gatt.Application(DOMAIN_PATH, DOMAIN_NAME);
+const _app = new gatt.Application(DBUS_APP_PATH, DBUS_DEST_NAME);
 const _service = new gatt.Service(SERVICE0_UUID, _app);
 const _deviceInfoChar = new DeviceInfoCharacteristic(_service);
 const _currentWiFiChar = new CurrentWiFiCharacteristic(_service);
