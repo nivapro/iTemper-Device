@@ -38,7 +38,7 @@ export class AvailableWiFiCharacteristic extends gatt.Characteristic<NetworkList
   constructor(protected _service: gatt.Service) {
     super(_service, AvailableWiFiCharacteristic.UUID);
     this.enableAsyncReadValue(handleReadRequest.bind(this));
-    this.enableNotify(this.hansleStartNotify.bind(this), this.handleStopNotify.bind(this));
+    this.enableNotify(this.handleStartNotify.bind(this), this.handleStopNotify.bind(this));
     AvailableWiFiCharacteristic.configureMembers(this.getMembers());
   }
 
@@ -46,12 +46,13 @@ export class AvailableWiFiCharacteristic extends gatt.Characteristic<NetworkList
       throw Error('AvailableWiFiCharacteristic: handleWriteRequest not implemented: received' + JSON.stringify(raw));
   }
 
-  protected hansleStartNotify(): void {
+  protected handleStartNotify(): void {
+    log.info('AvailableWiFiCharacteristic.startNotify');
     this.Notifying = true;
-    this.publish();
+    this.update();
     this.timeout = setInterval(() => {
       if (this.Notifying) {
-        this.publish();
+        this.update();
       }
     }, this.Interval);
   }
@@ -62,21 +63,19 @@ export class AvailableWiFiCharacteristic extends gatt.Characteristic<NetworkList
       clearInterval(this.timeout);
     }
   }
- public async publish(): Promise<void> {
+  public async update(): Promise<void> {
     handleReadRequest(5)
     .then((networks) => {
-      for (const network of networks) {
-        const valueStr = JSON.stringify(network);
-        const Value = Buffer.from(valueStr);
-        if (Value.length > this.MTU) {
-          log.error('available-wifi-characteristic.publish: value exceeds maxValueSize ' + Value.length);
-        } else {
-          this.Value = Value;
-          log.info('available-wifi-characteristic.publish valueStr=' + valueStr);
-          if (this.Notifying) {
+      const valueStr = JSON.stringify(networks);
+      const Value = Buffer.from(valueStr)
+      if (Value.length > this.MTU) {
+        log.error('available-wifi-characteristic.publish: value exceeds maxValueSize ' + Value.length);
+      } else {
+        this.Value = Value;
+        if (this.Notifying) {
+          log.info('available-wifi-characteristic.publish emitting valueStr=' + valueStr);
             AvailableWiFiCharacteristic.emitPropertiesChanged(this,{ Value },[]);
           }
-        }
       }
     });
   }

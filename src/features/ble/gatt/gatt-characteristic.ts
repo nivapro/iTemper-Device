@@ -86,7 +86,6 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     protected static ValueChanged<T>(iface: Characteristic<T>) {
         dbus.interface.Interface.emitPropertiesChanged(iface, {Value: iface.Value }, []);
     }
-
     constructor(
                 protected _service: Service,
                 protected _uuid: string,
@@ -175,18 +174,19 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     // Methods of org.bluez.GattCharacteristic1
     protected async ReadValue(options: ReadValueOptions): Promise<Buffer> {
         const self = this;
-        log.debug(label('ReadValue') + ', options=' + JSON.stringify(options));
+        log.info(label('ReadValue') + ' received on object ' + this._path + 'with options=' + JSON.stringify(options));
         return new Promise((resolve) => {
             if (self._readValueAsync !== undefined) { 
-                log.debug(label('ReadValue') + 'async');
+                log.info(label('ReadValueSync') + 'pending');
                 self._readValueAsync().then ((value: T) => {
-                    log.info(label('ReadValue') + 'async, value=' + JSON.stringify(value));
+                    log.info(label('ReadValueAsync') + ' on object ' + this._path + 'value=' + JSON.stringify(value));
                     this.Value = self.encode(value, options);
                     resolve(this.Value);
                 });
             } else if (self._readValueFn !== undefined) {
-                log.info(label('ReadValue') + 'synch');
-                this.Value = self.encode(self._readValueFn(), options);
+                const value = self._readValueFn();
+                log.info(label('ReadValue') + ' on object ' + this._path + 'value=' + JSON.stringify(value));
+                this.Value = self.encode(value, options);
                 resolve(this.Value);
             }  else {
                 log.error(label('ReadValue') + 'Not supported DBus error');
