@@ -111,6 +111,11 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     public getDescriptors(): GattDescriptor1[] {
         return this._descriptors;
     }
+    private get Descriptors(): string[] {
+        const result: string[] = [];
+        this._descriptors.forEach(desc => result.push(desc.getPath()));
+        return result;
+    }
     public getPath(): string {
         return this._path;
     }
@@ -125,9 +130,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
             Service: new dbus.Variant<dbus.ObjectPath>('o', this.Service),
             UUID: new dbus.Variant<string>('s', this.UUID),
             Flags: new dbus.Variant<string[]>('as', this.Flags),
-            Descriptors:  descriptorPaths.length === 0
-                ? undefined
-                : new dbus.Variant<dbus.ObjectPath[]>('ao', descriptorPaths),
+            Descriptors: new dbus.Variant<dbus.ObjectPath[]>('ao', this.Descriptors),
         };
         return properties;
     }
