@@ -125,8 +125,8 @@ export interface ManufacturerDataDict{
         }
         try{
             Adertisement.configureMembers(members);
-            this._bus.export(this.getPath(), this);
-            log.info(label("publish") + "Export Adertisement, members=" + JSON.stringify(members));
+            this._bus.export(this._path, this);
+            log.info(label("publish") + constants.ADVERTISEMENT_INTERFACE + ' exported on path ' +  this._path);
         } catch (e){
             log.error(label("publish") + "Export Adertisement, error=" + JSON.stringify(e));
         }

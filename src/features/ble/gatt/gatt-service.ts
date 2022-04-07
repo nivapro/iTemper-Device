@@ -3,8 +3,10 @@ import { Application } from './gatt-application';
 import { Characteristic, GATTCharacteristic } from './gatt-characteristic';
 
 import * as constants from './gatt-constants';
-
 import { GATT_SERVICE_INTERFACE } from './gatt-constants';
+
+import { log } from '../../../core/logger';
+
 export interface ServiceProperties {
     UUID: dbus.Variant<string>;
     Primary: dbus.Variant<boolean>;
@@ -15,9 +17,12 @@ export interface ServicePropertyDict {
 }
 export interface ManagedServiceObjects {
     [path: string]: ServicePropertyDict;
-} 
-
-export interface GATTService1 {
+}
+const m = "gatt-service"
+function label(f: string = ""){
+    return m + "." + f + ": ";
+}
+export interface GATTService {
     addCharacteristic(charactseristic: GATTCharacteristic): void;
     getCharacteristics(): GATTCharacteristic[];
     getPath(): string;
@@ -31,19 +36,19 @@ type DbusMembers = {
     signals?: { [key: string]: dbus.interface.SignalOptions }
 };
 // org.bluez.GattService1 interface implementation
-export class Service extends dbus.interface.Interface implements GATTService1 {
+export class Service extends dbus.interface.Interface implements GATTService {
     _characteristics: GATTCharacteristic[] = [];
     _path: string = '';
     _charPathIndex = 0;
     self: Service;
     // _objectManager: ObjectManager;
-    constructor(private uuid: string,
-                private application: Application,
-                private primary: boolean = true,
-                private bus: dbus.MessageBus = constants.systemBus) {
+    constructor(private _uuid: string,
+                private _application: Application,
+                private _primary: boolean = true,
+                private _bus: dbus.MessageBus = constants.systemBus) {
         super(GATT_SERVICE_INTERFACE);
         this.self = this;
-        this.application.addService(this);
+        this._application.addService(this);
         // this._objectManager = new ObjectManager(this);
     }
     // Methods for adding characteristics and publishing the interface on DBus.
@@ -55,9 +60,6 @@ export class Service extends dbus.interface.Interface implements GATTService1 {
         return this._characteristics;
     }
     public export(): void {
-        this.defineGattManager1();
-    }
-    public defineGattManager1(): void {
         const members: DbusMembers  = {
             properties: {
                 UUID: {
@@ -71,15 +73,16 @@ export class Service extends dbus.interface.Interface implements GATTService1 {
             },
         };
         Service.configureMembers(members);
-        this.bus.export(this.getPath(), this.self);
+        this._bus.export(this._path, this);
+        log.info(label("export") + GATT_SERVICE_INTERFACE + ' exported on path ' +  this._path);
         this._characteristics.forEach(char => char.export());
     }
     // Properties of the GATTService1 interface, use org.freedesktop.DBus.Properties to Get and GetAll
     private get UUID(): string {
-        return this.uuid;
+        return this._uuid;
     }
     private get Primary(): boolean {
-        return this.primary;
+        return this._primary;
     }
     // getAllProperties is used when implementing org.freedesktop.DBus.GetManagedObjects.
     // Assumes dbus-next handles GetAll on org.freedesktop.DBus.Properties.

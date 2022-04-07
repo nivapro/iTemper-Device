@@ -3,6 +3,7 @@ import { GattManager1 } from '../bluez/org.bluez-gatt-class';
 
 import * as constants from './gatt-constants';
 import { log } from '../../../core/logger';
+import { stringify } from '../../../core/helpers'; 
 import * as descriptor from './gatt-descriptor';
 import * as service from './gatt-service';
 import * as utils from './gatt-utils'
@@ -26,7 +27,7 @@ function label(f: string = ""){
 
 // org.bluez.GattApplication1 interface implementation
 export class Application extends dbus.interface.Interface  {
-    _services: service.GATTService1[] = [];
+    _services: service.GATTService[] = [];
     _servicePathIndex = 0;
     static IFACE = 'org.freedesktop.DBus.ObjectManager';
     constructor(private _path: string,
@@ -35,7 +36,7 @@ export class Application extends dbus.interface.Interface  {
         super(Application.IFACE);
     }
     // Properties & Methods of the interface org.freedesktop.DBus.ObjectManager
-    private GetManagedObjects() {
+    public GetManagedObjects() {
         const response: ManagedObjects = {};
         this._services.forEach ((serv) => {
             response[serv.getPath()] = serv.getProperties();
@@ -56,7 +57,7 @@ export class Application extends dbus.interface.Interface  {
         this._services.push(service);
         log.info(label('addService') + 'Completed');
     }
-    public getServices(): service.GATTService1[] {
+    public getServices(): service.GATTService[] {
         return this._services;
     }
     public async close(): Promise<void> {
@@ -82,18 +83,16 @@ export class Application extends dbus.interface.Interface  {
         };
         await setBusName(this._name);
         Application.configureMembers(members);
-        log.debug(label("init") + Application.IFACE + ' DBus members configured');
-        this._bus.export(this._path, this);
-        log.debug(label("init") + 'Interface ' + Application.IFACE + ' exported on path ' +  this._path);
+        this._bus.export(this._path, this as dbus.interface.Interface);
+        log.info(label("init") + Application.IFACE + ' exported on path ' +  this._path);
         this._services.forEach((serv) => serv.export());
-        log.debug(label("init") + "Application configured");
         try{
-            const gattManager = await GattManager1.Connect(this._bus, adapterPath);
-            log.debug(label("init") + "GATT Manager connected on path " + adapterPath);
+            const gattManager = await GattManager1.Connect(this._bus);
+            log.info(label("init") + "GATT Manager connected on path " + adapterPath);
             await gattManager.RegisterApplication(this._path, {});
             log.info(label("init") + "Application registered on path " + this._path);
         } catch(e){
-            log.error(label("init") + "Could not register application on path " + this._path + ", error\n=" + JSON.stringify(e));
+            log.error(label("init") + "Could not register application on path " + ", error=\n" + JSON.stringify(e));
         } 
     }
 }

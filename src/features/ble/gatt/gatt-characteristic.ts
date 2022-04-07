@@ -37,10 +37,6 @@ export type NotifyFlag = 'notify' | 'encrypt-notify' | 'encrypt-authenticated-no
 
 export type indicateFlag = 'indicate' | 'encrypt-indicate' | 'encrypt-authenticated-indicate' | 'secure-indicate';
 
-const m = 'gatt-characteristic';
-function label(f: string = '') {
-    return m + '.' + f + ': ';
-}
 export interface CharacteristicProperties {
     Service: dbus.Variant<dbus.ObjectPath>;
     UUID: dbus.Variant<string>;
@@ -58,6 +54,10 @@ export interface GATTCharacteristic {
     getProperties(): CharacteristicPropertyDict;
     getMembers(): DbusMembers;
     export(): void;
+}
+const m = 'gatt-characteristic';
+function label(f: string = '') {
+    return m + '.' + f + ': ';
 }
 export abstract class Characteristic<T>extends dbus.interface.Interface implements GATTCharacteristic  {
     // Class properties GATTCharacteristic implementation 
@@ -135,10 +135,10 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         return this._members;
     } 
     public export(): void {
-        this._bus.export(this.getPath(), this);
+        this._bus.export(this._path, this);
+        log.info(label("export") + constants.GATT_CHARACTERISTIC_INTERFACE + ' exported on path ' +  this._path);
         this._descriptors.forEach(desc => desc.export());
         this._exported = true;
-        log.info(label('export') + this.getPath());
     }
     // Mandatory properties of org.bluez.GattCharacteristic1
     protected get Service(): string {

@@ -3,7 +3,7 @@
 import { Adertisement } from './gatt/gap-advertisment';
 import * as constants from './gatt/gatt-constants';
 
-import { GattServer, DOMAIN_PATH, SERVICE0_UUID }  from './gatt-server';
+import { GattServer, DBUS_APP_PATH, PRIMARY_SERVICE_UUID }  from './gatt-server';
 // import { GattServer, SERVICE0_UUID }  from './gatt-server';
 
 import { log } from '../../core/logger';
@@ -22,7 +22,7 @@ const advertisingType = 'peripheral';
 const apperance = constants.apperance.MultiSensor;
 const includeTYxPower = true;
 
-const advertisment = new Adertisement(DOMAIN_PATH,
+const advertisment = new Adertisement(DBUS_APP_PATH,
                               AdvertisingPathIndex,
                               advertisingType,
                               apperance,
@@ -36,10 +36,10 @@ function AdvertisedName() {
 }
 async function initAdvertisement() {
   try{
-    advertisment.addServiceUUID(SERVICE0_UUID);
+    advertisment.addServiceUUID(PRIMARY_SERVICE_UUID );
     advertisment.setLocalName(AdvertisedName());
     await advertisment.init();
-    log.info(label("startAdvertising") + "service=" + SERVICE0_UUID + ", name=" + AdvertisedName());
+    log.info(label("startAdvertising") + "service=" + PRIMARY_SERVICE_UUID  + ", name=" + AdvertisedName());
   } catch (e){
     log.error(label("startAdvertising") + "error="+ JSON.stringify(e));
   } 
@@ -78,7 +78,7 @@ export async function init() {
     });
     try{
       await gattServer.init();
-      log.info(label("init") + "GATT server initaited");
+      log.info(label("init") + "GATT server initiAted");
       await initAdvertisement();
       await startAdvertising();
       log.info(label("init") + "Advertising BLE GATT service");

@@ -1,9 +1,9 @@
 import * as util from 'util';
 import { log } from './logger';
-export function stringify(o: any) {
+export function stringify(value: any, spacer?: string|number ) {
     const cache: object[] = [];
 
-    return JSON.stringify(o, function(key, value) {
+    const replacer = function(key: string, value: any) {
         if (typeof value === 'object' && value !== null) {
             if (cache.indexOf(value) !== -1) {
                 // Duplicate reference found, discard key
@@ -17,7 +17,8 @@ export function stringify(o: any) {
             log.debug(key + ',' + value);
         }
         return value;
-    });
+    }
+    return JSON.stringify(value, replacer, spacer);
 }
 
 // helper functions to encode/decode messages

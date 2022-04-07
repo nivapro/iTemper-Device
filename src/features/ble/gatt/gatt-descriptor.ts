@@ -2,7 +2,7 @@ import dbus from 'dbus-next';
 import { GATTCharacteristic } from './gatt-characteristic';
 import { DbusMembers, NotSupportedDBusError } from './gatt-utils';
 import { stringify } from '../../../core/helpers'; 
-
+import { log } from '../../../core/logger';
 import * as constants from './gatt-constants';
 
 type Flag = 'Read' | 'Notify';
@@ -32,7 +32,10 @@ interface WriteValueOptions {
     device?: string,
 	'prepare-authorize'?: boolean
 }
-
+const m = 'gatt-characteristic';
+function label(f: string = '') {
+    return m + '.' + f + ': ';
+}
 export class Descriptor extends dbus.interface.Interface implements GattDescriptor1 {
     _path: string = '';
     _descriptors: Descriptor[] =[];
@@ -93,7 +96,8 @@ export class Descriptor extends dbus.interface.Interface implements GattDescript
             },
         };
         Descriptor.configureMembers(members);
-        this._bus.export(this.getPath(), this);
+        this._bus.export(this._path, this);
+        log.info(label("export") + constants.GATT_DESCRIPTOR_INTERFACE + ' exported on path ' +  this._path);
     }
         // Properties of the GATTCharacteristic1 interface, use org.freedesktop.DBus.Properties to Get and GetAll
     public get Characteristic(): string {
