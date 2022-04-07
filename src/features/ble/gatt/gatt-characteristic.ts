@@ -164,10 +164,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         return this._cachedValue;
     }
     protected set Value(value: Buffer) {
-        if (this._cachedValue !== value) {
-            this._cachedValue = value;
-            dbus.interface.Interface.emitPropertiesChanged(this, {Value: this.Value }, []);
-        } 
+        this._cachedValue = value;
     }
     protected get Notifying(): boolean {
         return this._notifying;
