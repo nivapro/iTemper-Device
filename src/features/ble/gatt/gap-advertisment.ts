@@ -189,8 +189,10 @@ export interface ManufacturerDataDict{
     private include(feature: string): void {
         this._includes.push(feature);
     }
-    public Release() {
-        log.info(label('Release') + 'Nothing to do');
+    public async Release(): Promise<void> {
+        log.info(label('Release'));
+        await this.unregister();
+        await this.register();
     }
     public getPath(): string {
         return this._path;

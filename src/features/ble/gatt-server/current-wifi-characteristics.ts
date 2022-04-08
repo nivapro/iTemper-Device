@@ -13,7 +13,7 @@ const handleReadRequest = async (): Promise<WiFiData> => {
     .then((networks: WiFi[]) => {
         const { ssid, security, quality, channel } = networks.length > 0
         ? networks[0]
-        : {ssid: 'Test', security: 'WPA-2', quality: 75, channel: 1};
+        : {ssid: 'Current', security: 'Open', quality: 74, channel: 1};
         const data: WiFiData = { ssid, security, quality, channel };
         log.info('current-wifi-characteristic.handleReadRequest: successfully retrieving network data='
         + stringify(data));
@@ -34,8 +34,6 @@ export class CurrentWiFiCharacteristic extends  gatt.Characteristic<WiFiData>{
     CurrentWiFiCharacteristic.configureMembers(this.getMembers());
     // const descriptor = new gatt.UserDescriptor('Device settings', this);
   }
-
-
  async handleWriteRequest(raw: unknown): Promise<void> {
     return new Promise((resolve, reject) => {
       if (isWiFiRequestValid(raw)) {

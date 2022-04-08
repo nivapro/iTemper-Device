@@ -20,7 +20,7 @@ const handleReadRequest = async (MaxNetworks: number = 5): Promise<NetworkList> 
         log.info('available-wifi-characteristic.handleReadRequest: successfully retrieving network data='
         + stringify(data));
       if (data.length === 0) {
-        data.push({ ssid: 'Test', security: 'WPA-2', quality: 74, channel: 6});
+        data.push({ ssid: 'Available', security: 'WPA-2', quality: 65, channel: 1});
       } 
       resolve(data);
     })
@@ -32,7 +32,7 @@ const handleReadRequest = async (MaxNetworks: number = 5): Promise<NetworkList> 
 }
 export class AvailableWiFiCharacteristic extends gatt.Characteristic<NetworkList> {
   public static UUID = getUuid(UUID_Designator.AvailableWiFi);
-  private Interval = 60_000;
+  private Interval = 5_000;
   private timeout: NodeJS.Timeout;
 
   constructor(protected _service: gatt.Service) {
@@ -41,11 +41,9 @@ export class AvailableWiFiCharacteristic extends gatt.Characteristic<NetworkList
     this.enableNotify(this.handleStartNotify.bind(this), this.handleStopNotify.bind(this));
     AvailableWiFiCharacteristic.configureMembers(this.getMembers());
   }
-
   public async handleWriteRequest(raw: unknown): Promise<boolean> {
       throw Error('AvailableWiFiCharacteristic: handleWriteRequest not implemented: received' + JSON.stringify(raw));
   }
-
   protected handleStartNotify(): void {
     log.info('AvailableWiFiCharacteristic.startNotify');
     this.Notifying = true;
