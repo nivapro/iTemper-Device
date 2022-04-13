@@ -200,6 +200,9 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
             log.info(label('WriteValue') + 'options=' + JSON.stringify(options));
             log.info(label('WriteValue') + 'data=' + JSON.stringify(data));
             const value = self.convert(data, options);
+            if (!this._isValidFn (value)) {
+                reject('Cannot WriteValue, Invalid value=' + JSON.stringify(value));
+            }
             if (self._writeValueAsync !== undefined) {
                 log.debug(label('WriteValue') + '_writeValueAsync');
                 self._writeValueAsync (value).then (() => resolve());

@@ -34,6 +34,8 @@ export class AvailableWiFiCharacteristic extends gatt.Characteristic<NetworkList
   public static UUID = getUuid(UUID_Designator.AvailableWiFi);
   private Interval = 5_000;
   private timeout: NodeJS.Timeout;
+  private notificationTimeout: NodeJS.Timeout;
+  private notificationPeriod = 60_000;
 
   constructor(protected _service: gatt.Service) {
     super(_service, AvailableWiFiCharacteristic.UUID);
@@ -53,12 +55,18 @@ export class AvailableWiFiCharacteristic extends gatt.Characteristic<NetworkList
         this.update();
       }
     }, this.Interval);
+    this.notificationTimeout = setTimeout(() => {
+      if (this.Notifying) {
+        this.handleStopNotify();
+      }
+    }, this.notificationPeriod);
   }
   protected handleStopNotify(): void {
     log.info('AvailableWiFiCharacteristic.stopNotify');
     if (this.Notifying) {
       this.Notifying = false;
       clearInterval(this.timeout);
+      clearTimeout(this.notificationTimeout);
     }
   }
   public async update(): Promise<void> {

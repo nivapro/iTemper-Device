@@ -3,7 +3,7 @@ import { log } from './logger';
 export function stringify(value: any, spacer?: string|number ) {
     const cache: object[] = [];
 
-    const replacer = function(key: string, value: any) {
+    const replacer = function(_key: string, value: any) {
         if (typeof value === 'object' && value !== null) {
             if (cache.indexOf(value) !== -1) {
                 // Duplicate reference found, discard key
@@ -13,9 +13,10 @@ export function stringify(value: any, spacer?: string|number ) {
             cache.push(value);
         }
 
-        if (typeof value === 'string' || typeof value === 'number') {
-            log.debug(key + ',' + value);
-        }
+
+        if (typeof value === 'bigint') { 
+            value = value.toString();
+        } 
         return value;
     }
     return JSON.stringify(value, replacer, spacer);

@@ -41,7 +41,7 @@ export function newComponentLogger(component: string): Logger {
   if ((component in componentLoggers) || component.length === 0){
     throw new Error('Component logger exists already or invalid component name length')
   }
-  const logger = newLogger(component, conf.CONSOLE_LEVEL, !AddFileTransport);
+  const logger = newLogger(component, 'info', !AddFileTransport);
   componentLoggers[component]  = logger;
   return logger;
 }  
@@ -49,6 +49,7 @@ export function newComponentLogger(component: string): Logger {
 export const log: Logger =  newLogger ();
 
 export const wLog: Logger =  newComponentLogger('WiFi');
+log.info('loggers: wLog created');
 
 export function setLevel(level: string, component = ''): void {
   if (component === '') {

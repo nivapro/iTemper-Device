@@ -10,13 +10,10 @@ export interface DeviceColor {
 export interface DeviceKey {
     key: string ;
 }
-export interface DeviceData {
-     name: string ;
-     deviceID: string ;
+export interface DeviceInfo {
+     name: string;
+     color: string;
      key: string;
-     color?: string;
-     statusTime?: number;
-     uptime?: number;
 }
 export interface WiFiData {
      ssid: string;
@@ -29,17 +26,9 @@ export interface DeviceWiFiData {
      available: WiFiData[];
 }
 export interface DeviceState {
-     deviceData: DeviceData;
+     deviceData: DeviceInfo;
      networks: DeviceWiFiData;
      sensors: SensorData[];
-}
-export interface DeviceData {
-     name: string ;
-     deviceID: string ;
-     key: string;
-     color?: string;
-     statusTime?: number;
-     uptime?: number;
 }
 export interface WiFiRequest {
     ssid: string;
@@ -50,21 +39,20 @@ export interface DeviceWiFiData {
      available: WiFiData[];
 }
 export interface DeviceState {
-     deviceData: DeviceData;
+     deviceData: DeviceInfo;
      networks: DeviceWiFiData;
      sensors: SensorData[];
 }
 export function isObject(raw: unknown) {
     return typeof raw === 'object' && raw !== null;
 }
-export function isDeviceDataValid(raw: unknown): boolean {
+export function isDeviceInfoValid(raw: unknown): boolean {
     let valid = isObject(raw);
     if (!valid) {
         log.error('device-characteristic-data.isDeviceDataValid - not an object');
     } else {
-        const data = raw as Partial<DeviceData>;
+        const data = raw as Partial<DeviceInfo>;
         valid = valid
-        && 'deviceID' in data && typeof data.deviceID === 'string'
         && 'name' in data && typeof data.name === 'string'
         && 'color' in data && typeof data.color === 'string'
         && 'key' in data && typeof data.key === 'string';
@@ -189,7 +177,7 @@ export function isDeviceStateValid(raw: unknown): boolean {
     } else {
         const data = raw as Partial<DeviceState>;
         if ('deviceData' in data) {
-            valid = valid && isDeviceDataValid(data.deviceData);
+            valid = valid && isDeviceInfoValid(data.deviceData);
         }
         valid = valid
         && 'networks' in data && isDeviceWiFiDataValid(data.networks)

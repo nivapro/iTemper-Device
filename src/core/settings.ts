@@ -33,6 +33,8 @@ export class Settings {
     public static WS_ORIGIN = 'WS_ORIGIN';
     public static WS_URL = 'WS_URL';
     public static SHARED_ACCESS_KEY = 'SHARED_ACCESS_KEY';
+    public static CURRENT_SSID = 'CURRENT_SSID';
+    public static NEARBY_SSIDs = 'NEARBY_SSIDs';
 
     public static READONLY = true;
 
@@ -60,8 +62,10 @@ export class Settings {
         Settings.add(Settings.SHARED_ACCESS_KEY, 'Shared access key', conf.SHARED_ACCESS_KEY, '',
             'Add the Shared key to a device on an itemper.io user account ' +
             ' to allow the this device to log sensor data on itemper.io', !Settings.READONLY);
-
-
+        Settings.add(Settings.CURRENT_SSID, 'SSID', '', '',
+        'Current wireless network', Settings.READONLY);
+        Settings.add(Settings.NEARBY_SSIDs, 'Nearby wireless networks', '', '',
+        'Available nearby wireless network', Settings.READONLY);
         // Helper
         Settings.onChange(Settings.CONSOLE_LEVEL, (setting: Setting) => {
             setLevel(setting.value.toString());
@@ -137,9 +141,9 @@ export class Settings {
         Settings.map.set(setting.name, setting);
         log.info ('Settings.set: ' + JSON.stringify(setting));
     }
-    public static update(name: string, value: SettingValue, callback: (updated: boolean) => void) {
+    public static update(name: string, value: SettingValue, callback: (updated: boolean) => void = () => {}, override: boolean = false) {
         const setting = Settings.get(name);
-        if (setting && !setting.readonly) {
+        if (setting && (!setting.readonly || override)) {
             setting.value = value;
             log.info('Settings.update: setting ' + name + ' has new value:' + setting.value);
             if (name === Settings.SHARED_ACCESS_KEY) {
