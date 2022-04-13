@@ -20,12 +20,9 @@ init();
 
 function init() {
     initMenu();
-
-    openSection('sensorSection');
-    const monitorBtn = document.getElementById('monitor');
-    on('click', monitorBtn,  ()=> { monitor();});
+    addMonitorBtn();
+    openSection('sensorsSection');
     window.addEventListener('message', receiveItemperDevice, false);
-
 }
 function receiveItemperDevice(event: any) {
     console.log('client.receiveItemperDevice, event=' + JSON.stringify(event.data));
@@ -34,10 +31,13 @@ function initMenu() {
     const menu = document.getElementById('menu');
     console.log('initMenu()');
     menu.appendChild(menuItem('Device','deviceSection'));
-    menu.appendChild(menuItem('Sensors','sensorSection'));
+    menu.appendChild(menuItem('Sensors','sensorsSection'));
     menu.appendChild(menuItem('Settings','settingsSection'));
 }
-
+function addMonitorBtn() {
+    const monitorBtn = document.getElementById('sensorMonitor');
+    on('click', monitorBtn,  ()=> { monitor();});
+} 
 function menuItem(name: string, sectionId: string): HTMLElement {
     console.log('menuItem: name=%s, sectionId=%s', name, sectionId);
     const li = document.createElement('li');
@@ -48,8 +48,6 @@ function menuItem(name: string, sectionId: string): HTMLElement {
     li.appendChild(a);
     return li;
 }
-
-
 function on(event: string, element: HTMLElement | null, fn: () => void) {
     if (element) {
         console.log('on %s: add event listener', event);
@@ -83,7 +81,6 @@ function openSection(id: string) {
     }
 
 }
-
 function closeActiveSections() {
     const activeItems = document.getElementsByClassName('active');
 
@@ -93,7 +90,6 @@ function closeActiveSections() {
         section.setAttribute('style', 'display:none');
     }
 }
-
 export interface SensorDescription {
     SN: string;
     port: number;
@@ -108,7 +104,6 @@ export interface SensorLog {
     samples: SensorSample[];
 }
 export type SettingValue = string | number;
-
 export interface Setting {
     name: string;
     label: string;
@@ -117,18 +112,14 @@ export interface Setting {
     text: string;
     readonly: boolean;
 }
-
 const sensors: SensorLog[] = [];
-
 const url = 'ws://' + window.location.host;
 let socket = new WebSocket(url);
-
 socket.onopen = function() {
     setConnectionStatus(true);
     socket.send(JSON.stringify({command: 'getSensors'}));
     socket.send(JSON.stringify({command: 'getSettings'}));
 };
-
 socket.onmessage = function(event) {
     setConnectionStatus(true);
     const msg = JSON.parse(event.data);
@@ -147,33 +138,26 @@ socket.onmessage = function(event) {
             break;
       }
 };
-
 socket.onclose = function() {
     setConnectionStatus(false);
     clearTimeout(logTimer);
     logTimer = setInterval(clearSensorValue, 5000);
 };
-
 socket.onerror = function() {
     setConnectionStatus(false);
     clearTimeout(logTimer);
     logTimer = setInterval(clearSensorValue, 5000);
 };
-
-
-
 function sensorName(desc: SensorDescription): string {
     return desc.SN.replace('--', '/') + '/' + desc.port;
 }
-
 function sensorId(desc: SensorDescription): string {
     const sn = desc.SN.replace(' ', desc.SN);
     const id = desc.SN.replace(' ', desc.SN) + '-' + desc.port;
     return id;
 }
-
 function receiveSensors(sensors: SensorLog[]) {
-    const section = document.getElementById('sensorSection');
+    const section = document.getElementById('sensorsSection');
     for (const sensor of sensors) {
         const article = document.createElement('article');
         const heading = document.createElement('h3');
@@ -192,7 +176,7 @@ function receiveSensors(sensors: SensorLog[]) {
 }
 let isMonitoring = false;
 function setMonitoringButton() {
-    const button = document.getElementById('monitor');
+    const button = document.getElementById('sensorMonitor');
     if (!button) { return; }
     if (isMonitoring) {
         button.innerHTML = 'Stop monitor';
@@ -202,7 +186,6 @@ function setMonitoringButton() {
         button.classList.remove('isMonitoring');
     }
 }
-
 function startMonitor(sensors: SensorLog[]) {
     isMonitoring = true;
     setMonitoringButton();
@@ -213,7 +196,6 @@ function startMonitor(sensors: SensorLog[]) {
     }
     socket.send(JSON.stringify({command, data}));
 }
-
 function stopMonitor(sensors: SensorLog[]) {
     isMonitoring = false;
     setMonitoringButton();
@@ -359,7 +341,6 @@ class HTMLSetting implements Setting {
         this.readonlySetting();
     }
 }
-
 function textFieldHtml(setting: Setting) {
     // Get the contents of the template
     const template = document.getElementById('template-text-field-setting');
@@ -398,7 +379,6 @@ function addSetting(setting: Setting, section: HTMLElement) {
 
     const settingDOM: HTMLSetting =  HTMLSetting.create(setting);
 }
-
 function updateSetting(setting: Setting) {
     console.log('updateSetting: ' + setting.name);
     const input = <HTMLInputElement>document.getElementById(setting.name +'value');
@@ -407,7 +387,6 @@ function updateSetting(setting: Setting) {
     input.value = setting.value.toString();
     input.readOnly = readonly;
 }
-
 function editSetting(name: string) {
     const input = <HTMLInputElement>document.getElementById(name +'value');
     const editBtn = <HTMLButtonElement>document.getElementById(name +'edit');
@@ -448,7 +427,6 @@ function clickedSaved(name: string) {
         updateBrowser(setting);
     }
 }
-
 function readonlySetting(name: string) {
     const input = <HTMLInputElement>document.getElementById(name +'value');
     const editBtn = <HTMLButtonElement>document.getElementById(name +'edit');
@@ -467,7 +445,6 @@ function readonlySetting(name: string) {
 
     SaveBtn.setAttribute('style', 'display:none');
 }
-
 const BrowserSettings  = ['COLOR'];
 function isBrowserSetting(setting: Setting) {
     return BrowserSettings.find((s) => s === setting.name);
@@ -506,7 +483,6 @@ function setConnectionStatus(connected: boolean) {
         status.innerHTML = ' (Disconnected)';
     }
 }
-
 function monitor() {
     if (isMonitoring) {
         stopMonitor(sensors);
@@ -515,7 +491,6 @@ function monitor() {
         startMonitor(sensors);
     }
 }
-
 function clearSensorValue() {
     for (const sensor of sensors) {
         const sampleDate = sensor.samples[0].date;
@@ -532,7 +507,6 @@ function clearSensorValue() {
         socket = new WebSocket(url);
     }
 }
-
 function round(value: number, precision: number) {
     //    precision || (precision = 1);
     const inverse = 1.0 / precision;
