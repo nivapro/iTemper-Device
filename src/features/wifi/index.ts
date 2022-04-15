@@ -2,7 +2,7 @@ import {log, wLog} from '../../core/logger';
 import {WiFi} from '../device/device-status';
 import { WiFiDevice } from './wifi-device'; 
 import { Settings } from '../../core/settings'; 
-const wifiDevice = new WiFiDevice();
+export const wifiDevice = new WiFiDevice();
 async function updateWifiSettings(){
     try {
         wifiDevice.logNetworkManagerSettings().then(() => {});

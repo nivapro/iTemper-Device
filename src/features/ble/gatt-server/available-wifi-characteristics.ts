@@ -1,33 +1,26 @@
 import * as gatt from '../gatt';
-import wifi from 'node-wifi';
+import { wifiDevice } from '../../wifi'; 
 import { stringify } from '../../../core/helpers';
 import { log } from '../../../core/logger';
-import { WiFi } from '../../device/device-status';
 import { getUuid, UUID_Designator} from './uuid';
 import { WiFiData } from './data';
 
 type NetworkList = WiFiData[];
 const handleReadRequest = async (MaxNetworks: number = 5): Promise<NetworkList> => {
-  return new Promise((resolve, reject) => {
-    wifi.scan()
-    .then((networks: WiFi[]) => {
-      const sorted = networks.filter((n) => n.ssid !== '')
-      .sort((a,b) => b.quality - a.quality)
-      .slice(0, networks.length < MaxNetworks ? networks.length : MaxNetworks);
-      const data: NetworkList = [];
-      sorted.forEach((network: WiFi) => data.push(
-        { ssid: network.ssid, security: network.security, quality: network.quality, channel: network.channel}));
-        log.info('available-wifi-characteristic.handleReadRequest: successfully retrieving network data='
-        + stringify(data));
-      if (data.length === 0) {
-        data.push({ ssid: 'Available', security: 'WPA-2', quality: 65, channel: 1});
-      } 
-      resolve(data);
+  return new Promise((resolve) => {
+    wifiDevice.GetAllAccessPoints()
+    .then((APs) => {
+        const networks:NetworkList = [];
+        for (const ssid in APs) {
+          networks.push({ ssid, security: APs[ssid].security, quality: APs[ssid].quality, channel: APs[ssid].channel });
+        }
+        const data = networks.sort((a,b) => b.quality - a.quality)
+        .slice(0, networks.length < MaxNetworks ? networks.length : MaxNetworks);
+        log.info('available-wifi-characteristic.handleReadRequest: successfully retrieving network data=' + stringify(data));
+        resolve(data);
+        
     })
-    .catch((e: Error) => {
-      log.error('available-wifi-characteristic.handleReadRequest - error retrieving available WiFi networks', e);
-      reject(e);
-    });
+    .catch((e) => { log.error('available-wifi-characteristic.handleReadRequest, error=' + e); resolve ([]); });
   });
 }
 export class AvailableWiFiCharacteristic extends gatt.Characteristic<NetworkList> {
@@ -70,7 +63,7 @@ export class AvailableWiFiCharacteristic extends gatt.Characteristic<NetworkList
     }
   }
   public async update(): Promise<void> {
-    handleReadRequest(5)
+    handleReadRequest(10)
     .then((networks) => {
       const valueStr = JSON.stringify(networks);
       const Value = Buffer.from(valueStr)

@@ -1,6 +1,4 @@
-import { profile } from 'console';
 import dbus from 'dbus-next'; 
-import { resolve } from 'dns';
 import { v4 as uuid } from 'uuid';
 
 import { getBus } from  '../../core/dbus';
@@ -8,7 +6,6 @@ import { decode, stringify } from  '../../core/helpers';
 import { log as wLog } from '../../core/logger';
 
 import { NetworkManager } from './dbus/generated/org.freedesktop.NetworkManager-class';
-import { AccessPoint } from './dbus/generated/org.freedesktop.NetworkManager.ap-class'; 
 import { Settings } from './dbus/generated/org.freedesktop.NetworkManager.settings-class'; 
 import { Device, DeviceWireless, OrgfreedesktopDBusProperties } from './dbus/generated/org.freedesktop.NetworkManager.wireless-class';
 
@@ -129,27 +126,32 @@ export class WiFiDevice {
         const paths = await this._deviceWireless.GetAllAccessPoints();
         wLog.info('GetAllAccessPoints: GetAllAccessPoints path=' + JSON.stringify(paths));
         for (const path of paths){
-            const apProxy = await this._bus.getProxyObject('org.freedesktop.NetworkManager', path);
-            const propsIface = await apProxy.getInterface('org.freedesktop.DBus.Properties');
-            const props = await propsIface.GetAll('org.freedesktop.NetworkManager.AccessPoint');
+            const props = await this.getAllAccessPointProperties(path);
             this.addAccessPoint(props);
         }
         return this.availableAPs; 
     }
     public async getCurrentNetwork(): Promise<string> {
+        const ap = await this.getCurrentAccessPoint();
+        if (ap !== undefined) {
+            return ap.ssid;
+        } else {
+            return '';
+        } 
+    }
+    public async getCurrentAccessPoint(): Promise<AccessPointData | undefined > {
         const activeConnections = await this._nm.ActiveConnections();
         const ActiveIface = 'org.freedesktop.NetworkManager.Connection.Active';
         for (const activeConnection of activeConnections) {
-            const activeProps = await this.getProperties(activeConnection, ActiveIface,['Type', 'Connection']);
+            const activeProps = await this.getProperties(activeConnection, ActiveIface,['Type', 'SpecificObject']);
             if (activeProps.Type.value === '802-11-wireless') {
-                const settings = await this.getSettings(activeProps.Connection.value);
-                const wifiSettings = settings['802-11-wireless'];
-                const currentNetwork = decode(wifiSettings['ssid'].value).replace('"', '');
-                wLog.info('getCurrentNetwork, currentNetwork=' + currentNetwork)
-                return currentNetwork; 
+                const APpath = activeProps.SpecificObject.value;
+                const allProps = await this.getAllAccessPointProperties(APpath);
+                const ap = this.toAP(allProps);
+                return ap; 
             } 
         }
-        return '';
+        return undefined;
     }
     public async connectNetwork (ssid: string,  password: string):Promise<void> {
         wLog.info('wifiDevice.connectNetwork, ssid=' + ssid + ', password=' + password.replace(/.*/, '*'));
@@ -190,6 +192,11 @@ export class WiFiDevice {
         } 
         return '';
     } 
+    private async getAllAccessPointProperties(path: string): Promise<Dict> {
+        const apProxy = await this._bus.getProxyObject('org.freedesktop.NetworkManager', path);
+        const propsIface = await apProxy.getInterface('org.freedesktop.DBus.Properties');
+        return await propsIface.GetAll('org.freedesktop.NetworkManager.AccessPoint');
+    } 
     private async getSettings(connection: string):Promise<DictofDict> {
         const SettingsIface = 'org.freedesktop.NetworkManager.Settings.Connection';
         const apProxy = await this._bus.getProxyObject('org.freedesktop.NetworkManager', connection);
@@ -220,23 +227,26 @@ export class WiFiDevice {
         await this.connectNM();
         return await this._nm.AllDevices();
     } 
-    private addAccessPoint(dict: Dict) {
+    private toAP (dict: Dict): AccessPointData {
         if ('Ssid' in dict && 'Frequency' in dict && 'Strength' in dict && 
         'Flags' in dict && 'WpaFlags' in dict && 'RsnFlags' in dict && 'LastSeen' in dict){
-            const ap = {
-                ssid: decode(dict['Ssid'].value),
+            const ap: AccessPointData = {
+                ssid: decode(dict['Ssid'].value).replace('"', ''),
                 channel: this.toChannel(dict['Frequency'].value as number),
                 quality:  dict['Strength'].value,
                 security: this.security(dict['Flags'].value, dict['WpaFlags'].value,dict['RsnFlags'].value,),
                 lastSeen: dict['LastSeen'].value
             }
-            if (!(ap.ssid in this.availableAPs) || ap.lastSeen > this.availableAPs[ap.ssid].lastSeen ){
-                this.availableAPs[ap.ssid] = ap;
-            }
+            return ap;
         } else {
             throw Error ('Cannot convert Access Point properties');
         } 
-
+    } 
+    private addAccessPoint(dict: Dict) {
+        const ap = this.toAP(dict);
+        if (!(ap.ssid in this.availableAPs) || ap.lastSeen > this.availableAPs[ap.ssid].lastSeen ){
+            this.availableAPs[ap.ssid] = ap;
+        }
     }
     private toChannel(frequency: number): number {
         return frequency > 2400 

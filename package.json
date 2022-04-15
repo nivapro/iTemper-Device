@@ -27,7 +27,6 @@
         "lint": "tslint -t stylish -c tslint.json \"src/**/*.ts\""
     },
     "dependencies": {
-        "@types/node-persist": "^3.1.0",
         "axios": "^0.26.0",
         "chalk": "^4.1.0",
         "cors": "^2.8.5",
@@ -36,12 +35,8 @@
         "express": "^4.17.1",
         "fs-extra": "^9.0.1",
         "isomorphic-ws": "^4.0.1",
-        "lodash": "^4.17.21",
         "node-hid": "^2.1.1",
-        "node-persist": "^3.1.0",
         "node-ruuvitag": "^4.6.1",
-        "node-wifi": "^2.0.13",
-        "typescript": "^3.9.5",
         "uuid": "^3.4.0",
         "winston": "^3.3.3",
         "ws": "^5.2.2"
@@ -75,6 +70,7 @@
         "require-npm4-to-publish": "^1.0.0",
         "tsify": "^4.0.2",
         "tslint": "^5.20.1",
+        "typescript": "^3.9.5",
         "vinyl-source-stream": "^2.0.0"
     },
     "lint-staged": {
