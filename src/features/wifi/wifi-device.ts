@@ -149,7 +149,7 @@ export class WiFiDevice {
                 return currentNetwork; 
             } 
         }
-        throw new Error('No wireless network found')
+        return '';
     }
     public async connectNetwork (ssid: string,  password: string):Promise<void> {
         wLog.info('wifiDevice.connectNetwork, ssid=' + ssid + ', password=' + password.replace(/.*/, '*'));
@@ -283,7 +283,7 @@ export class WiFiDevice {
             },
             '802-11-wireless':  {
                 'ssid': new dbus.Variant('ay',Buffer.from(ssid)),
-                'id': new dbus.Variant('s', 'infrastructure'),
+                'mode': new dbus.Variant('s', 'infrastructure'),
             },
             '802-11-wireless-security': {
                 'key-mgmt': new dbus.Variant('s', 'wpa-psk'),
@@ -317,7 +317,7 @@ export class WiFiDevice {
     private async connectNM(): Promise<void>{
         if (!this._nm){
             this._nm = await NetworkManager.Connect(this._bus);
-            wLog.info('wifiDevice.connectNM, NetWorkManager connected');
+            wLog.info('wifiDevice.connectNM, NetworkManager connected');
         } 
     }
     public async connectSettings(): Promise<void> {
@@ -326,6 +326,13 @@ export class WiFiDevice {
             wLog.info('wifiDevice.connectSettings, Settings connected');
         } 
     }
+    public async logNetworkManagerSettings() {
+        const networkingEnabled = await this._nm.NetworkingEnabled();
+        const WirelessEnabled = await this._nm.WirelessEnabled();
+        const WirelessHardwareEnabled = await this._nm.WirelessHardwareEnabled();
+        wLog.info('wifiDevice.connectNM, NetworkManager settings=' + 
+        JSON.stringify({networkingEnabled, WirelessEnabled, WirelessHardwareEnabled}));
+    } 
     private async connectDeviceWireless(): Promise<void> {
         if (this._devicePath.length === 0 ||  !this._deviceWireless) {
             await this.findWiFiDevice();
