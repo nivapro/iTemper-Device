@@ -1,9 +1,8 @@
 { 
     "compilerOptions": {
-//      "baseUrl": ".",
       "outDir": "build/public",
       "target": "es2015",
-      "module": "es2015",
+      "module": "commonjs",
       "baseUrl": ".",
       "paths": {
           "@/*": [

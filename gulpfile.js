@@ -1,6 +1,5 @@
 const gulp = require('gulp');
 const sourcemaps = require('gulp-sourcemaps');
-const watch = require('gulp-watch');
 const typescript = require('gulp-typescript');
 var browserify = require('browserify');
 var source = require('vinyl-source-stream');
@@ -47,9 +46,9 @@ async function copyFiles() {
 async function buildBrowser() {
     return browserify({
             basedir: '.',
-            entries: ['src/features/browser/client.ts'],
+            entries: ["src/features/browser/client.ts"],
             cache: {},
-            transform: ['babelify'],
+            
             packageCache: {}
         })
         .plugin(tsify, { p: "./tsconfig.browser.json" })

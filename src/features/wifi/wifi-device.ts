@@ -144,8 +144,9 @@ export class WiFiDevice {
             if (activeProps.Type.value === '802-11-wireless') {
                 const settings = await this.getSettings(activeProps.Connection.value);
                 const wifiSettings = settings['802-11-wireless'];
-                wLog.info('getCurrentNetwork, wifiSettings=' + JSON.stringify(wifiSettings))
-                return wifiSettings['ssid'].value; 
+                const currentNetwork = decode(wifiSettings['ssid'].value).replace('"', '');
+                wLog.info('getCurrentNetwork, currentNetwork=' + currentNetwork)
+                return currentNetwork; 
             } 
         }
         throw new Error('No wireless network found')
@@ -157,7 +158,8 @@ export class WiFiDevice {
             if (!(ssid in nearbyAPs)) {
                 throw new Error('Network not available')
             } 
-        });
+        })
+        .catch((e) => wLog.error('wifiDevice.connectNetwork: GetAllAccessPoints error' + e));
         // Check if connection has been added already, add otherwise.
         this._connectionPath = await this.findWiFiConnection(ssid);
         if (this._connectionPath.length === 0 ) {
@@ -208,7 +210,9 @@ export class WiFiDevice {
                     }
                 }
             });
-            this._deviceWireless.RequestScan(scanningOptions).then(() => wLog.info('wifiDevice.scan: Scanning requested'));
+            this._deviceWireless.RequestScan(scanningOptions)
+            .then(() => wLog.info('wifiDevice.scan: Scanning requested'))
+            .catch((e) =>  wLog.error('wifiDevice.scan: RequestScan error=' + e));
             setInterval(() => resolve(), 16000);
         });
     }

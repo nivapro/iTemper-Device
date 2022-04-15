@@ -39,7 +39,7 @@ export class Settings {
     public static READONLY = true;
 
     public static init() {
-        Settings.add(Settings.COLOR, 'Color', conf.COLOR,  '',
+        Settings.add(Settings.COLOR, 'Color', conf.COLOR,  '#7fe37b',
         'Color', !Settings.READONLY);
         Settings.add(Settings.SERIAL_NUMBER, 'Serial Number', conf.SERIAL_NUMBER,  '',
         'Serial Number (SN)', !Settings.READONLY);

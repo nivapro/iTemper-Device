@@ -32,7 +32,7 @@ class Config implements Options {
         return {
             ADAPTER_NAME:'hci0',
             BLUETOOTH: (process.arch === 'arm' || process.arch === 'arm64')? process.arch : '',
-            COLOR: '#00AA00FF',
+            COLOR: '#7fe37b',
             SERIAL_NUMBER: os.hostname(),
             ITEMPER_URL: 'https://userapi.itemper.io',
             WS_URL: 'wss://userapi.itemper.io/ws',
