@@ -9,22 +9,6 @@ import { NetworkManager } from './dbus/generated/org.freedesktop.NetworkManager-
 import { Settings } from './dbus/generated/org.freedesktop.NetworkManager.settings-class'; 
 import { Device, DeviceWireless, OrgfreedesktopDBusProperties } from './dbus/generated/org.freedesktop.NetworkManager.wireless-class';
 
-
-class StrVariant extends dbus.Variant<string> {
-    constructor(value: string) {
-        super('s', value);
-    } 
-}
-class BoolVariant extends dbus.Variant<boolean> {
-    constructor(value: boolean) {
-        super('b', value);
-    } 
-}
-class ByteArrayVariant extends dbus.Variant<Buffer> {
-    constructor(value: Buffer) {
-        super('ay', value);
-    } 
-}
 interface Dict {
     [key: string]: dbus.Variant; 
 }
@@ -51,7 +35,6 @@ export interface AccessPointDict {
 interface SecurityTypes {
    [code: string]: number;
 } 
-
 const AP_802_11S: SecurityTypes = {
     /** Access point has no special capabilities */
     NONE: 0x00000000,
@@ -64,13 +47,6 @@ const AP_802_11S: SecurityTypes = {
     /** Access point supports PIN-based WPS */
     WPS_PIN: 0x00000008,
 };
-
-/**
- * NM80211ApSecurityFlags
- * @enum {Number}
- * @description current security requirements of an
- * access point as determined from the access point's beacon
- */
 const AP_802_11_SEC: SecurityTypes = {
     /** The access point has no special security requirements */
     NONE: 0x00000000,
@@ -102,66 +78,80 @@ export class WiFiDevice {
     private _deviceWireless: DeviceWireless;
     private _properties: OrgfreedesktopDBusProperties;
 
-
     //  properties
     private _connectionPath: dbus.ObjectPath = '';
     private _iface: string = '';
     private _devicePath: string = '';
     private _lastTime = -1;
+    private _accessPointPaths: string[]= [];
+    private _availableAPs: AccessPointDict = {}; 
     private _uuid: string = '';
-    private availableAPs: AccessPointDict = {}; 
 
     constructor(
         private _bus: dbus.MessageBus = getBus()) {
     }
     public async init(): Promise<void>{
         await this.connectNM();
-        await this.connectSettings();
-        await this.connectDeviceWireless();
-        await this.connectProperties();
+        await this.connectNMSettings();
+        await this.connectWiFiDeviceWireless();
+        await this.connectWiFiDeviceProperties();
     } 
-    public async GetAllAccessPoints(): Promise<AccessPointDict>{
-        this.availableAPs = {}; 
-        await this.scan();
+    public async scanNearbyAPs(period: number = 5): Promise<AccessPointData[]> {
+        await this.scan(period);
         const paths = await this._deviceWireless.GetAllAccessPoints();
-        wLog.info('GetAllAccessPoints: GetAllAccessPoints path=' + JSON.stringify(paths));
-        for (const path of paths){
-            const props = await this.getAllAccessPointProperties(path);
-            this.addAccessPoint(props);
-        }
-        return this.availableAPs; 
+        wLog.info('GetAllAccessPoints: GetNearbyAPs path=' + JSON.stringify(paths));
+        this._availableAPs = {}; 
+        return this.updateNewAPs(paths); 
     }
-    public async getCurrentNetwork(): Promise<string> {
-        const ap = await this.getCurrentAccessPoint();
-        if (ap !== undefined) {
-            return ap.ssid;
-        } else {
-            return '';
+    public async nearbyAPsChanged(callback: (newAPs:AccessPointData[] ) => void ){
+        this._properties.on('PropertiesChanged', (interface_name: string, changed_properties: {[key: string]: dbus.Variant<any>; }) => {
+            if (interface_name === this._deviceWireless.dbusInterfaceName) {
+                for (const key in changed_properties) {
+                    if (key === 'AccessPoints') {
+                        this.updateNewAPs(changed_properties [key].value).then ((newAPs) => callback(newAPs));
+                    } 
+                }
+            }
+        });
+    }
+    public get NearbyAPs(): AccessPointData[]{
+        const nearbyAPs: AccessPointData[] = [];
+        for (const key in this._availableAPs) {
+            nearbyAPs.push(this._availableAPs[key]);
         } 
-    }
-    public async getCurrentAccessPoint(): Promise<AccessPointData | undefined > {
+        return nearbyAPs;
+    } 
+    public async getCurrentAP(): Promise<AccessPointData | undefined> {
         const activeConnections = await this._nm.ActiveConnections();
         const ActiveIface = 'org.freedesktop.NetworkManager.Connection.Active';
         for (const activeConnection of activeConnections) {
             const activeProps = await this.getProperties(activeConnection, ActiveIface,['Type', 'SpecificObject']);
             if (activeProps.Type.value === '802-11-wireless') {
                 const APpath = activeProps.SpecificObject.value;
-                const allProps = await this.getAllAccessPointProperties(APpath);
-                const ap = this.toAP(allProps);
+                const allAPprops = await this.getAllAccessPointProperties(APpath);
+                const ap = this.toAP(allAPprops);
                 return ap; 
             } 
         }
         return undefined;
     }
+    public async getCurrentNetwork(): Promise<string> {
+        const ap = await this.getCurrentAP();
+        if (ap !== undefined) {
+            return ap.ssid;
+        } else {
+            return '';
+        } 
+    }
     public async connectNetwork (ssid: string,  password: string):Promise<void> {
         wLog.info('wifiDevice.connectNetwork, ssid=' + ssid + ', password=' + password.replace(/.*/, '*'));
         // require a nearby AP
-        this.GetAllAccessPoints().then((nearbyAPs) => { 
+        this.scanNearbyAPs().then((nearbyAPs) => { 
             if (!(ssid in nearbyAPs)) {
                 throw new Error('Network not available')
             } 
         })
-        .catch((e) => wLog.error('wifiDevice.connectNetwork: GetAllAccessPoints error' + e));
+        .catch((e) => wLog.error('wifiDevice.connectNetwork: connectNetwork error' + e));
         // Check if connection has been added already, add otherwise.
         this._connectionPath = await this.findWiFiConnection(ssid);
         if (this._connectionPath.length === 0 ) {
@@ -178,6 +168,18 @@ export class WiFiDevice {
         } 
 
     }
+    private async updateNewAPs(paths: string []): Promise<AccessPointData[]> {
+        const newAPs: AccessPointData[] = []; 
+        for (const path of paths){
+            const props = await this.getAllAccessPointProperties(path);
+            const ap = this.toAP(props);
+            if (!(ap.ssid in this._availableAPs) || ap.lastSeen > this._availableAPs[ap.ssid].lastSeen ){
+                this._availableAPs[ap.ssid] = ap;
+                newAPs.push(ap); 
+            }
+        }
+        return newAPs;
+    } 
     private async findWiFiConnection(ssid: string): Promise<string> {
         const connections = await this._settings.ListConnections();
         const toString = (setting: DictofDict): string => { const keys =[]; for (const key in setting){keys.push(key)} return keys.toString() } 
@@ -203,7 +205,7 @@ export class WiFiDevice {
         const settingsIface = await apProxy.getInterface(SettingsIface);
         return await settingsIface.GetSettings();
     } 
-    private async scan(): Promise<void> {
+    private async scan(seconds: number = 5): Promise<void> {
         const scanningOptions = {}; 
         return new Promise((resolve) => {
             this._properties.on('PropertiesChanged', (interface_name: string, changed_properties: {[key: string]: dbus.Variant<any>; }) => {
@@ -220,7 +222,7 @@ export class WiFiDevice {
             this._deviceWireless.RequestScan(scanningOptions)
             .then(() => wLog.info('wifiDevice.scan: Scanning requested'))
             .catch((e) =>  wLog.error('wifiDevice.scan: RequestScan error=' + e));
-            setInterval(() => resolve(), 16000);
+            setInterval(() => resolve(), seconds * 1000);
         });
     }
     private async getAllDevicePaths(): Promise<string[]> {
@@ -242,12 +244,6 @@ export class WiFiDevice {
             throw Error ('Cannot convert Access Point properties');
         } 
     } 
-    private addAccessPoint(dict: Dict) {
-        const ap = this.toAP(dict);
-        if (!(ap.ssid in this.availableAPs) || ap.lastSeen > this.availableAPs[ap.ssid].lastSeen ){
-            this.availableAPs[ap.ssid] = ap;
-        }
-    }
     private toChannel(frequency: number): number {
         return frequency > 2400 
         ? 36
@@ -327,30 +323,30 @@ export class WiFiDevice {
     private async connectNM(): Promise<void>{
         if (!this._nm){
             this._nm = await NetworkManager.Connect(this._bus);
-            wLog.info('wifiDevice.connectNM, NetworkManager connected');
+            wLog.info('wifiDevice.connectNM, NetworkManager interface connected');
         } 
     }
-    public async connectSettings(): Promise<void> {
+    public async connectNMSettings(): Promise<void> {
         if (!this._settings){
             this._settings = await Settings.Connect(this._bus);
-            wLog.info('wifiDevice.connectSettings, Settings connected');
+            wLog.info('wifiDevice.connectSettings, NetworkManager\'s Settings interface connected');
         } 
     }
-    public async logNetworkManagerSettings() {
+    public async logNMWiFiProps() {
         const networkingEnabled = await this._nm.NetworkingEnabled();
         const WirelessEnabled = await this._nm.WirelessEnabled();
         const WirelessHardwareEnabled = await this._nm.WirelessHardwareEnabled();
-        wLog.info('wifiDevice.connectNM, NetworkManager settings=' + 
+        wLog.info('wifiDevice.connectNM, NetworkManager wireless properties=' + 
         JSON.stringify({networkingEnabled, WirelessEnabled, WirelessHardwareEnabled}));
     } 
-    private async connectDeviceWireless(): Promise<void> {
+    private async connectWiFiDeviceWireless(): Promise<void> {
         if (this._devicePath.length === 0 ||  !this._deviceWireless) {
-            await this.findWiFiDevice();
+            await this.findWiFiDevicePath();
             this._deviceWireless = await DeviceWireless.Connect(this._bus, this._devicePath);
-            wLog.info('wifiDevice.connectDeviceWireless, DeviceWireless connected');
+            wLog.info('wifiDevice.connectDeviceWireless, DeviceWireless interface connected');
         }  
     }
-    private async findWiFiDevice(): Promise<void> {
+    private async findWiFiDevicePath(): Promise<void> {
         const allDevicePaths = await this.getAllDevicePaths();
         wLog.info('wifiDevice.findWiFiDevice, allDevicePaths=' + JSON.stringify(allDevicePaths));
         for (const devicePath of allDevicePaths){
@@ -364,7 +360,7 @@ export class WiFiDevice {
         } 
         throw new Error('Wireless device not found');
     } 
-    private async connectProperties(): Promise<void> {
+    private async connectWiFiDeviceProperties(): Promise<void> {
         if (!this._properties){
             this._properties = await OrgfreedesktopDBusProperties.Connect(this._bus, this._devicePath);
             wLog.info('wifiDevice.connectProperties: OrgfreedesktopDBusProperties connected');

@@ -1,32 +1,32 @@
 import * as gatt from '../gatt';
-import { wifiDevice } from '../../wifi'; 
+import { wifiDevice } from '../../wifi/wifi-device-init'; 
 import { log } from '../../../core/logger';
 import { getUuid, UUID_Designator} from './uuid';
 import { isWiFiRequestValid, WiFiData, WiFiRequest } from './data';
 
-const handleReadRequest = async (): Promise<WiFiData> => {
-  log.info('current-wifi-characteristic.handleReadRequest');
-  const noNetwork = {ssid: '', security: '', quality: 0, channel: 1};
-  return new Promise((resolve) => {
-    wifiDevice.getCurrentAccessPoint().then((network) => { 
-         const ap = network !== undefined
-         ? {ssid: network.ssid, security: network.security, quality: network.quality, channel: network.quality }
-         : noNetwork;
-        resolve(ap);
-    })
-    .catch((e) => { log.warn('current-wifi-characteristcis.handleReadRequest, getCurrentNetwork error=' + e); resolve(noNetwork)} );
-  });
-}
 export class CurrentWiFiCharacteristic extends  gatt.Characteristic<WiFiData>{
   public static UUID = getUuid(UUID_Designator.CurrentWiFi);
   constructor(protected _service: gatt.Service) {
     super(_service, CurrentWiFiCharacteristic.UUID);
-    this.enableAsyncReadValue(handleReadRequest);
+    this.enableAsyncReadValue(this.handleReadRequest);
     this.enableAsyncWriteValue(this.handleWriteRequest, isWiFiRequestValid);
     CurrentWiFiCharacteristic.configureMembers(this.getMembers());
     // const descriptor = new gatt.UserDescriptor('Device settings', this);
   }
- async handleWriteRequest(raw: unknown): Promise<void> {
+  async handleReadRequest (): Promise<WiFiData> {
+    return new Promise((resolve) => {
+      log.info('current-wifi-characteristic.handleReadRequest');
+      const noWiFi = {ssid: '', security: '', quality: 0, channel: 0};
+      wifiDevice.getCurrentAP().then((ap) => { 
+           const currentWiFi = ap !== undefined
+           ? {ssid: ap.ssid, security: ap.security, quality: ap.quality, channel: ap.quality }
+           : noWiFi;
+          resolve(currentWiFi);
+      })
+      .catch((e) => { log.warn('current-wifi-characteristcis.handleReadRequest, getCurrentNetwork error=' + e); resolve(noWiFi)} );
+    });
+  }
+  async handleWriteRequest(raw: unknown): Promise<void> {
     return new Promise((resolve, reject) => {
       if (isWiFiRequestValid(raw)) {
         const network = raw as WiFiRequest;

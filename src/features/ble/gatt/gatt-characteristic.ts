@@ -318,7 +318,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
             throw new Error('UUID=' + this.UUID + ' interface members exported already');
         } 
     } 
-    private encode (value: T, options: ReadValueOptions): Buffer {
+    protected encode (value: T, options?: ReadValueOptions): Buffer {
         const buffer = Buffer.from(stringify(value));
         const offset = options && options.offset ? options.offset : 0;
         if (offset < buffer.length){
