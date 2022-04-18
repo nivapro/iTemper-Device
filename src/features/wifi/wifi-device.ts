@@ -4,9 +4,10 @@ import { v4 as uuid } from 'uuid';
 import { getBus } from  '../../core/dbus';
 import { decode, stringify } from  '../../core/helpers';
 import { log as wLog } from '../../core/logger';
+import { Settings } from '../../core/settings';
 
 import { NetworkManager } from './dbus/generated/org.freedesktop.NetworkManager-class';
-import { Settings } from './dbus/generated/org.freedesktop.NetworkManager.settings-class'; 
+import { Settings as NMSettings } from './dbus/generated/org.freedesktop.NetworkManager.settings-class'; 
 import { Device, DeviceWireless, OrgfreedesktopDBusProperties } from './dbus/generated/org.freedesktop.NetworkManager.wireless-class';
 
 interface Dict {
@@ -74,18 +75,15 @@ const AP_802_11_SEC: SecurityTypes = {
 export class WiFiDevice {
     // Interfaces
     private _nm: NetworkManager;
-    private _settings: Settings;
+    private _settings: NMSettings;
     private _deviceWireless: DeviceWireless;
     private _properties: OrgfreedesktopDBusProperties;
 
     //  properties
     private _connectionPath: dbus.ObjectPath = '';
-    private _iface: string = '';
     private _devicePath: string = '';
     private _lastTime = -1;
-    private _accessPointPaths: string[]= [];
     private _availableAPs: AccessPointDict = {}; 
-    private _uuid: string = '';
 
     constructor(
         private _bus: dbus.MessageBus = getBus()) {
@@ -103,7 +101,7 @@ export class WiFiDevice {
         this._availableAPs = {}; 
         return this.addNewAPs(paths); 
     }
-    public async nearbyAPsChanged(callback: (APs:AccessPointData[], added: boolean) => void ){
+    public nearbyAPsChanged(callback: (APs:AccessPointData[], added: boolean) => void ){
         this._deviceWireless.on('AccessPointAdded', (path:  dbus.ObjectPath) => {
             this.addNewAPs([path]).then ((newAPs) => callback(newAPs, true))
         });
@@ -127,6 +125,8 @@ export class WiFiDevice {
                 const APpath = activeProps.SpecificObject.value;
                 const allAPprops = await this.getAllAccessPointProperties(APpath);
                 const ap = this.toAP(allAPprops);
+                Settings.update(Settings.CURRENT_SSID, ap.ssid,
+                    (updated) => {wLog.info('wifi-device.getCurrentAP: CURRENT_SSID updated=' + updated)}, true);
                 return ap; 
             } 
         }
@@ -143,12 +143,10 @@ export class WiFiDevice {
     public async connectNetwork (ssid: string,  password: string):Promise<void> {
         wLog.info('wifiDevice.connectNetwork, ssid=' + ssid + ', password=' + password.replace(/.*/, '*'));
         // require a nearby AP
-        this.scanNearbyAPs().then((nearbyAPs) => { 
-            if (!(ssid in nearbyAPs)) {
-                throw new Error('Network not available')
-            } 
-        })
-        .catch((e) => wLog.error('wifiDevice.connectNetwork: connectNetwork error' + e));
+        if (!(ssid in this._availableAPs) || !(ssid in await this.scanNearbyAPs())) {
+            throw new Error('Network not available')
+        } 
+
         // Check if connection has been added already, add otherwise.
         this._connectionPath = await this.findWiFiConnection(ssid);
         if (this._connectionPath.length === 0 ) {
@@ -175,6 +173,8 @@ export class WiFiDevice {
                 newAPs.push(ap); 
             }
         }
+        Settings.update(Settings.NEARBY_SSIDs,  this.NearbyAPs.toString().replace(',', ', '),
+        (updated) => {wLog.info('wifi-device.addNewAPs: NEARBY_SSIDs updated=' + updated)}, true);
         return newAPs;
     }
     private async removeAPs(paths: string []): Promise<AccessPointData[]> {
@@ -187,6 +187,8 @@ export class WiFiDevice {
                 removedAPs.push(ap);
             }
         }
+        Settings.update(Settings.NEARBY_SSIDs,  this.NearbyAPs.toString().replace(',', ', '),
+        (updated) => {wLog.info('wifi-device.removeAPs: NEARBY_SSIDs updated=' + updated)}, true);
         return removedAPs;
     } 
     private async findWiFiConnection(ssid: string): Promise<string> {
@@ -288,13 +290,10 @@ export class WiFiDevice {
         return security;
     }
     private createprofile(ssid: string,  password: string): ConnectionProfile {
-        if (this._uuid.length === 0) {
-            this._uuid = uuid();
-        }   
         const profile = {
             'connection': {
                 'type': new dbus.Variant('s', '802-11-wireless'),
-                'uuid': new dbus.Variant('s', this._uuid),
+                'uuid': new dbus.Variant('s', uuid()),
                 'id': new dbus.Variant('s', ssid),
             },
             '802-11-wireless':  {
@@ -338,7 +337,7 @@ export class WiFiDevice {
     }
     public async connectNMSettings(): Promise<void> {
         if (!this._settings){
-            this._settings = await Settings.Connect(this._bus);
+            this._settings = await NMSettings.Connect(this._bus);
             wLog.info('wifiDevice.connectSettings, NetworkManager\'s Settings interface connected');
         } 
     }

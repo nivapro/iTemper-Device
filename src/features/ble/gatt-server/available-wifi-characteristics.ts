@@ -41,14 +41,19 @@ export class AvailableWiFiCharacteristic extends gatt.Characteristic<NetworkList
   public notify(APs: AccessPointData[], added: boolean) {
     const Value = this.encode(this.updateAndSort(APs, added));
     if (this.Notifying) {
-        log.info('available-wifi-characteristic.notify: Notify available WiFi networks');
+        log.info('available-wifi-characteristic.notify: Notify available WiFi networks ' + added?'added=':'removed=' + APs.map(ap => ap.ssid)).toString().replace(',', ', ');
         AvailableWiFiCharacteristic.emitPropertiesChanged(this,{ Value },[]);
     }
   }
   private updateAndSort (APs: AccessPointData[], added: boolean): NetworkList {
     if (added) {
       for (const { ssid, security, quality, channel } of APs) {
-        this._networks.push({ssid, security, quality, channel});
+        const index = this._networks.findIndex((ap: WiFiData) => ap.ssid === ssid)
+        if (index === -1 ) {
+          this._networks.push({ssid, security, quality, channel});
+        } else {
+          this._networks [index] = { ssid, security, quality, channel};
+        } 
       }
     } else {
       for (const { ssid } of APs) {
@@ -58,7 +63,6 @@ export class AvailableWiFiCharacteristic extends gatt.Characteristic<NetworkList
         } 
       }
     } 
-
     const sortedNetworks: NetworkList = this._networks.sort((a,b) => b.quality - a.quality);
     return sortedNetworks;
   } 
