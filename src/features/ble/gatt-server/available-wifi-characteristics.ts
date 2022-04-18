@@ -21,7 +21,7 @@ export class AvailableWiFiCharacteristic extends gatt.Characteristic<NetworkList
       .then((APs) => {
           this._networks = []; // Start with an empty network list
           log.info('available-wifi-characteristic.handleReadRequest: successfully scanned nearby WiFi networks');
-          resolve(this.updateAndSort(APs));
+          resolve(this.updateAndSort(APs, true));
       })
       .catch((e) => { log.error('available-wifi-characteristic.handleReadRequest, error=' + e); resolve ([]); });
     });
@@ -38,17 +38,27 @@ export class AvailableWiFiCharacteristic extends gatt.Characteristic<NetworkList
     log.info('AvailableWiFiCharacteristic.stopNotify');
     this.Notifying = false;
   }
-  public notify(newAPs: AccessPointData[]) {
-    const Value = this.encode(this.updateAndSort(newAPs));
+  public notify(APs: AccessPointData[], added: boolean) {
+    const Value = this.encode(this.updateAndSort(APs, added));
     if (this.Notifying) {
-        log.info('available-wifi-characteristic.notify: Notifies nearby WiFi networks');
+        log.info('available-wifi-characteristic.notify: Notify available WiFi networks');
         AvailableWiFiCharacteristic.emitPropertiesChanged(this,{ Value },[]);
     }
   }
-  private updateAndSort (APs: AccessPointData[]): NetworkList {
-    for (const {ssid, security, quality, channel} of APs) {
-      this._networks.push({ssid, security, quality, channel});
-    }
+  private updateAndSort (APs: AccessPointData[], added: boolean): NetworkList {
+    if (added) {
+      for (const { ssid, security, quality, channel } of APs) {
+        this._networks.push({ssid, security, quality, channel});
+      }
+    } else {
+      for (const { ssid } of APs) {
+        const index = this._networks.findIndex((ap: WiFiData) => ap.ssid === ssid)
+        if (index !== -1 ) {
+          this._networks.splice(index);
+        } 
+      }
+    } 
+
     const sortedNetworks: NetworkList = this._networks.sort((a,b) => b.quality - a.quality);
     return sortedNetworks;
   } 

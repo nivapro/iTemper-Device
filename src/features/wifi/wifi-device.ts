@@ -101,17 +101,14 @@ export class WiFiDevice {
         const paths = await this._deviceWireless.GetAllAccessPoints();
         wLog.info('GetAllAccessPoints: GetNearbyAPs path=' + JSON.stringify(paths));
         this._availableAPs = {}; 
-        return this.updateNewAPs(paths); 
+        return this.addNewAPs(paths); 
     }
-    public async nearbyAPsChanged(callback: (newAPs:AccessPointData[] ) => void ){
-        this._properties.on('PropertiesChanged', (interface_name: string, changed_properties: {[key: string]: dbus.Variant<any>; }) => {
-            if (interface_name === this._deviceWireless.dbusInterfaceName) {
-                for (const key in changed_properties) {
-                    if (key === 'AccessPoints') {
-                        this.updateNewAPs(changed_properties [key].value).then ((newAPs) => callback(newAPs));
-                    } 
-                }
-            }
+    public async nearbyAPsChanged(callback: (APs:AccessPointData[], added: boolean) => void ){
+        this._deviceWireless.on('AccessPointAdded', (path:  dbus.ObjectPath) => {
+            this.addNewAPs([path]).then ((newAPs) => callback(newAPs, true))
+        });
+        this._deviceWireless.on('AccessPointRemoved', (path:  dbus.ObjectPath) => {
+            this.removeAPs([path]).then ((removedAPs) => callback(removedAPs, false))
         });
     }
     public get NearbyAPs(): AccessPointData[]{
@@ -168,7 +165,7 @@ export class WiFiDevice {
         } 
 
     }
-    private async updateNewAPs(paths: string []): Promise<AccessPointData[]> {
+    private async addNewAPs(paths: string []): Promise<AccessPointData[]> {
         const newAPs: AccessPointData[] = []; 
         for (const path of paths){
             const props = await this.getAllAccessPointProperties(path);
@@ -179,6 +176,18 @@ export class WiFiDevice {
             }
         }
         return newAPs;
+    }
+    private async removeAPs(paths: string []): Promise<AccessPointData[]> {
+        const removedAPs: AccessPointData[] = []; 
+        for (const path of paths){
+            const props = await this.getAllAccessPointProperties(path);
+            const ap = this.toAP(props);
+            if (ap.ssid in this._availableAPs){
+                delete this._availableAPs[ap.ssid];
+                removedAPs.push(ap);
+            }
+        }
+        return removedAPs;
     } 
     private async findWiFiConnection(ssid: string): Promise<string> {
         const connections = await this._settings.ListConnections();
@@ -195,10 +204,11 @@ export class WiFiDevice {
         return '';
     } 
     private async getAllAccessPointProperties(path: string): Promise<Dict> {
+        wLog.info('wifiDevice.getAllAccessPointProperties path=' + path);
         const apProxy = await this._bus.getProxyObject('org.freedesktop.NetworkManager', path);
-        const propsIface = await apProxy.getInterface('org.freedesktop.DBus.Properties');
+        const propsIface = apProxy.getInterface('org.freedesktop.DBus.Properties');
         return await propsIface.GetAll('org.freedesktop.NetworkManager.AccessPoint');
-    } 
+    }
     private async getSettings(connection: string):Promise<DictofDict> {
         const SettingsIface = 'org.freedesktop.NetworkManager.Settings.Connection';
         const apProxy = await this._bus.getProxyObject('org.freedesktop.NetworkManager', connection);

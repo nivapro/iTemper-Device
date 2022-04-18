@@ -8,13 +8,13 @@ async function updateWifiSettings(){
         wifiDevice.logNMWiFiProps().then(() => {});
         wifiDevice.scanNearbyAPs()
         .then((APs) => { 
-            const nearbySsids =[];
-            for (const ssid in APs) {
-                if (ssid !== '') {
-                    nearbySsids.push(ssid);
+            const nearbyAPs = [];
+            for (const ap of APs) {
+                if (ap.ssid !== '') {
+                    nearbyAPs.push(ap.ssid);
                 } 
             } 
-            Settings.update(Settings.NEARBY_SSIDs, nearbySsids.toString(),
+            Settings.update(Settings.NEARBY_SSIDs, nearbyAPs.toString(),
                             (updated) => {log.info('wifi.updateWifiSettings: NEARBY_SSIDs updated=' + updated)}, true);
         })
         .catch((e) => log.warn('wifi.updateWifiSettings, GetAllAccessPoints error=' + e));
