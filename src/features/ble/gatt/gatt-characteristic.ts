@@ -178,13 +178,13 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
             if (self._readValueAsync !== undefined) { 
                 self._readValueAsync().then ((value: T) => {
                     this.Value = self.encode(value, options);
-                    log.info(label('ReadValueAsync') + ' on object ' + this._path + 'value=' + JSON.stringify(value));
+                    log.info(label('ReadValueAsync') + 'Object ' + this._path + ', value=' + JSON.stringify(value));
                     resolve(this.Value);
                 });
             } else if (self._readValueFn !== undefined) {
                 const value = self._readValueFn();
                 this.Value = self.encode(value, options);
-                log.info(label('ReadValue') + ' on object ' + this._path + 'value=' + JSON.stringify(value));
+                log.info(label('ReadValue') + 'Object ' + this._path + ', value=' + JSON.stringify(value));
                 resolve(this.Value);
             }  else {
                 log.error(label('ReadValue') + 'Not supported DBus error');
@@ -197,6 +197,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         return new Promise((resolve, reject) => {
             const value = self.convert(data, options);
             if (!this._isValidFn (value)) {
+                log.error(label('WriteValue') + 'Invalid value='+ JSON.stringify(value));
                 reject('Cannot WriteValue, Invalid value=' + JSON.stringify(value));
             }
             if (self._writeValueAsync !== undefined) {
@@ -213,7 +214,6 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
                 reject('WriteValue'+ constants.GATT_CHARACTERISTIC_INTERFACE);
             }
         } )
-
     }
     protected StartNotify(): void {
         if (!this._startNotifyFn) {
