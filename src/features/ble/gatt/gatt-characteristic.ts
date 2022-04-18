@@ -174,19 +174,17 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     // Methods of org.bluez.GattCharacteristic1
     protected async ReadValue(options: ReadValueOptions): Promise<Buffer> {
         const self = this;
-        log.info(label('ReadValue') + ' received on object ' + this._path + 'with options=' + JSON.stringify(options));
         return new Promise((resolve) => {
             if (self._readValueAsync !== undefined) { 
-                log.info(label('ReadValueSync') + 'pending');
                 self._readValueAsync().then ((value: T) => {
-                    log.info(label('ReadValueAsync') + ' on object ' + this._path + 'value=' + JSON.stringify(value));
                     this.Value = self.encode(value, options);
+                    log.info(label('ReadValueAsync') + ' on object ' + this._path + 'value=' + JSON.stringify(value));
                     resolve(this.Value);
                 });
             } else if (self._readValueFn !== undefined) {
                 const value = self._readValueFn();
-                log.info(label('ReadValue') + ' on object ' + this._path + 'value=' + JSON.stringify(value));
                 this.Value = self.encode(value, options);
+                log.info(label('ReadValue') + ' on object ' + this._path + 'value=' + JSON.stringify(value));
                 resolve(this.Value);
             }  else {
                 log.error(label('ReadValue') + 'Not supported DBus error');
@@ -197,18 +195,18 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
     protected async WriteValue(data: Buffer, options: WriteValueOptions): Promise<void>   {
         const self = this;
         return new Promise((resolve, reject) => {
-            log.info(label('WriteValue') + 'options=' + JSON.stringify(options));
-            log.info(label('WriteValue') + 'data=' + JSON.stringify(data));
             const value = self.convert(data, options);
             if (!this._isValidFn (value)) {
                 reject('Cannot WriteValue, Invalid value=' + JSON.stringify(value));
             }
             if (self._writeValueAsync !== undefined) {
-                log.debug(label('WriteValue') + '_writeValueAsync');
-                self._writeValueAsync (value).then (() => resolve());
+                self._writeValueAsync (value).then (() => {
+                    log.info(label('WriteValueAsync') + 'value='+ JSON.stringify(value));
+                    resolve()
+                } );
             } else if (self._writeValueFn !== undefined){
-                log.debug(label('WriteValue') + '_writeValueFn');
                 self._writeValueFn(value);
+                log.info(label('WriteValue') + 'value='+ JSON.stringify(value));
                 resolve();
             } else {
                 log.error(label('WriteValue') + 'Not supported DBus error');

@@ -72,6 +72,7 @@ const AP_802_11_SEC: SecurityTypes = {
     /** 802.1x authentication and key management is supported */
     KEY_MGMT_802_1X: 0x00000200,
 };
+enum APAction { Add, Remove } 
 export class WiFiDevice {
     // Interfaces
     private _nm: NetworkManager;
@@ -99,14 +100,14 @@ export class WiFiDevice {
         const paths = await this._deviceWireless.GetAllAccessPoints();
         wLog.info('GetAllAccessPoints: GetNearbyAPs path=' + JSON.stringify(paths));
         this._availableAPs = {}; 
-        return this.addNewAPs(paths); 
+        return this.updateNearbyAPs(paths, APAction.Add); 
     }
     public nearbyAPsChanged(callback: (APs:AccessPointData[], added: boolean) => void ){
         this._deviceWireless.on('AccessPointAdded', (path:  dbus.ObjectPath) => {
-            this.addNewAPs([path]).then ((newAPs) => callback(newAPs, true))
+            this.updateNearbyAPs([path], APAction.Add).then ((updatedAPs) => callback(updatedAPs, true));
         });
         this._deviceWireless.on('AccessPointRemoved', (path:  dbus.ObjectPath) => {
-            this.removeAPs([path]).then ((removedAPs) => callback(removedAPs, false))
+            this.updateNearbyAPs([path], APAction.Remove).then ((updatedAPs) => callback(updatedAPs, false));
         });
     }
     public get NearbyAPs(): AccessPointData[]{
@@ -140,13 +141,13 @@ export class WiFiDevice {
             return '';
         } 
     }
-    public async connectNetwork (ssid: string,  password: string):Promise<void> {
+    public async connectNetwork(ssid: string,  password: string):Promise<void> {
         wLog.info('wifiDevice.connectNetwork, ssid=' + ssid + ', password=' + password.replace(/.*/, '*'));
+
         // require a nearby AP
         if (!(ssid in this._availableAPs) || !(ssid in await this.scanNearbyAPs())) {
             throw new Error('Network not available')
-        } 
-
+        }
         // Check if connection has been added already, add otherwise.
         this._connectionPath = await this.findWiFiConnection(ssid);
         if (this._connectionPath.length === 0 ) {
@@ -161,36 +162,25 @@ export class WiFiDevice {
         } else {
             wLog.error('wifiDevice.connectNetwork, no wireless connection to activate')
         } 
-
     }
-    private async addNewAPs(paths: string []): Promise<AccessPointData[]> {
-        const newAPs: AccessPointData[] = []; 
+    private async updateNearbyAPs(paths: string [], action: APAction): Promise<AccessPointData[]> {
+        const updatedAPs: AccessPointData[] = []; 
         for (const path of paths){
             const props = await this.getAllAccessPointProperties(path);
             const ap = this.toAP(props);
-            if (!(ap.ssid in this._availableAPs) || ap.lastSeen > this._availableAPs[ap.ssid].lastSeen ){
-                this._availableAPs[ap.ssid] = ap;
-                newAPs.push(ap); 
+            if (action === APAction.Add) {
+                if (!(ap.ssid in this._availableAPs) || ap.lastSeen > this._availableAPs[ap.ssid].lastSeen ){
+                    this._availableAPs[ap.ssid] = ap;
+                }
+            } else if (ap.ssid in this._availableAPs) {
+                    delete this._availableAPs[ap.ssid];
             }
+            updatedAPs.push(ap);
         }
-        Settings.update(Settings.NEARBY_SSIDs,  this.NearbyAPs.toString().replace(',', ', '),
-        (updated) => {wLog.info('wifi-device.addNewAPs: NEARBY_SSIDs updated=' + updated)}, true);
-        return newAPs;
+        Settings.update(Settings.NEARBY_SSIDs, this.NearbyAPs.map((ap) => ap.ssid).toString().replace(',', ', '),
+        (updated) => {wLog.info('wifi-device.updateNearbyAPs: NEARBY_SSIDs updated=' + updated)}, true);
+        return updatedAPs;
     }
-    private async removeAPs(paths: string []): Promise<AccessPointData[]> {
-        const removedAPs: AccessPointData[] = []; 
-        for (const path of paths){
-            const props = await this.getAllAccessPointProperties(path);
-            const ap = this.toAP(props);
-            if (ap.ssid in this._availableAPs){
-                delete this._availableAPs[ap.ssid];
-                removedAPs.push(ap);
-            }
-        }
-        Settings.update(Settings.NEARBY_SSIDs,  this.NearbyAPs.toString().replace(',', ', '),
-        (updated) => {wLog.info('wifi-device.removeAPs: NEARBY_SSIDs updated=' + updated)}, true);
-        return removedAPs;
-    } 
     private async findWiFiConnection(ssid: string): Promise<string> {
         const connections = await this._settings.ListConnections();
         const toString = (setting: DictofDict): string => { const keys =[]; for (const key in setting){keys.push(key)} return keys.toString() } 
@@ -279,13 +269,13 @@ export class WiFiDevice {
             security = 'WEP';
         }
         if (wpaSecurity.length > 0) {
-            security = 'WPA'
+            security = 'WPA';
         }
         if (rsnSecurity.length > 0) {
-            security = 'WPA2'
+            security = 'WPA2';
         }
         if (wpaSecurity.indexOf('KEY_MGMT_802_1X') !== -1 || rsnSecurity.indexOf('KEY_MGMT_802_1X') !== -1) {
-            security = 'enterprise'
+            security = 'enterprise';
         } 
         return security;
     }
