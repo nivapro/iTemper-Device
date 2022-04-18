@@ -322,6 +322,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
         if (offset < buffer.length){
             return buffer.slice(offset);
         } else {
+            log.error(label('encode') + 'Offset larger than buffer size ' + constants.GATT_CHARACTERISTIC_INTERFACE)
             throw new FailedException('offset larger than buffer size', constants.GATT_CHARACTERISTIC_INTERFACE);
         }
     }
@@ -342,6 +343,7 @@ export abstract class Characteristic<T>extends dbus.interface.Interface implemen
             if (this._isValidFn(raw)){
                 return <T>raw;
             } else {
+                log.error('convert. Invalid parse JSON.' + 'raw=' + JSON.stringify(raw) );
                 throw new FailedException('WriteValue.convert, received invalid data',
                 constants.GATT_CHARACTERISTIC_INTERFACE);
             };
