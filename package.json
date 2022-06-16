@@ -63,7 +63,7 @@
         "babelify": "^10.0.0",
         "browserify": "^16.5.1",
         "dotenv": "^8.2.0",
-        "electron": "^16.0.8",
+        "electron": "^16.2.6",
         "gulp": "^4.0.2",
         "gulp-sourcemaps": "^2.6.5",
         "gulp-typescript": "^6.0.0-alpha.1",
