@@ -69,7 +69,7 @@
         "gulp-typescript": "^6.0.0-alpha.1",
         "gulp-watch": "^5.0.1",
         "install": "^0.13.0",
-        "npm": "^6.14.8",
+        "npm": "^9.4.1",
         "require-npm4-to-publish": "^1.0.0",
         "tsify": "^4.0.2",
         "tslint": "^5.20.1",
